@@ -1,0 +1,72 @@
+# ============================================================
+# .gitignore — CostoBot
+# ============================================================
+
+# ----- SECRETS (NEVER commit) -----
+.env
+.env.local
+.env.production
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ----- AGENT & CONTEXT (local only) -----
+.agente/
+contextoIA/
+agent-unified.md
+
+# ----- VERSIONING (machine-specific) -----
+frontend/versionamiento.config.json
+
+# ----- NODE & PACKAGE MANAGERS -----
+node_modules/
+.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+package-lock.json
+
+# ----- NEXT.JS BUILD -----
+frontend/.next/
+frontend/out/
+frontend/.nuxt
+frontend/dist/
+
+# ----- TESTING -----
+coverage/
+.nyc_output
+
+# ----- OS & EDITORS -----
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ----- LOGS -----
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ----- BUILD ARTIFACTS -----
+build/
+dist/
+tmp/
+temp/
+
+# ----- MISC -----
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
