@@ -57,15 +57,15 @@ services:
         sync: false       # igual que PUBLIC_API_KEY del backend
       - key: NEXT_PUBLIC_APP_NAME
         value: CostoBot
-      - key: FIREBASE_APIKEY
+      - key: NEXT_PUBLIC_FIREBASE_APIKEY
         sync: false
-      - key: FIREBASE_AUTHDOMAIN
+      - key: NEXT_PUBLIC_FIREBASE_AUTHDOMAIN
         sync: false
-      - key: FIREBASE_PROJECTID
+      - key: NEXT_PUBLIC_FIREBASE_PROJECTID
         sync: false
-      - key: FIREBASE_STORAGEBUCKET
+      - key: NEXT_PUBLIC_FIREBASE_STORAGEBUCKET
         sync: false
-      - key: FIREBASE_MESSAGINGSENDERID
+      - key: NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID
         sync: false
-      - key: FIREBASE_APPID
+      - key: NEXT_PUBLIC_FIREBASE_APPID
         sync: false
