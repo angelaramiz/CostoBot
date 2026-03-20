@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.4.0
+# 🚀 Release Notes — CostoBot v0.4.1
 
 **Fecha:** 2026-03-20
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: add Firebase Admin SDK backend and client SDK frontend
+- 🐛 fix: add Next.js app directory and tsconfig for Render build
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
