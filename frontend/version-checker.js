@@ -14,7 +14,7 @@
 const VERSION_CHECK_KEY = 'costobot_version_checks';
 const THROTTLE_HOURS = 12;
 const API_URL = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) || 'http://localhost:3001';
-const API_KEY = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_PUBLIC_API_KEY) || 'sb_public_cfb036da59e17824';
+const API_KEY = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_PUBLIC_API_KEY) || '';
 
 function getStoredChecks() {
   try { return JSON.parse(localStorage.getItem(VERSION_CHECK_KEY) || '{}'); }
