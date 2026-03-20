@@ -30,13 +30,14 @@ yarn-error.log*
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
-package-lock.json
 
 # ----- NEXT.JS BUILD -----
 frontend/.next/
 frontend/out/
 frontend/.nuxt
 frontend/dist/
+.next/
+out/
 
 # ----- TESTING -----
 coverage/

@@ -17,10 +17,20 @@
 'use strict';
 
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const { requirePublicKey, requireInternalKey } = require('../middleware/apiKey.middleware');
 const { getConnectionState } = require('../db/connection');
 const VersionHistory = require('../db/VersionHistory.model');
+
+// Rate limiter only for write operations
+const versionWriteLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too Many Requests', message: 'Version record rate limit exceeded.' },
+});
 
 // ---------------------------------------------------------------------------
 // In-memory fallback (used when MongoDB is not connected)
@@ -55,7 +65,7 @@ router.get('/', requirePublicKey, async (req, res) => {
 // ---------------------------------------------------------------------------
 // POST /api/version/record
 // ---------------------------------------------------------------------------
-router.post('/record', requireInternalKey, async (req, res) => {
+router.post('/record', versionWriteLimiter, requireInternalKey, async (req, res) => {
   const { version, bumpType, message, commitHash, branch, project } = req.body;
 
   if (!version || !bumpType || !message) {

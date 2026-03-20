@@ -64,7 +64,8 @@ app.get('/health', (_req, res) => {
 // ---------------------------------------------------------------------------
 const versionRoutes = require('./routes/version.routes');
 const { connectDB } = require('./db/connection');
-app.use('/api/version', versionWriteLimiter, versionRoutes);
+// versionWriteLimiter only on POST — GET uses the general limiter (100/15min)
+app.use('/api/version', versionRoutes);
 
 // ---------------------------------------------------------------------------
 // 404 handler
