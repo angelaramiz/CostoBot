@@ -1,0 +1,71 @@
+# render.yaml — CostoBot Infrastructure as Code
+# Defines both services: backend (Express) + frontend (Next.js)
+# Docs: https://render.com/docs/infrastructure-as-code
+
+services:
+
+  # -----------------------------------------------------------------------
+  # BACKEND — Node.js + Express API
+  # -----------------------------------------------------------------------
+  - type: web
+    name: costobot-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: PUBLIC_API_KEY
+        sync: false       # set manually in Render dashboard
+      - key: INTERNAL_API_KEY
+        sync: false       # set manually in Render dashboard
+      - key: DATABASE_URL
+        sync: false       # MongoDB Atlas connection string
+      - key: FIREBASE_ADMIN_PROJECT_ID
+        sync: false
+      - key: FIREBASE_ADMIN_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_ADMIN_PRIVATE_KEY
+        sync: false
+      - key: IA_PROVIDER
+        value: openrouter
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false       # URL del frontend en Render, ej: https://costobot.onrender.com
+
+  # -----------------------------------------------------------------------
+  # FRONTEND — Next.js App
+  # -----------------------------------------------------------------------
+  - type: web
+    name: costobot-frontend
+    runtime: node
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        sync: false       # URL del backend en Render, ej: https://costobot-backend.onrender.com
+      - key: NEXT_PUBLIC_PUBLIC_API_KEY
+        sync: false       # igual que PUBLIC_API_KEY del backend
+      - key: NEXT_PUBLIC_APP_NAME
+        value: CostoBot
+      - key: FIREBASE_APIKEY
+        sync: false
+      - key: FIREBASE_AUTHDOMAIN
+        sync: false
+      - key: FIREBASE_PROJECTID
+        sync: false
+      - key: FIREBASE_STORAGEBUCKET
+        sync: false
+      - key: FIREBASE_MESSAGINGSENDERID
+        sync: false
+      - key: FIREBASE_APPID
+        sync: false
