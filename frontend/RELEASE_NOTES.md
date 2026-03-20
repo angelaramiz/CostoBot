@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.2.1
+# 🚀 Release Notes — CostoBot v0.3.0
 
 **Fecha:** 2026-03-20
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: remove hardcoded API key fallback — use env var only
+- ✨ feat: add backend server, render.yaml and next.config for Render deployment
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
