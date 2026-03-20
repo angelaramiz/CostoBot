@@ -19,10 +19,11 @@
 const express = require('express');
 const router = express.Router();
 const { requirePublicKey, requireInternalKey } = require('../middleware/apiKey.middleware');
+const { getConnectionState } = require('../db/connection');
+const VersionHistory = require('../db/VersionHistory.model');
 
 // ---------------------------------------------------------------------------
-// In-memory store (until MongoDB is wired up)
-// Replace with real MongoDB calls once the DB connection is established.
+// In-memory fallback (used when MongoDB is not connected)
 // ---------------------------------------------------------------------------
 
 let currentVersion = {
@@ -31,42 +32,39 @@ let currentVersion = {
   updatedAt: new Date().toISOString(),
 };
 
-/** @type {Array<{version: string, bumpType: string, message: string, commitHash?: string, branch: string, project: string, pushedAt: string}>} */
-const versionHistory = [];
+/** @type {Array} */
+const versionHistoryMemory = [];
 
 // ---------------------------------------------------------------------------
 // GET /api/version
-// Returns the current published version — used by version-checker.js
 // ---------------------------------------------------------------------------
-router.get('/', requirePublicKey, (req, res) => {
-  res.json({
-    version: currentVersion.version,
-    project: currentVersion.project,
-    updatedAt: currentVersion.updatedAt,
-  });
+router.get('/', requirePublicKey, async (req, res) => {
+  if (getConnectionState()) {
+    try {
+      const latest = await VersionHistory.findOne({ project: 'CostoBot' }).sort({ pushedAt: -1 });
+      if (latest) {
+        return res.json({ version: latest.version, project: latest.project, updatedAt: latest.pushedAt });
+      }
+    } catch (err) {
+      console.error('[version] GET / DB error:', err.message);
+    }
+  }
+  res.json({ version: currentVersion.version, project: currentVersion.project, updatedAt: currentVersion.updatedAt });
 });
 
 // ---------------------------------------------------------------------------
 // POST /api/version/record
-// Called by bump-version.js and post-commit-version.js after a successful bump.
-// Body: { version, bumpType, message, commitHash?, branch?, project? }
 // ---------------------------------------------------------------------------
-router.post('/record', requireInternalKey, (req, res) => {
+router.post('/record', requireInternalKey, async (req, res) => {
   const { version, bumpType, message, commitHash, branch, project } = req.body;
 
   if (!version || !bumpType || !message) {
-    return res.status(400).json({
-      error: 'Bad Request',
-      message: 'Required fields: version, bumpType, message',
-    });
+    return res.status(400).json({ error: 'Bad Request', message: 'Required fields: version, bumpType, message' });
   }
 
   const validBumpTypes = ['patch', 'minor', 'major', 'rollback'];
   if (!validBumpTypes.includes(bumpType)) {
-    return res.status(400).json({
-      error: 'Bad Request',
-      message: `bumpType must be one of: ${validBumpTypes.join(', ')}`,
-    });
+    return res.status(400).json({ error: 'Bad Request', message: `bumpType must be one of: ${validBumpTypes.join(', ')}` });
   }
 
   const entry = {
@@ -79,40 +77,41 @@ router.post('/record', requireInternalKey, (req, res) => {
     pushedAt: new Date().toISOString(),
   };
 
-  // Persist in in-memory store (replace with MongoDB insert)
-  versionHistory.unshift(entry);
+  if (getConnectionState()) {
+    try {
+      await VersionHistory.create(entry);
+    } catch (err) {
+      console.error('[version] POST /record DB error:', err.message);
+    }
+  } else {
+    versionHistoryMemory.unshift(entry);
+  }
 
-  // Update current version
-  currentVersion = {
-    version,
-    project: entry.project,
-    updatedAt: entry.pushedAt,
-  };
-
-  // TODO: replace with MongoDB call
-  // await VersionHistory.create(entry);
-
+  currentVersion = { version, project: entry.project, updatedAt: entry.pushedAt };
   console.info(`[version] Recorded ${bumpType} bump to ${version}: ${message}`);
-
   res.status(201).json({ ok: true, recorded: entry });
 });
 
 // ---------------------------------------------------------------------------
 // GET /api/version/history
-// Returns paginated version history (INTERNAL key required)
 // ---------------------------------------------------------------------------
-router.get('/history', requireInternalKey, (req, res) => {
+router.get('/history', requireInternalKey, async (req, res) => {
   const page  = Math.max(1, parseInt(req.query.page  || '1', 10));
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || '10', 10)));
-  const start = (page - 1) * limit;
-  const slice = versionHistory.slice(start, start + limit);
 
-  res.json({
-    page,
-    limit,
-    total: versionHistory.length,
-    data: slice,
-  });
+  if (getConnectionState()) {
+    try {
+      const total = await VersionHistory.countDocuments({ project: 'CostoBot' });
+      const data  = await VersionHistory.find({ project: 'CostoBot' })
+        .sort({ pushedAt: -1 }).skip((page - 1) * limit).limit(limit).lean();
+      return res.json({ page, limit, total, data });
+    } catch (err) {
+      console.error('[version] GET /history DB error:', err.message);
+    }
+  }
+
+  const start = (page - 1) * limit;
+  res.json({ page, limit, total: versionHistoryMemory.length, data: versionHistoryMemory.slice(start, start + limit) });
 });
 
 module.exports = router;

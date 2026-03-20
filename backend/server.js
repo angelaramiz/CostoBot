@@ -63,6 +63,7 @@ app.get('/health', (_req, res) => {
 // Routes
 // ---------------------------------------------------------------------------
 const versionRoutes = require('./routes/version.routes');
+const { connectDB } = require('./db/connection');
 app.use('/api/version', versionWriteLimiter, versionRoutes);
 
 // ---------------------------------------------------------------------------
@@ -83,8 +84,10 @@ app.use((err, _req, res, _next) => {
 // ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------
-app.listen(PORT, () => {
-  console.log(`[CostoBot Backend] Running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`[CostoBot Backend] Running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+  });
 });
 
 module.exports = app;
