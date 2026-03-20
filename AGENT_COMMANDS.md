@@ -169,25 +169,85 @@ Antes de generar cualquier código, leer:
 
 > Instrucciones que el agente interpreta directamente en el chat.
 
-```
-task:new "título" "descripción"     # Crear nueva tarea en .agente/TODO/pendiente/
-task:start [nombre]                  # Iniciar tarea pendiente por nombre (o la más crítica)
-agent:update                         # Actualizar agent-core.md con nueva versión (con backup)
-config:update                        # Actualizar versionamiento.config.json en runtime
-```
+### Frases de activación
 
-### Protocolo `agent:update`
-1. Leer nueva versión del agente desde `agentupdate/agent-unified.md`
-2. Hacer backup: `.agente/backups/agent-core.backup-YYYY-MM-DD.md`
-3. Copiar nueva versión a `.agente/core/agent-core.md`
-4. Verificar que el backup existe antes de sobrescribir
-5. Reportar diferencias clave detectadas
+| Frase | Qué activa |
+|-------|-----------|
+| `"Implementa el sistema de versionamiento"` | Flujo completo desde cero |
+| `"Implementa versionamiento standard/advanced/autonomous"` | Flujo directo al modo elegido |
+| `"Audit my versioning system"` | Health check sin npm |
+| `"I need to restructure my project architecture"` | Wizard de migración |
+| `"Estoy separando mi frontend del backend"` | Migration wizard monolith → separado |
+| `"Agrega una regla sobre..."` | Añade regla a CLAUDE.md sin npm |
+| `"Ya pegué mis archivos en contextoIA, continúa"` | Lectura de contextoIA/ (Greenfield Autonomous) |
+| `"Actualiza el contexto del proyecto"` | Re-scan y refresh de PROJECT_CONTEXT.md |
+| `agent:update` | Actualizar agente con backup automático |
+| `agent:add-specialist [uxui/security/chat]` | Instala agente especialista |
+| `task:new [título]` | Crear tarea en .agente/TODO/pendiente/ |
+| `task:start [nombre]` | Iniciar tarea pendiente (o la más crítica) |
+| `config:update` | Actualizar configuración del proyecto |
+
+### Protocolo `agent:update` (actualizado v2)
+
+**Archivos necesarios en `.agente/update_agent/`:**
+- `agent-unified.agent.md` — nueva versión del agente
+- `AGENT_COMMANDS.md` — del repo agente_versionamiento/
+
+| Paso | Qué hace el agente |
+|------|--------------------|
+| 0 — Verificar | Confirma que `.agente/core/agent-core.agent.md` existe |
+| 1 — Preparar | Crea `.agente/update_agent/` y pide que el dev copie ambos archivos |
+| 2 — Analizar | Lee ambas versiones, genera reporte de diferencias |
+| 3 — Confirmar | Muestra reporte y **espera confirmación** antes de tocar nada |
+| 4 — Backup | Crea `.agente/backups/{{timestamp}}_agent-core.bak.md` — si falla, cancela todo |
+| 5 — Aplicar | Reemplaza `agent-core.agent.md` con el nuevo contenido |
+| 6 — Sincronizar | Extrae nuevos comandos de `AGENT_COMMANDS.md` y los aplica (append, never overwrite) |
+| 7 — Limpiar | Elimina `.agente/update_agent/` y muestra resumen |
+
+**Rollback:** `"agent:update rollback"` → lista backups y restaura el elegido.
+
+### Protocolo `task:new`
+
+| Forma | Ejemplo | Qué hace |
+|-------|---------|----------|
+| Desde chat | `"task:new Integrar Stripe"` | Crea `tarea_XX_integrar_stripe.md` en `pendiente/` |
+| Múltiples | `"task:new: 1) Migrar DB 2) Tests"` | Un archivo por ítem |
+| Desde archivo | `"task:new ancla contextoIA/requisitos.md"` | Lee el archivo y extrae tareas |
+| Desde carpeta | `"task:new ancla contextoIA/"` | Lee todos los archivos, genera tareas detectadas |
+| Sin argumentos | `"task:new"` | Pregunta: ¿desde chat o desde archivo/carpeta? |
 
 ### Protocolo `task:start`
-1. Si se da `[nombre]`, buscar en `.agente/TODO/pendiente/` por nombre parcial
-2. Si no se da nombre, evaluar tareas pendientes y sugerir la más crítica por impacto
-3. Mover archivo `.md` de `pendiente/` → `en_progreso/`
-4. Leer el contenido del task y comenzar ejecución
+
+Muestra listado ordenado por prioridad y pide confirmación:
+
+```
+📋 Tareas pendientes
+  🔴 tarea_03_correccion_critica.md   CRÍTICA
+  🟠 tarea_05_integrar_stripe.md      Alta
+  🟡 tarea_06_endpoints.md            Media
+  🟢 tarea_08_refactor_ui.md          Baja
+
+💡 Sugerencia: tarea_03 (CRÍTICA)
+¿Iniciar? (s / elegir otra / cancelar): _
+```
+
+### Protocolo `config:update`
+
+| Forma | Ejemplo | Qué hace |
+|-------|---------|----------|
+| Campo puntual | `"config:update repo: https://github.com/..."` | Actualiza solo ese campo |
+| Varios campos | `"config:update: repo=https://... ; db=PostgreSQL"` | Actualiza todos |
+| Desde archivo | `"config:update ancla contextoIA/nuevos-datos.md"` | Lee el archivo y extrae campos |
+| Interactivo | `"config:update"` solo | Muestra campos, indica vacíos, pregunta uno a uno |
+
+### Etiquetas de prioridad en tareas
+
+| Etiqueta | Nivel | Cuándo usarla |
+|----------|-------|---------------|
+| `🔴 CRÍTICA` | 0 | Bug en producción, seguridad, bloquea a otros |
+| `🟠 Alta` | 1 | Feature comprometida, deadline próximo |
+| `🟡 Media` | 2 | Mejora planificada, refactor necesario |
+| `🟢 Baja` | 3 | Nice-to-have, exploración, documentación |
 
 ---
 
@@ -195,7 +255,8 @@ config:update                        # Actualizar versionamiento.config.json en 
 
 | Archivo | Ubicación | Propósito |
 |---------|-----------|----------|
-| `agent-core.md` | `.agente/core/` | Agente activo — NO commitear, NO editar directamente |
+| `agent-core.agent.md` | `.agente/core/` | Agente activo (v2 — `.agent.md` extension) — NO commitear |
+| `agent-core.md` | `.agente/core/` | Versión anterior del agente (backup de referencia) |
 | `IMPLEMENTATION_ROADMAP.md` | `.agente/docs/` | Plan de fases del proyecto |
 | `IMPLEMENTATION_REPORT.md` | `.agente/docs/` | Reporte de implementación completada |
 | `CLAUDE.md` | `.claude/` | Reglas maestras del agente — LEER PRIMERO |
@@ -209,4 +270,56 @@ config:update                        # Actualizar versionamiento.config.json en 
 
 ---
 
-*Generado por el agente de versionamiento CostoBot — actualizar cuando cambien comandos o convenciones.*
+## ➕ Agentes Especializados Disponibles
+
+> Instalar con: `agent:add-specialist [nombre]`
+> Los archivos van a `.agente/core/specialists/` tras la instalación.
+
+### Flujo de instalación
+
+```text
+1. Activar: "agent:add-specialist uxui" (o security / chat)
+2. El agente crea .agente/add_specialist/
+3. Copiar el archivo del especialista + AGENT_COMMANDS.md a esa carpeta
+4. Escribir: "ya copié el especialista, instala"
+5. El agente lee contexto, ejecuta setup y mueve a .agente/core/specialists/
+```
+
+### Especialistas disponibles
+
+| Especialista | Archivo | Activar con |
+|-------------|---------|-------------|
+| 🎨 **uxui-specialist** | `agent-uxui.agent.md` | `"Implementa el design system"` |
+| 🔐 **cybersecurity-saas-specialist** | `agent-cybersecurity-saas.agent.md` | `"Audita la seguridad del proyecto"` |
+| 💬 **chat-interface-specialist** | `agent-chat-interface.agent.md` | `"Implementa el chat"` |
+
+### Comandos por especialista
+
+**🎨 uxui:** `uxui:audit` · `uxui:a11y` · `uxui:tokens` · `uxui:darkmode` · `uxui:component [nombre]` · `uxui:animate`
+
+**🔐 security:** `sec:audit` · `sec:auth` · `sec:tenants` · `sec:headers` · `sec:secrets` · `sec:deps` · `sec:gdpr`
+
+**💬 chat:** `chat:ai` · `chat:realtime` · `chat:reactions` · `chat:threads` · `chat:files` · `chat:virtualscroll` · `chat:widget`
+
+### Orden recomendado para SaaS completo
+
+```text
+① agent-unified       → versionamiento + contexto base
+② uxui-specialist     → design system (tokens que usa el chat)
+③ security-specialist → hardening antes de construir features
+④ chat-specialist     → usa tokens de uxui + controles de security
+```
+
+### Integración entre agentes
+
+```text
+agent-unified → contexto y versionamiento del proyecto
+  ├── uxui       → CSS, tokens, componentes, dark mode
+  ├── security   → auth, rate-limit, secrets, GDPR
+  └── chat       → streaming, WebSocket, archivos, historial
+```
+
+---
+
+*Última actualización: 2026-03-20 — agent:update aplicado (v2 → agent-core.agent.md).*
+*Para actualizar este archivo: `agent:update` → el agente sincroniza secciones nuevas automáticamente.*
