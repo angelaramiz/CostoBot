@@ -26,7 +26,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const PKG_PATH = path.join(__dirname, 'package.json');
 const RELEASE_NOTES_PATH = path.join(__dirname, 'RELEASE_NOTES.md');
 const CONFIG_PATH = path.join(__dirname, 'versionamiento.config.json');
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.VERSION_RECORD_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const API_KEY = process.env.INTERNAL_API_KEY || '';
 const GIT_TOKEN = process.env.GIT_PAT_TOKEN || '';
 
