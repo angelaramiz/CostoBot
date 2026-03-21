@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { version } = require('./frontend/package.json');
+
 const nextConfig = {
   // Output standalone build — reduces bundle size on Render
   output: 'standalone',
@@ -6,7 +8,7 @@ const nextConfig = {
   // Environment variables exposed to the browser
   env: {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'CostoBot',
-    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || version,
   },
 
   // Redirect API calls to backend in production
