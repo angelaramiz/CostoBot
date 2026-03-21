@@ -1,8 +1,18 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AuthGuard from '@/components/auth/AuthGuard';
 import VersionBadge from '@/components/ui/VersionBadge';
+
+// Mantiene el backend de Render despierto con un ping al cargar la app.
+function useBackendWakeup() {
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url) return;
+    fetch(`${url}/health`, { method: 'GET' }).catch(() => { /* silencioso */ });
+  }, []);
+}
 
 /**
  * AppLayout — layout para rutas protegidas.
@@ -12,6 +22,7 @@ import VersionBadge from '@/components/ui/VersionBadge';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   // useAuth registra onAuthStateChanged vía useEffect interno
   useAuth();
+  useBackendWakeup();
 
   return (
     <AuthGuard>

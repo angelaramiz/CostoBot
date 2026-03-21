@@ -12,7 +12,9 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 // Se puede sobreescribir con la variable de entorno OPENROUTER_MODEL.
 const FREE_MODELS = [
   'qwen/qwen3-next-80b-a3b-instruct:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
   'google/gemma-3-27b-it:free',
+  'mistralai/mistral-7b-instruct:free',
 ];
 const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || FREE_MODELS[0];
 
