@@ -15,12 +15,11 @@ export default function DashboardPage() {
   const { displayName, email, signOut } = useAuth();
   const token = useAuthStore((s) => s.token) ?? '';
   const router = useRouter();
-  const [projects, setProjects] = useState<BusinessProject[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState<BusinessProject[] | null>(null);
+  const loading = projects === null && !!token;
 
   useEffect(() => {
     if (!token) return;
-    setLoading(true);
     fetch(`${API_URL}/api/projects`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -36,8 +35,7 @@ export default function DashboardPage() {
         );
         setProjects(list);
       })
-      .catch(() => setProjects([]))
-      .finally(() => setLoading(false));
+      .catch(() => setProjects([]));
   }, [token]);
 
   async function handleSignOut() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useProjectStore } from '@/store/project.store';
 import { formatRelativeTime } from '@/lib/format';
 import styles from './AutoSaveIndicator.module.css';
@@ -9,14 +9,18 @@ export default function AutoSaveIndicator() {
   const isDirty = useProjectStore((s) => s.isDirty);
   const lastSyncedAt = useProjectStore((s) => s.lastSyncedAt);
   const syncError = useProjectStore((s) => s.syncError);
-  const [timeLabel, setTimeLabel] = useState('');
+  const [tick, setTick] = useState(0);
+  // Derive timeLabel from lastSyncedAt + tick (updated every 5s) — avoids
+  // calling setState synchronously inside a useEffect body.
+  const timeLabel = useMemo(
+    () => (lastSyncedAt ? formatRelativeTime(lastSyncedAt) : ''),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lastSyncedAt, tick]
+  );
 
   useEffect(() => {
     if (!lastSyncedAt) return;
-    setTimeLabel(formatRelativeTime(lastSyncedAt));
-    const id = setInterval(() => {
-      setTimeLabel(formatRelativeTime(lastSyncedAt));
-    }, 5000);
+    const id = setInterval(() => setTick((n) => n + 1), 5000);
     return () => clearInterval(id);
   }, [lastSyncedAt]);
 
