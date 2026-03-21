@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.10.1
+# 🚀 Release Notes — CostoBot v0.11.0
 
 **Fecha:** 2026-03-21
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: project.layers undefined crash en dashboard y chat IA
+- ✨ feat: agregar agente IA al dashboard principal
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
