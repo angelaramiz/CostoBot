@@ -7,7 +7,14 @@
 const { IIAAdapter } = require('./ia.adapter');
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-3.5-turbo';
+
+// Modelos gratuitos disponibles en OpenRouter (en orden de preferencia).
+// Se puede sobreescribir con la variable de entorno OPENROUTER_MODEL.
+const FREE_MODELS = [
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'openai/gpt-oss-120b:free',
+];
+const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || FREE_MODELS[0];
 
 class OpenRouterAdapter extends IIAAdapter {
   constructor() {
@@ -24,36 +31,54 @@ class OpenRouterAdapter extends IIAAdapter {
   async chat(messages, context, mode = 'project') {
     const systemPrompt = buildSystemPrompt(context, mode);
 
-    const payload = {
-      model: DEFAULT_MODEL,
+    const basePayload = {
       messages: [
         { role: 'system', content: systemPrompt },
-        ...messages.slice(-10), // max 10 mensajes de historial
+        ...messages.slice(-10),
       ],
       temperature: 0.7,
       max_tokens: 1024,
     };
 
-    const res = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
-        'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
-        'X-Title': 'CostoBot',
-      },
-      body: JSON.stringify(payload),
-    });
+    // Intentar con el modelo configurado y, si falla, probar el fallback gratuito
+    const modelsToTry =
+      DEFAULT_MODEL === FREE_MODELS[0]
+        ? FREE_MODELS
+        : [DEFAULT_MODEL, ...FREE_MODELS];
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(`OpenRouter error ${res.status}: ${err.error?.message ?? 'Unknown error'}`);
+    let lastError = null;
+    for (const model of modelsToTry) {
+      try {
+        const res = await fetch(OPENROUTER_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.apiKey}`,
+            'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
+            'X-Title': 'CostoBot',
+          },
+          body: JSON.stringify({ ...basePayload, model }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          lastError = new Error(`OpenRouter error ${res.status} (${model}): ${err.error?.message ?? 'Unknown error'}`);
+          continue; // intentar siguiente modelo
+        }
+
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content;
+        if (!reply) {
+          lastError = new Error(`OpenRouter devolvió respuesta vacía (${model})`);
+          continue;
+        }
+        return reply;
+      } catch (err) {
+        lastError = err;
+      }
     }
 
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content;
-    if (!reply) throw new Error('OpenRouter devolvió respuesta vacía');
-    return reply;
+    throw lastError ?? new Error('Todos los modelos de OpenRouter fallaron');
   }
 
   async isAvailable() {
