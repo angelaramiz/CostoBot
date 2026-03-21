@@ -10,11 +10,12 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-  const totalInsumos = project.layers.layer1.length;
-  const totalProductos = project.layers.layer3.length;
-  const totalPrecios = project.layers.layer4.length;
+  const layers = project.layers ?? { layer1: [], layer2: [], layer3: [], layer4: [] };
+  const totalInsumos = layers.layer1.length;
+  const totalProductos = layers.layer3.length;
+  const totalPrecios = layers.layer4.length;
 
-  const maxPrecioVenta = project.layers.layer4.reduce(
+  const maxPrecioVenta = layers.layer4.reduce(
     (max, p) => Math.max(max, p.precioVenta),
     0
   );

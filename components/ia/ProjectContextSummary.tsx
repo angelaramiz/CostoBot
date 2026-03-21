@@ -24,18 +24,19 @@ export default function ProjectContextSummary() {
 
   if (!project) return null;
 
-  const l1 = project.layers.layer1.length;
-  const l2 = project.layers.layer2.length;
-  const l3 = project.layers.layer3.length;
-  const l4 = project.layers.layer4.length;
+  const layers = project.layers ?? { layer1: [], layer2: [], layer3: [], layer4: [] };
+  const l1 = layers.layer1.length;
+  const l2 = layers.layer2.length;
+  const l3 = layers.layer3.length;
+  const l4 = layers.layer4.length;
 
   const avgCost =
     l3 > 0
-      ? Math.round(project.layers.layer3.reduce((a, p) => a + p.costoUnitario, 0) / l3)
+      ? Math.round(layers.layer3.reduce((a, p) => a + p.costoUnitario, 0) / l3)
       : 0;
   const avgMargen =
     l4 > 0
-      ? project.layers.layer4.reduce((a, p) => a + p.margenPorcentaje, 0) / l4
+      ? layers.layer4.reduce((a, p) => a + p.margenPorcentaje, 0) / l4
       : 0;
 
   return (
