@@ -33,7 +33,7 @@ export default function GoogleSignInButton() {
           {error.toLowerCase().includes('popup') && (
             <span style={{ display: 'block', marginTop: 4, fontSize: '0.8rem', opacity: 0.8 }}>
               Toca el ícono de popup bloqueado en la barra del navegador y selecciona
-              &quot;Permitir siempre&quot;.
+              {' '}&#34;Permitir siempre&#34;.
             </span>
           )}
         </p>
