@@ -5,16 +5,28 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-bg);
-  /* Indicador de scroll horizontal en móvil */
+  /* Scroll inercial en iOS */
   -webkit-overflow-scrolling: touch;
+  /* Cursor de scroll en escritorio */
+  scroll-behavior: smooth;
 }
 
-/* Sombra sutil al costado derecho para indicar que hay más contenido */
+/* Sombra derecha para indicar que hay más contenido horizontalmente */
 @media (max-width: 640px) {
   .sheetWrapper {
     border-radius: 0;
     border-left: none;
     border-right: none;
+    /* Hint visual de scroll — desvanece hacia la derecha */
+    background:
+      linear-gradient(to right, var(--color-bg) 30%, transparent),
+      linear-gradient(to left, var(--color-bg) 4px, transparent 4px) right,
+      radial-gradient(farthest-side at 0 50%, rgba(0,0,0,0.08), transparent) left,
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,0.08), transparent) right;
+    background-attachment: local, local, scroll, scroll;
+    background-color: var(--color-bg);
+    /* Indicador textual en la primera carga */
+    position: relative;
   }
 }
 
@@ -48,11 +60,17 @@
   vertical-align: middle;
 }
 
-/* En móvil, aumentar padding para mejorar área de toque */
+/* En móvil: celdas con altura mínima de 44px (touch target) */
 @media (max-width: 640px) {
   .table th,
   .table td {
-    padding: 10px 10px;
+    padding: 12px 10px;
+    min-height: 44px;
+  }
+
+  /* Fuente ligeramente mayor para mejor legibilidad */
+  .table {
+    font-size: 0.95rem;
   }
 }
 
@@ -75,7 +93,9 @@
   cursor: pointer;
   color: var(--color-danger);
   font-size: 1rem;
-  /* Touch target mínimo 44×44px recomendado */
+  /* Touch target mínimo 44×44px */
+  min-width: 44px;
+  min-height: 44px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   transition: opacity 0.15s, background 0.15s;

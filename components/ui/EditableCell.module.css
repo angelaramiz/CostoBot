@@ -1,11 +1,21 @@
 .cell {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   min-width: 60px;
+  /* Touch target mínimo 44px en móvil (WCAG 2.5.5) */
+  min-height: 36px;
   padding: 4px 6px;
   border-radius: var(--radius-sm);
   cursor: text;
   white-space: nowrap;
   transition: background 0.15s;
+}
+
+@media (pointer: coarse) {
+  .cell {
+    min-height: 44px;
+    padding: 8px 8px;
+  }
 }
 
 .editable:hover {

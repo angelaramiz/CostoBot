@@ -1,25 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/auth.store';
 import styles from './AuthForm.module.css';
 
 export default function GoogleSignInButton() {
   const router = useRouter();
   const { signInWithGoogle } = useAuth();
+  const uid = useAuthStore((s) => s.uid);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirigir al dashboard cuando el uid esté disponible.
+  // Cubre tanto el flujo popup (desktop) como el flujo redirect (móvil):
+  // después del redirect de Google, onAuthStateChanged setea uid y este
+  // efecto se dispara automáticamente.
+  useEffect(() => {
+    if (uid) {
+      router.push('/dashboard');
+    }
+  }, [uid, router]);
 
   async function handleClick() {
     setError(null);
     setLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+      // En flujo popup, uid ya está en el store → el useEffect redirige.
+      // En flujo redirect, la página navega a Google; cuando vuelve,
+      // getRedirectResult + onAuthStateChanged setean uid → useEffect redirige.
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error con Google');
-    } finally {
       setLoading(false);
     }
   }

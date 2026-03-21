@@ -87,6 +87,17 @@ export default function EditableCell({
   }
 
   if (editing) {
+    // inputMode muestra el teclado correcto en móvil:
+    // 'decimal' → teclado numérico con punto decimal (moneda/porcentaje)
+    // 'numeric' → teclado numérico sin punto (enteros)
+    // 'text'    → teclado completo
+    const inputMode =
+      type === 'currency' || type === 'percent'
+        ? 'decimal'
+        : type === 'number'
+        ? 'numeric'
+        : 'text';
+
     return (
       <input
         ref={inputRef}
@@ -96,6 +107,8 @@ export default function EditableCell({
         onBlur={commit}
         onKeyDown={handleKeyDown}
         type={type === 'text' ? 'text' : 'number'}
+        inputMode={inputMode}
+        enterKeyHint="done"
         step={type === 'currency' ? '0.01' : type === 'percent' ? '0.01' : '1'}
         min={type !== 'text' ? '0' : undefined}
         autoFocus

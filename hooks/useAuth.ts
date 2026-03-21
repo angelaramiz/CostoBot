@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile,
@@ -50,6 +51,21 @@ export function useAuth() {
 
   /** Suscribirse a cambios de sesión (llamar una sola vez en el layout raíz) */
   useEffect(() => {
+    let cancelled = false;
+
+    // Recuperar el resultado pendiente del redirect de Google (flujo móvil).
+    // getRedirectResult procesa el token de la URL y completa el sign-in.
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (!cancelled && result?.user) {
+          const idToken = await result.user.getIdToken();
+          setUser(result.user, idToken);
+        }
+      })
+      .catch(() => {
+        // Sin redirect pendiente — ignorar
+      });
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const idToken = await user.getIdToken();
@@ -58,7 +74,11 @@ export function useAuth() {
         clearUser();
       }
     });
-    return unsubscribe;
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [setUser, clearUser]);
 
   async function signIn(email: string, password: string): Promise<void> {

@@ -22,16 +22,51 @@ export default function TagSelector({
   onChange,
 }: TagSelectorProps) {
   const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // Calcular posición del dropdown — en tablas con overflow-x, position:absolute
+  // queda clippeado. Usamos position:fixed con coordenadas del trigger.
+  useEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const dropdownHeight = Math.min(220, options.length * 38 + 16);
+
+    if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+      // Abre hacia arriba si no hay espacio abajo
+      setDropdownStyle({
+        position: 'fixed',
+        bottom: window.innerHeight - rect.top + 4,
+        left: rect.left,
+        minWidth: Math.max(rect.width, 180),
+        zIndex: 9999,
+      });
+    } else {
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left: rect.left,
+        minWidth: Math.max(rect.width, 180),
+        zIndex: 9999,
+      });
+    }
+  }, [open, options.length]);
 
   useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
+    function onOutside(e: MouseEvent | TouchEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
+    // Escuchar tanto mousedown (desktop) como touchstart (móvil)
+    document.addEventListener('mousedown', onOutside);
+    document.addEventListener('touchstart', onOutside, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', onOutside);
+      document.removeEventListener('touchstart', onOutside);
+    };
   }, []);
 
   function toggle(id: string) {
@@ -49,6 +84,7 @@ export default function TagSelector({
   return (
     <div ref={ref} className={styles.wrapper}>
       <button
+        ref={triggerRef}
         type="button"
         className={styles.trigger}
         onClick={() => setOpen(!open)}
@@ -60,7 +96,12 @@ export default function TagSelector({
         <span className={styles.arrow}>▾</span>
       </button>
       {open && (
-        <div className={styles.dropdown} role="listbox" aria-multiselectable="true">
+        <div
+          className={styles.dropdown}
+          role="listbox"
+          aria-multiselectable="true"
+          style={dropdownStyle}
+        >
           {options.length === 0 && (
             <p className={styles.noOptions}>Sin opciones disponibles</p>
           )}
