@@ -34,6 +34,7 @@ export default function ChatInput({ onSend, disabled = false }: ChatInputProps) 
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Pregunta sobre tu proyecto… (Enter para enviar)"
+        aria-label="Mensaje al asistente"
         disabled={disabled}
         rows={2}
         maxLength={1000}

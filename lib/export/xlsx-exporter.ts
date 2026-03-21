@@ -3,7 +3,7 @@
  * Exporta un BusinessProject a XLSX multi-sheet usando SheetJS CE.
  * Los valores monetarios están en centavos → se dividen entre 100 al exportar.
  */
-import * as XLSX from 'xlsx';
+import * as XLSX from '@e965/xlsx';
 import type { BusinessProject } from '@/types/business-project';
 
 // Centos → pesos

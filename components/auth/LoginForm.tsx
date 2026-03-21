@@ -32,7 +32,7 @@ export default function LoginForm() {
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <h1 className={styles.title}>Iniciar sesión</h1>
 
-      {error && <p className={styles.error}>{error}</p>}
+      {error && <p className={styles.error} role="alert">{error}</p>}
 
       <label className={styles.label}>
         Correo electrónico

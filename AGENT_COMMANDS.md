@@ -287,11 +287,11 @@ Muestra listado ordenado por prioridad y pide confirmación:
 
 ### Especialistas disponibles
 
-| Especialista | Archivo | Activar con |
-|-------------|---------|-------------|
-| 🎨 **uxui-specialist** | `agent-uxui.agent.md` | `"Implementa el design system"` |
-| 🔐 **cybersecurity-saas-specialist** | `agent-cybersecurity-saas.agent.md` | `"Audita la seguridad del proyecto"` |
-| 💬 **chat-interface-specialist** | `agent-chat-interface.agent.md` | `"Implementa el chat"` |
+| Especialista | Archivo | Activar con | Estado |
+|-------------|---------|-------------|--------|
+| 🎨 **uxui-specialist** | `agent-uxui.agent.md` | `"Implementa el design system"` | ✅ Instalado |
+| 🔐 **cybersecurity-saas-specialist** | `agent-cybersecurity-saas.agent.md` | `"Audita la seguridad del proyecto"` | ✅ Instalado |
+| 💬 **chat-interface-specialist** | `agent-chat-interface.agent.md` | `"Implementa el chat"` | ⬜ Pendiente |
 
 ### Comandos por especialista
 
@@ -321,5 +321,5 @@ agent-unified → contexto y versionamiento del proyecto
 
 ---
 
-*Última actualización: 2026-03-20 — agent:update aplicado (v2 → agent-core.agent.md).*
+*Última actualización: 2026-03-20 — agent:add-specialist aplicado (uxui ✅ + security ✅).*
 *Para actualizar este archivo: `agent:update` → el agente sincroniza secciones nuevas automáticamente.*

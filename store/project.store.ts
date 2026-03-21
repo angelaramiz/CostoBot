@@ -1,14 +1,14 @@
 'use client';
 
 import { create } from 'zustand';
-import { propagateChange, recalculateAllLayers } from '@/lib/cascade-engine';
-import { buildDependencyGraph } from '@/lib/dependency-graph';
+import { propagateChange, recalculateAllLayers } from '@/services/calculation/cascade-engine';
+import { buildDependencyGraph } from '@/services/calculation/dependency-graph';
 import type { BusinessProject, ProjectLayers } from '@/types/business-project';
 import type { Insumo } from '@/types/layer1-insumos';
 import type { Proceso } from '@/types/layer2-procesos';
 import type { Producto } from '@/types/layer3-productos';
 import type { Precio } from '@/types/layer4-precios';
-import type { DependencyGraph } from '@/lib/dependency-graph';
+import type { DependencyGraph } from '@/services/calculation/dependency-graph';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const DEBOUNCE_MS = 5000;

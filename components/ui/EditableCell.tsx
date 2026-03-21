@@ -115,6 +115,10 @@ export default function EditableCell({
     <span
       className={cellClass}
       onClick={startEdit}
+      role={readOnly ? undefined : 'button'}
+      tabIndex={readOnly ? undefined : 0}
+      onKeyDown={(e) => { if (!readOnly && (e.key === 'Enter' || e.key === ' ')) startEdit(); }}
+      aria-label={readOnly ? undefined : `Editar ${placeholder ?? 'valor'}`}
       title={readOnly ? undefined : 'Click para editar'}
     >
       {display() !== '' && display() !== '0' ? (

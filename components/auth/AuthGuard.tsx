@@ -20,7 +20,11 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <div
+        role="status"
+        aria-live="polite"
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}
+      >
         <span style={{ color: '#6b7280', fontSize: '1rem' }}>Cargando…</span>
       </div>
     );

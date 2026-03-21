@@ -52,13 +52,15 @@ export default function TagSelector({
         type="button"
         className={styles.trigger}
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
         title="Click para editar"
       >
         {labels || <span className={styles.placeholder}>{placeholder}</span>}
         <span className={styles.arrow}>▾</span>
       </button>
       {open && (
-        <div className={styles.dropdown}>
+        <div className={styles.dropdown} role="listbox" aria-multiselectable="true">
           {options.length === 0 && (
             <p className={styles.noOptions}>Sin opciones disponibles</p>
           )}

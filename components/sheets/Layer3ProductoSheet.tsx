@@ -1,8 +1,8 @@
 'use client';
 
-import EditableCell from '@/components/shared/EditableCell';
-import TagSelector from '@/components/shared/TagSelector';
-import styles from '@/components/shared/Sheet.module.css';
+import EditableCell from '@/components/ui/EditableCell';
+import TagSelector from '@/components/ui/TagSelector';
+import styles from '@/components/ui/Sheet.module.css';
 import { useProjectStore } from '@/store/project.store';
 import { useAuthStore } from '@/store/auth.store';
 import type { Producto } from '@/types/layer3-productos';

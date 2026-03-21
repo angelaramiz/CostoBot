@@ -1,7 +1,7 @@
 'use client';
 
-import EditableCell from '@/components/shared/EditableCell';
-import styles from '@/components/shared/Sheet.module.css';
+import EditableCell from '@/components/ui/EditableCell';
+import styles from '@/components/ui/Sheet.module.css';
 import { useProjectStore } from '@/store/project.store';
 import { useAuthStore } from '@/store/auth.store';
 import type { Insumo } from '@/types/layer1-insumos';

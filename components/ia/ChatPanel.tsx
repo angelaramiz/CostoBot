@@ -30,7 +30,8 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
         className={styles.floatBtn}
         onClick={() => setOpen(!open)}
         title={open ? 'Cerrar asistente' : 'Abrir asistente IA'}
-        aria-label="Toggle IA chat"
+        aria-label={open ? 'Cerrar asistente IA' : 'Abrir asistente IA'}
+        aria-expanded={open}
       >
         {open ? '✕' : '🤖'}
       </button>
@@ -42,18 +43,23 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
           <span className={styles.headerTitle}>🤖 Asistente CostoBot</span>
           <div className={styles.headerActions}>
             {messages.length > 0 && (
-              <button className={styles.clearBtn} onClick={clearMessages} title="Limpiar chat">
+              <button className={styles.clearBtn} onClick={clearMessages} title="Limpiar chat" aria-label="Limpiar conversación">
                 🗑
               </button>
             )}
-            <button className={styles.closeBtn} onClick={() => setOpen(false)} title="Cerrar">
+            <button className={styles.closeBtn} onClick={() => setOpen(false)} title="Cerrar" aria-label="Cerrar asistente">
               ✕
             </button>
           </div>
         </div>
 
         {/* Cuerpo del chat */}
-        <div className={styles.body}>
+        <div
+          className={styles.body}
+          role="log"
+          aria-live="polite"
+          aria-label="Conversación con el asistente"
+        >
           {messages.length === 0 && <ProjectContextSummary />}
 
           {messages.length === 0 && (

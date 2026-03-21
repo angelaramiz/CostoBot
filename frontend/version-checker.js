@@ -64,12 +64,26 @@ function showUpdateBanner(remoteVersion) {
     'display:flex;align-items:center;justify-content:space-between',
     'font-family:sans-serif;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.2)',
   ].join(';');
-  banner.innerHTML = `
-    <span>🚀 Nueva versión disponible (${remoteVersion}). Recarga para actualizar.</span>
-    <div>
-      <button onclick="window.location.reload()" style="margin-right:8px;padding:6px 12px;background:#fff;color:#1a73e8;border:none;border-radius:4px;cursor:pointer;font-weight:600;">Actualizar</button>
-      <button onclick="document.getElementById('costobot-update-banner').remove()" style="padding:6px 12px;background:transparent;color:#fff;border:1px solid #fff;border-radius:4px;cursor:pointer;">Después</button>
-    </div>`;
+  // Build DOM nodes — no innerHTML to avoid XSS with remote version string
+  const span = document.createElement('span');
+  span.textContent = '🚀 Nueva versión disponible (' + remoteVersion + '). Recarga para actualizar.';
+
+  const btnUpdate = document.createElement('button');
+  btnUpdate.textContent = 'Actualizar';
+  btnUpdate.setAttribute('style', 'margin-right:8px;padding:6px 12px;background:#fff;color:#1a73e8;border:none;border-radius:4px;cursor:pointer;font-weight:600;');
+  btnUpdate.addEventListener('click', () => window.location.reload());
+
+  const btnDismiss = document.createElement('button');
+  btnDismiss.textContent = 'Después';
+  btnDismiss.setAttribute('style', 'padding:6px 12px;background:transparent;color:#fff;border:1px solid #fff;border-radius:4px;cursor:pointer;');
+  btnDismiss.addEventListener('click', () => banner.remove());
+
+  const actions = document.createElement('div');
+  actions.appendChild(btnUpdate);
+  actions.appendChild(btnDismiss);
+
+  banner.appendChild(span);
+  banner.appendChild(actions);
   document.body.prepend(banner);
 }
 

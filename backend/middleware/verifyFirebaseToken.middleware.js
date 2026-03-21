@@ -40,7 +40,11 @@ async function verifyFirebaseToken(req, res, next) {
     const decoded = await admin.auth().verifyIdToken(token);
     req.uid = decoded.uid;
     next();
-  } catch {
+  } catch (err) {
+    const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+    console.warn(
+      `[Auth] 401 invalid token — ip=${ip} ua=${req.headers['user-agent'] || '-'} ts=${new Date().toISOString()} reason=${err.code || err.message}`
+    );
     return res.status(401).json({
       error: 'Unauthorized',
       message: 'Token inválido o expirado.',

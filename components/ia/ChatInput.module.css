@@ -3,15 +3,15 @@
   gap: 8px;
   align-items: flex-end;
   padding: 12px;
-  border-top: 1px solid #e5e7eb;
-  background: #fff;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
 }
 
 .textarea {
   flex: 1;
   padding: 8px 12px;
-  border: 1.5px solid #d1d5db;
-  border-radius: 8px;
+  border: 1.5px solid var(--color-border-input);
+  border-radius: var(--radius-lg);
   font-size: 0.875rem;
   font-family: inherit;
   resize: none;
@@ -21,22 +21,22 @@
 }
 
 .textarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
 }
 
 .textarea:disabled {
-  background: #f9fafb;
-  color: #9ca3af;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-disabled);
 }
 
 .sendBtn {
   width: 40px;
   height: 40px;
-  background: #2563eb;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-bg);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   font-size: 1.1rem;
   cursor: pointer;
   display: flex;
@@ -47,10 +47,10 @@
 }
 
 .sendBtn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 .sendBtn:disabled {
-  background: #93c5fd;
+  background: var(--color-primary-disabled);
   cursor: not-allowed;
 }

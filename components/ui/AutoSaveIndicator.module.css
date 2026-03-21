@@ -1,20 +1,27 @@
 .saving {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 .saved {
   font-size: 0.8rem;
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .error {
   font-size: 0.8rem;
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saving {
+    animation: none;
+    opacity: 0.7;
+  }
 }

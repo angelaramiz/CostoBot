@@ -19,6 +19,24 @@ const nextConfig = {
       },
     ];
   },
+
+  // Security headers — COOP must be same-origin-allow-popups so Firebase Auth
+  // popup can use window.closed to detect when the sign-in window closes.
+  // same-origin-allow-popups retains cross-origin popup references that opt
+  // out of COOP (unsafe-none), which covers the Firebase/Google auth domain.
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

@@ -9,18 +9,18 @@
   padding: 6px 14px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
 }
 
 .trigger:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-muted);
 }
 
 .dropdown {
@@ -28,10 +28,10 @@
   top: calc(100% + 4px);
   right: 0;
   min-width: 180px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-menu);
   z-index: 200;
   overflow: hidden;
   animation: fadeIn 0.1s ease;
@@ -49,7 +49,7 @@
   width: 100%;
   padding: 10px 14px;
   font-size: 0.875rem;
-  color: #111827;
+  color: var(--color-text);
   background: none;
   border: none;
   cursor: pointer;
@@ -58,16 +58,22 @@
 }
 
 .item:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: var(--color-bg-hover);
 }
 
 .item:disabled {
-  color: #9ca3af;
+  color: var(--color-text-disabled);
   cursor: not-allowed;
 }
 
 .divider {
   height: 1px;
-  background: #e5e7eb;
+  background: var(--color-border);
   margin: 2px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown {
+    animation: none;
+  }
 }

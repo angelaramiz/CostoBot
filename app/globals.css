@@ -1,0 +1,149 @@
+/* CostoBot — Design Tokens & Global Styles */
+
+:root {
+  /* === Primary === */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-disabled: #93c5fd;
+  --color-primary-bg: #eff6ff;
+  --color-primary-bg-deep: #dbeafe;
+  --color-primary-ring: rgba(37, 99, 235, 0.1);
+  --color-primary-ring-strong: rgba(37, 99, 235, 0.15);
+  --color-primary-border: #bfdbfe;
+  --color-primary-text: #1e40af;
+
+  /* === Text === */
+  --color-text: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-disabled: #9ca3af;
+
+  /* === Background === */
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f9fafb;
+  --color-bg-hover: #f3f4f6;
+  --color-bg-panel: #f8fafc;
+
+  /* === Border === */
+  --color-border: #e5e7eb;
+  --color-border-strong: #e2e8f0;
+  --color-border-input: #d1d5db;
+  --color-border-muted: #9ca3af;
+
+  /* === Status — Success === */
+  --color-success: #16a34a;
+  --color-success-bg: #f0fdf4;
+  --color-success-border: #bbf7d0;
+
+  /* === Status — Danger === */
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-danger-bg-error: #fee2e2;
+  --color-danger-border: #fecaca;
+  --color-danger-text-dark: #991b1b;
+  --color-danger-text-darker: #7f1d1d;
+
+  /* === Status — Warning === */
+  --color-warning-bg: #fef3c7;
+  --color-warning-text: #92400e;
+
+  /* === Info (panel IA / suggestions) === */
+  --color-info-bg: #f0f9ff;
+  --color-info-border: #bae6fd;
+  --color-info-text: #0c4a6e;
+  --color-info-title: #0369a1;
+  --color-info-list: #1e3a5f;
+
+  /* === Shadows === */
+  --shadow-form: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 4px 16px rgba(37, 99, 235, 0.1);
+  --shadow-dropdown: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-menu: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --shadow-dialog: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --shadow-float: 0 4px 16px rgba(37, 99, 235, 0.35);
+  --shadow-focus: 0 0 0 3px var(--color-primary-ring);
+  --shadow-focus-strong: 0 0 0 3px var(--color-primary-ring-strong);
+
+  /* === Border Radius === */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+}
+
+/* ─── Dark Mode ─────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #3b82f6;
+    --color-primary-hover: #2563eb;
+    --color-primary-disabled: #1e40af;
+    --color-primary-bg: #172554;
+    --color-primary-bg-deep: #1e3a5f;
+    --color-primary-ring: rgba(59, 130, 246, 0.2);
+    --color-primary-ring-strong: rgba(59, 130, 246, 0.25);
+    --color-primary-border: #1d4ed8;
+    --color-primary-text: #93c5fd;
+
+    --color-text: #f9fafb;
+    --color-text-secondary: #d1d5db;
+    --color-text-muted: #9ca3af;
+    --color-text-disabled: #6b7280;
+
+    --color-bg: #111827;
+    --color-bg-subtle: #1f2937;
+    --color-bg-hover: #374151;
+    --color-bg-panel: #1f2937;
+
+    --color-border: #374151;
+    --color-border-strong: #4b5563;
+    --color-border-input: #4b5563;
+    --color-border-muted: #6b7280;
+
+    --color-success: #22c55e;
+    --color-success-bg: #052e16;
+    --color-success-border: #14532d;
+
+    --color-danger: #f87171;
+    --color-danger-bg: #1f0808;
+    --color-danger-bg-error: #3b0c0c;
+    --color-danger-border: #7f1d1d;
+    --color-danger-text-dark: #fca5a5;
+    --color-danger-text-darker: #fca5a5;
+
+    --color-warning-bg: #1c1200;
+    --color-warning-text: #fbbf24;
+
+    --color-info-bg: #0c1f2e;
+    --color-info-border: #0369a1;
+    --color-info-text: #bae6fd;
+    --color-info-title: #38bdf8;
+    --color-info-list: #e0f2fe;
+
+    --shadow-form: 0 4px 24px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 4px 16px rgba(59, 130, 246, 0.15);
+    --shadow-dropdown: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-menu: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-dialog: 0 20px 60px rgba(0, 0, 0, 0.6);
+    --shadow-float: 0 4px 16px rgba(59, 130, 246, 0.4);
+  }
+}
+
+/* ─── Global Reset ───────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg-subtle);
+  -webkit-font-smoothing: antialiased;
+}

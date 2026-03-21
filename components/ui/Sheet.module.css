@@ -2,9 +2,9 @@
 
 .sheetWrapper {
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
 }
 
 .table {
@@ -14,15 +14,15 @@
 }
 
 .table thead tr {
-  background: #f8fafc;
-  border-bottom: 2px solid #e2e8f0;
+  background: var(--color-bg-panel);
+  border-bottom: 2px solid var(--color-border-strong);
 }
 
 .table th {
   padding: 10px 12px;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -31,12 +31,12 @@
 
 .table td {
   padding: 8px 12px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--color-bg-hover);
   vertical-align: middle;
 }
 
 .table tbody tr:hover {
-  background: #fafafa;
+  background: var(--color-bg-subtle);
 }
 
 .table tbody tr:hover .deleteBtn {
@@ -52,21 +52,21 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #ef4444;
+  color: var(--color-danger);
   font-size: 1rem;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   transition: opacity 0.15s, background 0.15s;
 }
 
 .deleteBtn:hover {
-  background: #fee2e2;
+  background: var(--color-danger-bg-error);
 }
 
 .addRow {
   display: flex;
   padding: 8px 12px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
 }
 
 .addBtn {
@@ -75,21 +75,21 @@
   gap: 6px;
   padding: 6px 14px;
   background: none;
-  border: 1.5px dashed #9ca3af;
-  border-radius: 6px;
-  color: #6b7280;
+  border: 1.5px dashed var(--color-text-disabled);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
 
 .addBtn:hover {
-  border-color: #2563eb;
-  color: #2563eb;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .calcCell {
-  color: #2563eb;
+  color: var(--color-primary);
   font-weight: 500;
   font-size: 0.875rem;
 }
@@ -97,6 +97,6 @@
 .emptyState {
   text-align: center;
   padding: 32px;
-  color: #9ca3af;
+  color: var(--color-text-disabled);
   font-size: 0.9rem;
 }

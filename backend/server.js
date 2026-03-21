@@ -7,10 +7,16 @@
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
+
+// ---------------------------------------------------------------------------
+// Security headers (Helmet)
+// ---------------------------------------------------------------------------
+app.use(helmet());
 const PORT = process.env.PORT || 3001;
 
 // ---------------------------------------------------------------------------

@@ -10,9 +10,9 @@
 }
 
 .dialog {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  background: var(--color-bg);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-dialog);
   width: 100%;
   max-width: 480px;
   display: flex;
@@ -26,14 +26,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .title {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--color-text);
 }
 
 .closeBtn {
@@ -41,15 +41,15 @@
   border: none;
   cursor: pointer;
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   transition: background 0.12s;
 }
 
 .closeBtn:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--color-bg-hover);
+  color: var(--color-text);
 }
 
 .body {
@@ -66,36 +66,36 @@
   flex-direction: column;
   gap: 8px;
   font-size: 0.9rem;
-  color: #374151;
+  color: var(--color-text-secondary);
 }
 
 .fileLabel code {
-  background: #f3f4f6;
+  background: var(--color-bg-hover);
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
 }
 
 .fileInput {
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
+  border: 2px dashed var(--color-border-input);
+  border-radius: var(--radius-lg);
   padding: 12px;
   cursor: pointer;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   transition: border-color 0.15s;
 }
 
 .fileInput:hover {
-  border-color: #9ca3af;
+  border-color: var(--color-border-muted);
 }
 
 .errorBox {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-lg);
   padding: 12px 16px;
-  color: #991b1b;
+  color: var(--color-danger-text-dark);
   font-size: 0.875rem;
 }
 
@@ -103,14 +103,14 @@
   margin: 6px 0 0;
   white-space: pre-wrap;
   font-size: 0.8rem;
-  color: #7f1d1d;
+  color: var(--color-danger-text-darker);
   font-family: monospace;
 }
 
 .preview {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-lg);
   padding: 16px;
 }
 
@@ -119,14 +119,14 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .projectName {
   margin: 0 0 12px;
   font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-text);
 }
 
 .statList {
@@ -145,20 +145,20 @@
 }
 
 .statLabel {
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .statValue {
   font-weight: 600;
-  color: #111827;
+  color: var(--color-text);
 }
 
 .warning {
   margin: 0;
   font-size: 0.8rem;
-  color: #92400e;
-  background: #fef3c7;
-  border-radius: 4px;
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border-radius: var(--radius-sm);
   padding: 6px 10px;
 }
 
@@ -167,23 +167,23 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px 20px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
 }
 
 .cancelBtn {
   padding: 8px 18px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.12s;
 }
 
 .cancelBtn:hover:not(:disabled) {
-  background: #f9fafb;
+  background: var(--color-bg-subtle);
 }
 
 .cancelBtn:disabled {
@@ -195,19 +195,19 @@
   padding: 8px 18px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #ffffff;
-  background: #2563eb;
+  color: var(--color-bg);
+  background: var(--color-primary);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .confirmBtn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 .confirmBtn:disabled {
-  background: #93c5fd;
+  background: var(--color-primary-disabled);
   cursor: not-allowed;
 }

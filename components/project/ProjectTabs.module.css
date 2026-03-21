@@ -7,7 +7,7 @@
 .tabList {
   display: flex;
   gap: 2px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--color-border-strong);
   overflow-x: auto;
   padding-bottom: 0;
 }
@@ -23,20 +23,20 @@
   margin-bottom: -2px;
   cursor: pointer;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   white-space: nowrap;
   transition: color 0.15s, border-color 0.15s;
-  border-radius: 6px 6px 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .tab:hover {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
 }
 
 .activeTab {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   font-weight: 600;
 }
 
