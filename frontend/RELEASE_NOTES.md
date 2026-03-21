@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.14.4
+# 🚀 Release Notes — CostoBot v0.14.5
 
 **Fecha:** 2026-03-21
 **Tipo:** patch
 
 ## Cambios en esta versión
 
-- 🐛 fix: COOP unsafe-none para Firebase Auth popup movil + modelo fallback google/gemma-3-27b-it:free
+- 🐛 fix: ampliar modelos fallback OpenRouter + keep-alive ping para backend Render
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
