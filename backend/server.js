@@ -26,8 +26,8 @@ app.use(cors({
     if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
     callback(new Error('Not allowed by CORS'));
   },
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'X-API-Key'],
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'X-API-Key', 'Authorization'],
 }));
 
 // ---------------------------------------------------------------------------
@@ -63,9 +63,11 @@ app.get('/health', (_req, res) => {
 // Routes
 // ---------------------------------------------------------------------------
 const versionRoutes = require('./routes/version.routes');
+const projectRoutes = require('./routes/project.routes');
 const { connectDB } = require('./db/connection');
 // versionWriteLimiter only on POST — GET uses the general limiter (100/15min)
 app.use('/api/version', versionRoutes);
+app.use('/api/projects', projectRoutes);
 
 // ---------------------------------------------------------------------------
 // 404 handler
