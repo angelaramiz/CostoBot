@@ -1,0 +1,49 @@
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rowUser {
+  flex-direction: row-reverse;
+}
+
+.rowAssistant {
+  flex-direction: row;
+}
+
+.avatar {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.bubble {
+  max-width: 78%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.bubbleUser {
+  background: #2563eb;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.bubbleAssistant {
+  background: #f3f4f6;
+  color: #111827;
+  border-bottom-left-radius: 4px;
+}
+
+.line {
+  margin: 0 0 4px;
+}
+
+.line:last-child {
+  margin-bottom: 0;
+}

@@ -7,6 +7,7 @@ import { useProjectStore } from '@/store/project.store';
 import { useAuthStore } from '@/store/auth.store';
 import ProjectTabs from '@/components/project/ProjectTabs';
 import AutoSaveIndicator from '@/components/shared/AutoSaveIndicator';
+import ChatPanel from '@/components/ia/ChatPanel';
 import styles from './ProjectPage.module.css';
 
 export default function ProjectPage() {
@@ -53,6 +54,7 @@ export default function ProjectPage() {
       </header>
 
       <ProjectTabs />
+      <ChatPanel projectId={id} />
     </main>
   );
 }
