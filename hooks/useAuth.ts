@@ -5,8 +5,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile,
@@ -22,24 +20,11 @@ const AUTH_ERRORS: Record<string, string> = {
   'auth/wrong-password': 'Contraseña incorrecta.',
   'auth/invalid-credential': 'Credenciales inválidas. Verifica tu correo y contraseña.',
   'auth/popup-closed-by-user': 'El inicio de sesión fue cancelado.',
-  'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Redirigiendo…',
+  'auth/popup-blocked':
+    'El navegador bloqueó la ventana emergente. Permite popups para este sitio e intenta de nuevo.',
+  'auth/cancelled-popup-request': 'Solicitud cancelada. Intenta de nuevo.',
   'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.',
 };
-
-/**
- * Detecta si el dispositivo es móvil/táctil.
- * En móvil, signInWithPopup falla porque el navegador bloquea popups y
- * los iframes cross-origin de Firebase quedan bloqueados por COOP.
- * La solución es signInWithRedirect — el usuario es llevado a Google
- * y vuelve al app donde onAuthStateChanged maneja el resultado.
- */
-function isMobileDevice(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return (
-    navigator.maxTouchPoints > 1 ||
-    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
-  );
-}
 
 function parseAuthError(code: string): string {
   return AUTH_ERRORS[code] ?? 'Error de autenticación. Intenta de nuevo.';
@@ -51,21 +36,6 @@ export function useAuth() {
 
   /** Suscribirse a cambios de sesión (llamar una sola vez en el layout raíz) */
   useEffect(() => {
-    let cancelled = false;
-
-    // Recuperar el resultado pendiente del redirect de Google (flujo móvil).
-    // getRedirectResult procesa el token de la URL y completa el sign-in.
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (!cancelled && result?.user) {
-          const idToken = await result.user.getIdToken();
-          setUser(result.user, idToken);
-        }
-      })
-      .catch(() => {
-        // Sin redirect pendiente — ignorar
-      });
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const idToken = await user.getIdToken();
@@ -74,11 +44,7 @@ export function useAuth() {
         clearUser();
       }
     });
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
+    return unsubscribe;
   }, [setUser, clearUser]);
 
   async function signIn(email: string, password: string): Promise<void> {
@@ -110,29 +76,32 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Siempre usa signInWithPopup — tanto en desktop como en móvil.
+   *
+   * ¿Por qué no signInWithRedirect en móvil?
+   * El flujo de redirect depende de cargar un iframe desde
+   * `yourapp.firebaseapp.com/__/auth/iframe` para transferir el token
+   * al regresar del proveedor. Chrome (política "Better Ads") bloquea
+   * ese iframe en sitios externos a Firebase Hosting, dejando al usuario
+   * atrapado en el login tras volver de Google.
+   *
+   * signInWithPopup usa postMessage entre la ventana popup y la app —
+   * no requiere el iframe de firebaseapp.com y funciona en Chrome/Brave/Kiwi
+   * siempre que el sitio permita popups (el usuario puede tener que habilitarlos
+   * manualmente la primera vez).
+   */
   async function signInWithGoogle(): Promise<void> {
     setLoading(true);
     try {
-      if (isMobileDevice()) {
-        // En móvil, signInWithPopup es bloqueado por el navegador (COOP + anti-popup policies).
-        // signInWithRedirect lleva al usuario a Google y vuelve al app.
-        // onAuthStateChanged detecta la sesión al retornar.
-        await signInWithRedirect(auth, googleProvider);
-        return; // La página navega fuera — el estado de carga queda hasta el retorno
-      }
       const credential = await signInWithPopup(auth, googleProvider);
       const idToken = await credential.user.getIdToken();
       setUser(credential.user, idToken);
-      setLoading(false);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
-      // Si el popup fue bloqueado en desktop, intentar redirect como fallback
-      if (code === 'auth/popup-blocked') {
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      }
-      setLoading(false);
       throw new Error(parseAuthError(code));
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -143,3 +112,4 @@ export function useAuth() {
 
   return { uid, email, displayName, isLoading, token, signIn, signUp, signInWithGoogle, signOut };
 }
+
