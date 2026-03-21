@@ -13,6 +13,12 @@
   gap: 8px;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;

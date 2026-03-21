@@ -48,6 +48,8 @@ interface ProjectActions {
     newValue: number | string,
     token: string
   ) => void;
+  /** Carga un proyecto importado desde JSON (reemplaza el proyecto actual) */
+  loadFromImport: (project: BusinessProject, token: string) => Promise<void>;
   /** Uso interno: aplica mutación estructural y recalcula todo */
   _applyStructural: (
     mutate: (p: BusinessProject) => BusinessProject,
@@ -203,7 +205,26 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     });
   },
 
-  // ── Insumos ───────────────────────────────────────────────────────────────
+  // ── loadFromImport ────────────────────────────────────────────────────────
+  loadFromImport: async (project, token) => {
+    const { _debounceTimer } = get();
+    if (_debounceTimer) clearTimeout(_debounceTimer);
+
+    const recalculated = recalculateAllLayers(project);
+    set({
+      currentProject: recalculated,
+      isDirty: true,
+      lastSyncedAt: null,
+      syncError: null,
+      _dependencyGraph: buildDependencyGraph(recalculated),
+      _debounceTimer: null,
+    });
+
+    // Sincronizar inmediatamente con el backend (PATCH del proyecto actual)
+    await get().saveProject(token);
+  },
+
+
   addInsumo: (item, token) =>
     get()._applyStructural(
       (p) => ({ ...p, layers: { ...p.layers, layer1: [...p.layers.layer1, item] } }),

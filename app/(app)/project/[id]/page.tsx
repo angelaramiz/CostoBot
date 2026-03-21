@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/auth.store';
 import ProjectTabs from '@/components/project/ProjectTabs';
 import AutoSaveIndicator from '@/components/shared/AutoSaveIndicator';
 import ChatPanel from '@/components/ia/ChatPanel';
+import ExportMenu from '@/components/export/ExportMenu';
 import styles from './ProjectPage.module.css';
 
 export default function ProjectPage() {
@@ -50,7 +51,10 @@ export default function ProjectPage() {
           <span className={styles.separator}>/</span>
           <h1 className={styles.projectName}>{project.name}</h1>
         </div>
-        <AutoSaveIndicator />
+        <div className={styles.headerActions}>
+          <ExportMenu />
+          <AutoSaveIndicator />
+        </div>
       </header>
 
       <ProjectTabs />
