@@ -147,3 +147,31 @@ body {
   background: var(--color-bg-subtle);
   -webkit-font-smoothing: antialiased;
 }
+
+/* ─── Mobile Baseline ────────────────────────────────────────────────────── */
+
+/* Todos los elementos interactivos tienen tap target mínimo de 44px */
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  a,
+  input[type='checkbox'],
+  input[type='radio'],
+  select {
+    min-height: 44px;
+  }
+}
+
+/* Evitar zoom al enfocar inputs en iOS (font-size < 16px dispara zoom) */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  /* Reducir padding lateral en contenedores para aprovechar el espacio */
+  .dashboardWrapper {
+    padding-inline: 12px;
+  }
+}

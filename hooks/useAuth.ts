@@ -5,6 +5,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile,
@@ -20,8 +21,24 @@ const AUTH_ERRORS: Record<string, string> = {
   'auth/wrong-password': 'Contraseña incorrecta.',
   'auth/invalid-credential': 'Credenciales inválidas. Verifica tu correo y contraseña.',
   'auth/popup-closed-by-user': 'El inicio de sesión fue cancelado.',
+  'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Redirigiendo…',
   'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.',
 };
+
+/**
+ * Detecta si el dispositivo es móvil/táctil.
+ * En móvil, signInWithPopup falla porque el navegador bloquea popups y
+ * los iframes cross-origin de Firebase quedan bloqueados por COOP.
+ * La solución es signInWithRedirect — el usuario es llevado a Google
+ * y vuelve al app donde onAuthStateChanged maneja el resultado.
+ */
+function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return (
+    navigator.maxTouchPoints > 1 ||
+    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
+  );
+}
 
 function parseAuthError(code: string): string {
   return AUTH_ERRORS[code] ?? 'Error de autenticación. Intenta de nuevo.';
@@ -74,16 +91,28 @@ export function useAuth() {
   }
 
   async function signInWithGoogle(): Promise<void> {
+    setLoading(true);
     try {
-      setLoading(true);
+      if (isMobileDevice()) {
+        // En móvil, signInWithPopup es bloqueado por el navegador (COOP + anti-popup policies).
+        // signInWithRedirect lleva al usuario a Google y vuelve al app.
+        // onAuthStateChanged detecta la sesión al retornar.
+        await signInWithRedirect(auth, googleProvider);
+        return; // La página navega fuera — el estado de carga queda hasta el retorno
+      }
       const credential = await signInWithPopup(auth, googleProvider);
       const idToken = await credential.user.getIdToken();
       setUser(credential.user, idToken);
+      setLoading(false);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
-      throw new Error(parseAuthError(code));
-    } finally {
+      // Si el popup fue bloqueado en desktop, intentar redirect como fallback
+      if (code === 'auth/popup-blocked') {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
       setLoading(false);
+      throw new Error(parseAuthError(code));
     }
   }
 

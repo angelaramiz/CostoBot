@@ -5,12 +5,25 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-bg);
+  /* Indicador de scroll horizontal en móvil */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sombra sutil al costado derecho para indicar que hay más contenido */
+@media (max-width: 640px) {
+  .sheetWrapper {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+  /* Evita que la tabla se comprima demasiado — el wrapper hace scroll */
+  min-width: 480px;
 }
 
 .table thead tr {
@@ -35,6 +48,14 @@
   vertical-align: middle;
 }
 
+/* En móvil, aumentar padding para mejorar área de toque */
+@media (max-width: 640px) {
+  .table th,
+  .table td {
+    padding: 10px 10px;
+  }
+}
+
 .table tbody tr:hover {
   background: var(--color-bg-subtle);
 }
@@ -54,13 +75,21 @@
   cursor: pointer;
   color: var(--color-danger);
   font-size: 1rem;
-  padding: 2px 6px;
+  /* Touch target mínimo 44×44px recomendado */
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
   transition: opacity 0.15s, background 0.15s;
 }
 
 .deleteBtn:hover {
   background: var(--color-danger-bg-error);
+}
+
+/* En dispositivos táctiles no existe "hover" — el botón siempre debe ser visible */
+@media (pointer: coarse) {
+  .deleteBtn {
+    opacity: 1;
+  }
 }
 
 .addRow {
@@ -81,6 +110,8 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
+  /* Target táctil suficiente */
+  min-height: 44px;
 }
 
 .addBtn:hover {

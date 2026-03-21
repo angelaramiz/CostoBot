@@ -222,10 +222,15 @@
     left: 8px;
     width: auto;
     bottom: 80px;
+    /* En móvil usar la mayor parte de la pantalla disponible */
+    max-height: calc(100dvh - 120px);
   }
 
   .floatBtn {
     right: 16px;
     bottom: 16px;
+    /* Target táctil explícito */
+    width: 56px;
+    height: 56px;
   }
 }
