@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.14.0
+# 🚀 Release Notes — CostoBot v0.14.1
 
 **Fecha:** 2026-03-21
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: modelos gratuitos OpenRouter con fallback automatico
+- 🐛 fix: eliminar return JSX duplicado fuera de la funcion en GoogleSignInButton
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
