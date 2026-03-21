@@ -22,10 +22,10 @@ const nextConfig = {
     ];
   },
 
-  // Security headers — COOP must be same-origin-allow-popups so Firebase Auth
-  // popup can use window.closed to detect when the sign-in window closes.
-  // same-origin-allow-popups retains cross-origin popup references that opt
-  // out of COOP (unsafe-none), which covers the Firebase/Google auth domain.
+  // COOP: unsafe-none — requerido para Firebase Auth signInWithPopup en móvil.
+  // Google (accounts.google.com) usa COOP: same-origin, lo que rompe window.closed
+  // con same-origin-allow-popups. unsafe-none permite la comunicación postMessage
+  // del popup sin restricciones de ventana cruzada.
   async headers() {
     return [
       {
@@ -33,7 +33,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin-allow-popups',
+            value: 'unsafe-none',
           },
         ],
       },
