@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import AuthGuard from '@/components/auth/AuthGuard';
+import VersionBadge from '@/components/ui/VersionBadge';
 
 /**
  * AppLayout — layout para rutas protegidas.
@@ -20,9 +21,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
           minHeight: '100vh',
           background: '#f9fafb',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        {children}
+        <div style={{ flex: 1 }}>{children}</div>
+        <footer
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            padding: '6px 16px',
+            borderTop: '1px solid var(--color-border)',
+            background: 'var(--color-surface)',
+          }}
+        >
+          <VersionBadge />
+        </footer>
       </div>
     </AuthGuard>
   );
