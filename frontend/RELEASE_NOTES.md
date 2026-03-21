@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.12.0
+# 🚀 Release Notes — CostoBot v0.13.0
 
 **Fecha:** 2026-03-21
 **Tipo:** minor
 
 ## Cambios en esta versión
 
-- ✨ feat: agregar logo SVG, favicon y iconos SVG — reemplazar emojis
+- ✨ feat: agente guía dashboard, onboarding nuevo usuario y selector de tipo de producto
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
