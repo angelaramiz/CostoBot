@@ -1,8 +1,9 @@
+import { redirect } from 'next/navigation';
+
+/**
+ * Ruta raíz: redirige siempre al dashboard.
+ * AuthGuard en el layout (app) redirigirá a /login si no hay sesión.
+ */
 export default function Home() {
-  return (
-    <main style={{ fontFamily: 'sans-serif', padding: '2rem' }}>
-      <h1>CostoBot</h1>
-      <p>Calculadora de costos con IA conversacional — en construcción.</p>
-    </main>
-  );
+  redirect('/dashboard');
 }
