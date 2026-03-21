@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { auth } from '@/lib/firebase';
 import styles from './AuthForm.module.css';
 
 export default function GoogleSignInButton() {
@@ -19,13 +18,6 @@ export default function GoogleSignInButton() {
       await signInWithGoogle();
       router.push('/dashboard');
     } catch (err: unknown) {
-      // En Chrome móvil, COOP de accounts.google.com puede romper window.closed
-      // y Firebase lanza cancelled aunque el login sí completó.
-      // Si hay currentUser, el auth funcionó — navegar igualmente.
-      if (auth.currentUser) {
-        router.push('/dashboard');
-        return;
-      }
       setError(err instanceof Error ? err.message : 'Error con Google');
     } finally {
       setLoading(false);

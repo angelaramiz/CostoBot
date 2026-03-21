@@ -99,6 +99,29 @@ export function useAuth() {
       setUser(credential.user, idToken);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
+
+      // En Chrome móvil, COOP de accounts.google.com lanza window.closed errors
+      // y Firebase arroja cancelled/closed ANTES de procesar el token del popup.
+      // Esperamos hasta 3s a que onAuthStateChanged dispare con el usuario real.
+      if (
+        code === 'auth/cancelled-popup-request' ||
+        code === 'auth/popup-closed-by-user'
+      ) {
+        const user = await new Promise<import('firebase/auth').User | null>((resolve) => {
+          const unsub = onAuthStateChanged(auth, (u) => {
+            unsub();
+            resolve(u);
+          });
+          // Timeout de seguridad: si no llega usuario en 3s, el error era real
+          setTimeout(() => { unsub(); resolve(null); }, 3000);
+        });
+        if (user) {
+          const idToken = await user.getIdToken();
+          setUser(user, idToken);
+          return; // login exitoso — el componente navegará a /dashboard
+        }
+      }
+
       throw new Error(parseAuthError(code));
     } finally {
       setLoading(false);
