@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 
 export interface ChatMessage {
@@ -8,13 +8,31 @@ export interface ChatMessage {
   content: string;
 }
 
+export type ChatMode = 'project' | 'dashboard' | 'onboarding';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
-export function useIAChat(projectId?: string) {
+interface UseIAChatOptions {
+  projectId?: string;
+  mode?: ChatMode;
+  /** Mensaje inicial que el asistente envía al abrirse (sin llamada a la IA) */
+  welcomeMessage?: string;
+}
+
+export function useIAChat({ projectId, mode = 'project', welcomeMessage }: UseIAChatOptions = {}) {
   const token = useAuthStore((s) => s.token) ?? '';
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    welcomeMessage ? [{ role: 'assistant', content: welcomeMessage }] : []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Si welcomeMessage cambia (p.ej. después de cargar el nombre del usuario), resetear
+  useEffect(() => {
+    if (welcomeMessage) {
+      setMessages([{ role: 'assistant', content: welcomeMessage }]);
+    }
+  }, [welcomeMessage]);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -33,7 +51,7 @@ export function useIAChat(projectId?: string) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ messages: updated, projectId }),
+          body: JSON.stringify({ messages: updated, projectId, mode }),
         });
 
         const body = await res.json();
@@ -52,13 +70,17 @@ export function useIAChat(projectId?: string) {
         setIsLoading(false);
       }
     },
-    [messages, isLoading, token, projectId]
+    [messages, isLoading, token, projectId, mode]
   );
 
   const clearMessages = useCallback(() => {
-    setMessages([]);
+    if (welcomeMessage) {
+      setMessages([{ role: 'assistant', content: welcomeMessage }]);
+    } else {
+      setMessages([]);
+    }
     setError(null);
-  }, []);
+  }, [welcomeMessage]);
 
   return { messages, isLoading, error, sendMessage, clearMessages };
 }

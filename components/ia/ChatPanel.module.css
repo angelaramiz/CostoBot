@@ -106,6 +106,35 @@
   margin: 0 0 8px;
 }
 
+/* Guía de capas en modo dashboard */
+.layerGuide {
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-size: 0.8rem;
+}
+
+.layerGuideTitle {
+  margin: 0 0 6px !important;
+  font-weight: 600;
+  color: var(--color-primary-text) !important;
+}
+
+.layerList {
+  margin: 0;
+  padding: 0 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--color-text);
+}
+
+.layerList li {
+  line-height: 1.4;
+}
+
 .suggestions {
   font-size: 0.8rem;
   color: var(--color-text-muted) !important;

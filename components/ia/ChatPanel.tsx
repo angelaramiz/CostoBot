@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useIAChat } from '@/hooks/useIAChat';
+import type { ChatMode } from '@/hooks/useIAChat';
 import ChatMessageBubble from './ChatMessage';
 import ChatInput from './ChatInput';
 import ProjectContextSummary from './ProjectContextSummary';
@@ -10,19 +11,42 @@ import styles from './ChatPanel.module.css';
 
 interface ChatPanelProps {
   projectId?: string;
+  /** 'project' = análisis de costos | 'dashboard' = guía general | 'onboarding' = bienvenida */
+  mode?: ChatMode;
+  /** Si true, el panel se abre automáticamente al montar */
+  autoOpen?: boolean;
+  welcomeMessage?: string;
 }
 
-export default function ChatPanel({ projectId }: ChatPanelProps) {
-  const [open, setOpen] = useState(false);
-  const { messages, isLoading, error, sendMessage, clearMessages } = useIAChat(projectId);
+export default function ChatPanel({
+  projectId,
+  mode = 'project',
+  autoOpen = false,
+  welcomeMessage,
+}: ChatPanelProps) {
+  const [open, setOpen] = useState(autoOpen);
+  const { messages, isLoading, error, sendMessage, clearMessages } = useIAChat({
+    projectId,
+    mode,
+    welcomeMessage,
+  });
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Scroll al último mensaje
   useEffect(() => {
-    if (open) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
+
+  // Si autoOpen cambia externamente (ej. tras onboarding), sincronizar
+  useEffect(() => {
+    if (autoOpen) setOpen(true);
+  }, [autoOpen]);
+
+  const isDashboard = mode === 'dashboard' || mode === 'onboarding';
+  const title = isDashboard ? 'Guía CostoBot' : 'Asistente CostoBot';
+  const suggestions = isDashboard ? DASHBOARD_SUGGESTIONS : PROJECT_SUGGESTIONS;
+  const emptyText = isDashboard
+    ? '¡Hola! Soy tu guía de CostoBot. Puedo ayudarte a entender las capas, crear tu primer proyecto o resolver dudas de costos.'
+    : '¡Hola! Puedo ayudarte a analizar los costos de tu proyecto.';
 
   return (
     <>
@@ -41,14 +65,27 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
       <div className={`${styles.panel} ${open ? styles.panelOpen : ''}`}>
         {/* Header */}
         <div className={styles.header}>
-          <span className={styles.headerTitle}><BotIcon size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />Asistente CostoBot</span>
+          <span className={styles.headerTitle}>
+            <BotIcon size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+            {title}
+          </span>
           <div className={styles.headerActions}>
-            {messages.length > 0 && (
-              <button className={styles.clearBtn} onClick={clearMessages} title="Limpiar chat" aria-label="Limpiar conversación">
+            {messages.length > (welcomeMessage ? 1 : 0) && (
+              <button
+                className={styles.clearBtn}
+                onClick={clearMessages}
+                title="Limpiar chat"
+                aria-label="Limpiar conversación"
+              >
                 <TrashIcon size={15} />
               </button>
             )}
-            <button className={styles.closeBtn} onClick={() => setOpen(false)} title="Cerrar" aria-label="Cerrar asistente">
+            <button
+              className={styles.closeBtn}
+              onClick={() => setOpen(false)}
+              title="Cerrar"
+              aria-label="Cerrar asistente"
+            >
               <CloseIcon size={15} />
             </button>
           </div>
@@ -61,14 +98,27 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
           aria-live="polite"
           aria-label="Conversación con el asistente"
         >
-          {messages.length === 0 && <ProjectContextSummary />}
+          {/* Contexto del proyecto solo en modo project */}
+          {mode === 'project' && messages.length === 0 && <ProjectContextSummary />}
 
+          {/* Sugerencias iniciales */}
           {messages.length === 0 && (
             <div className={styles.emptyChat}>
-              <p>¡Hola! Puedo ayudarte a analizar los costos de tu proyecto.</p>
+              <p>{emptyText}</p>
+              {isDashboard && (
+                <div className={styles.layerGuide}>
+                  <p className={styles.layerGuideTitle}>📋 Las 4 capas de CostoBot:</p>
+                  <ul className={styles.layerList}>
+                    <li><strong>Capa 1 — Insumos:</strong> materias primas y materiales</li>
+                    <li><strong>Capa 2 — Procesos:</strong> pasos de producción y mano de obra</li>
+                    <li><strong>Capa 3 — Productos:</strong> costo total calculado automáticamente</li>
+                    <li><strong>Capa 4 — Precios:</strong> precio de venta y margen de ganancia</li>
+                  </ul>
+                </div>
+              )}
               <p className={styles.suggestions}>Prueba preguntando:</p>
               <ul className={styles.suggestionList}>
-                {SUGGESTIONS.map((s) => (
+                {suggestions.map((s) => (
                   <li key={s}>
                     <button className={styles.suggestionBtn} onClick={() => sendMessage(s)}>
                       {s}
@@ -97,14 +147,31 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
         </div>
 
         {/* Input */}
-        <ChatInput onSend={sendMessage} disabled={isLoading} />
+        <ChatInput
+          onSend={sendMessage}
+          disabled={isLoading}
+          placeholder={
+            isDashboard
+              ? 'Pregunta sobre costos, capas o tu negocio…'
+              : 'Pregunta sobre tu proyecto… (Enter para enviar)'
+          }
+        />
       </div>
     </>
   );
 }
 
-const SUGGESTIONS = [
+const PROJECT_SUGGESTIONS = [
   '¿Cuáles son mis insumos más caros?',
   '¿Es rentable mi margen actual?',
   '¿Cómo puedo reducir costos?',
 ];
+
+const DASHBOARD_SUGGESTIONS = [
+  '¿Para qué sirve cada capa?',
+  'Tengo una panadería, ¿cómo empiezo?',
+  'Vendo ropa al por mayor, ¿qué tipo de proyecto uso?',
+  '¿Cómo calculo mi punto de equilibrio?',
+  '¿Qué diferencia hay entre producto fabricado y reventa?',
+];
+

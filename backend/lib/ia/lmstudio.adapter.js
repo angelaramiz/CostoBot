@@ -15,8 +15,8 @@ class LMStudioAdapter extends IIAAdapter {
    * @param {import('./ia.adapter').ProjectContext} context
    * @returns {Promise<string>}
    */
-  async chat(messages, context) {
-    const systemPrompt = buildSystemPrompt(context);
+  async chat(messages, context, mode = 'project') {
+    const systemPrompt = buildSystemPrompt(context, mode);
 
     const payload = {
       model: 'local-model', // LM Studio ignora este campo, usa el modelo cargado

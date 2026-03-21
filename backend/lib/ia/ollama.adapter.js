@@ -17,8 +17,8 @@ class OllamaAdapter extends IIAAdapter {
    * @param {import('./ia.adapter').ProjectContext} context
    * @returns {Promise<string>}
    */
-  async chat(messages, context) {
-    const systemPrompt = buildSystemPrompt(context);
+  async chat(messages, context, mode = 'project') {
+    const systemPrompt = buildSystemPrompt(context, mode);
 
     // Ollama usa el formato de chat /api/chat (compatible con mensajes)
     const payload = {

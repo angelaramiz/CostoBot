@@ -45,11 +45,17 @@ router.use(iaLimiter);
 
 // ── POST /api/ia/chat ───────────────────────────────────────────────────────
 router.post('/chat', async (req, res) => {
-  const { messages, projectId } = req.body;
+  const { messages, projectId, mode = 'project' } = req.body;
 
-  // Validación básica de entrada
-  if (!projectId || typeof projectId !== 'string') {
-    return res.status(400).json({ error: 'projectId requerido' });
+  // Validar modo
+  const validModes = ['project', 'dashboard', 'onboarding'];
+  const chatMode = validModes.includes(mode) ? mode : 'project';
+
+  // En modo dashboard/onboarding no se requiere projectId
+  if (chatMode === 'project') {
+    if (!projectId || typeof projectId !== 'string') {
+      return res.status(400).json({ error: 'projectId requerido en modo project' });
+    }
   }
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages[] requerido' });
@@ -69,22 +75,25 @@ router.post('/chat', async (req, res) => {
   }
 
   try {
-    // Cargar proyecto — ownership check incluido
-    const project = await BusinessProject.findOne({
-      _id: projectId,
-      ownerId: req.uid,
-    }).lean();
+    let context = null;
 
-    if (!project) {
-      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    if (chatMode === 'project' && projectId) {
+      // Cargar proyecto — ownership check incluido
+      const project = await BusinessProject.findOne({
+        _id: projectId,
+        ownerId: req.uid,
+      }).lean();
+
+      if (!project) {
+        return res.status(404).json({ error: 'Proyecto no encontrado' });
+      }
+
+      context = buildProjectContext(project);
     }
 
-    // Generar contexto del proyecto para la IA
-    const context = buildProjectContext(project);
-
-    // Llamar al adapter
+    // Llamar al adapter con contexto y modo
     const adapter = getIAAdapter();
-    const reply = await adapter.chat(validMessages.slice(-10), context);
+    const reply = await adapter.chat(validMessages.slice(-10), context, chatMode);
 
     // Validar respuesta
     if (!reply || typeof reply !== 'string' || reply.trim().length === 0) {

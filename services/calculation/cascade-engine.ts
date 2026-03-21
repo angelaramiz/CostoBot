@@ -22,9 +22,13 @@ function recalculateProceso(proceso: Proceso, insumos: Insumo[]): Proceso {
 
 /**
  * Recalcula el costoUnitario de un producto en base a los procesos activos del proyecto.
- * costoUnitario = Σ proceso.totalCost
+ * - `fabricado` (default): costoUnitario = Σ proceso.totalCost
+ * - `retail` / `servicio`:  costoUnitario = costoCompra (fijado manualmente)
  */
 function recalculateProducto(producto: Producto, procesos: Proceso[]): Producto {
+  if (producto.productType === 'retail' || producto.productType === 'servicio') {
+    return { ...producto, costoUnitario: producto.costoCompra ?? 0 };
+  }
   const procesoMap = new Map(procesos.map((p) => [p.id, p]));
   const costoUnitario = producto.procesoIds.reduce((acc, id) => {
     const proceso = procesoMap.get(id);

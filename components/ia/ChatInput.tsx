@@ -6,9 +6,10 @@ import styles from './ChatInput.module.css';
 interface ChatInputProps {
   onSend: (content: string) => void;
   disabled?: boolean;
+  placeholder?: string;
 }
 
-export default function ChatInput({ onSend, disabled = false }: ChatInputProps) {
+export default function ChatInput({ onSend, disabled = false, placeholder }: ChatInputProps) {
   const [value, setValue] = useState('');
 
   function handleSubmit(e: React.FormEvent) {
@@ -33,7 +34,7 @@ export default function ChatInput({ onSend, disabled = false }: ChatInputProps) 
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Pregunta sobre tu proyecto… (Enter para enviar)"
+        placeholder={placeholder ?? 'Pregunta sobre tu proyecto… (Enter para enviar)'}
         aria-label="Mensaje al asistente"
         disabled={disabled}
         rows={2}
