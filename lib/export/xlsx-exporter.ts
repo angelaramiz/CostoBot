@@ -35,7 +35,7 @@ function applyFormat(
 
 /** Genera la hoja de Insumos (Layer 1). */
 function buildInsumoSheet(project: BusinessProject): XLSX.WorkSheet {
-  const { layer1, layer2 } = project.layers;
+  const { layer1 } = project.layers;
 
   const headers = ['Nombre', 'Unidad', 'Cantidad', 'Costo/Unidad ($)', 'Subtotal ($)'];
 

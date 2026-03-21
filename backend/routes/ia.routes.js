@@ -43,19 +43,6 @@ router.get('/status', async (_req, res) => {
 router.use(verifyFirebaseToken);
 router.use(iaLimiter);
 
-// ── GET /api/ia/status — no requiere auth, verifica si el provider está activo
-// (registrado ANTES del middleware para que sea público)
-router.get('/status', async (_req, res) => {
-  try {
-    const adapter = getIAAdapter();
-    const available = await adapter.isAvailable();
-    const provider = process.env.IA_PROVIDER || 'openrouter';
-    return res.json({ provider, available });
-  } catch {
-    return res.json({ provider: process.env.IA_PROVIDER || 'openrouter', available: false });
-  }
-});
-
 // ── POST /api/ia/chat ───────────────────────────────────────────────────────
 router.post('/chat', async (req, res) => {
   const { messages, projectId } = req.body;
@@ -114,8 +101,7 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// ── GET /api/ia/status — verifica si el provider está disponible ────────────
-// (ya registrado antes del middleware como ruta pública)
+
 
 // ---------------------------------------------------------------------------
 // Helpers
