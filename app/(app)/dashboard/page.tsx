@@ -76,13 +76,13 @@ export default function DashboardPage() {
         <div className={styles.loadingSpinner}>Cargando proyectos…</div>
       ) : (
         <div className={styles.grid}>
-          {projects.length === 0 ? (
+          {(projects ?? []).length === 0 ? (
             <div className={styles.emptyState}>
               <p>Aún no tienes proyectos.</p>
               <small>Crea uno con el botón de arriba.</small>
             </div>
           ) : (
-            projects.map((p) => <ProjectCard key={p.id} project={p} />)
+            (projects ?? []).map((p) => <ProjectCard key={p.id} project={p} />)
           )}
         </div>
       )}
