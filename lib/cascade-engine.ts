@@ -152,3 +152,29 @@ export function propagateChange(
   updatedProject.updatedAt = new Date();
   return updatedProject;
 }
+
+/**
+ * Recalcula todas las capas del proyecto desde cero.
+ * Usar tras cambios estructurales (agregar / eliminar ítems).
+ */
+export function recalculateAllLayers(project: BusinessProject): BusinessProject {
+  const updated = structuredClone(project) as BusinessProject;
+
+  // Recalcular Layer2 totalCost
+  updated.layers.layer2 = updated.layers.layer2.map((proceso) =>
+    recalculateProceso(proceso, updated.layers.layer1)
+  );
+
+  // Recalcular Layer3 costoUnitario
+  updated.layers.layer3 = updated.layers.layer3.map((producto) =>
+    recalculateProducto(producto, updated.layers.layer2)
+  );
+
+  // Recalcular Layer4 precioVenta + roi
+  updated.layers.layer4 = updated.layers.layer4.map((precio) =>
+    recalculatePrecio(precio, updated.layers.layer3)
+  );
+
+  updated.updatedAt = new Date();
+  return updated;
+}

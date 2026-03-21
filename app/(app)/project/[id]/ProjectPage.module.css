@@ -1,0 +1,80 @@
+.projectWrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.projectHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backLink {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.backLink:hover {
+  color: #2563eb;
+}
+
+.separator {
+  color: #d1d5db;
+  font-size: 0.875rem;
+}
+
+.projectName {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.loadingState {
+  text-align: center;
+  padding: 80px 16px;
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+.errorState {
+  text-align: center;
+  padding: 80px 16px;
+  color: #dc2626;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorState p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.errorState small {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.errorState a {
+  color: #2563eb;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.errorState a:hover {
+  text-decoration: underline;
+}
