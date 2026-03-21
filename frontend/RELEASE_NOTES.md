@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.13.0
+# 🚀 Release Notes — CostoBot v0.13.1
 
 **Fecha:** 2026-03-21
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: agente guía dashboard, onboarding nuevo usuario y selector de tipo de producto
+- 🐛 fix: compatibilidad movil — signInWithRedirect en movil, viewport meta, touch targets en tablas
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
