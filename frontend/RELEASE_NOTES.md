@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.4.3
+# 🚀 Release Notes — CostoBot v0.5.0
 
-**Fecha:** 2026-03-20
-**Tipo:** patch
+**Fecha:** 2026-03-21
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: use VERSION_RECORD_URL for versioning hook DB record
+- ✨ feat: MVP-01 tipos TypeScript, Zod schemas y cascade engine con tests
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
