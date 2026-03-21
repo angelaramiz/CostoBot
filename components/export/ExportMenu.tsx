@@ -5,6 +5,7 @@ import { useProjectStore } from '@/store/project.store';
 import { exportToXLSX } from '@/lib/export/xlsx-exporter';
 import { exportToJSON } from '@/lib/export/json-exporter';
 import ImportDialog from './ImportDialog';
+import { ExcelIcon, JsonIcon, ImportIcon } from '@/components/ui/icons';
 import styles from './ExportMenu.module.css';
 
 export default function ExportMenu() {
@@ -64,7 +65,7 @@ export default function ExportMenu() {
               disabled={!project}
               role="menuitem"
             >
-              📊 Exportar XLSX
+              <ExcelIcon size={15} /> Exportar XLSX
             </button>
             <button
               className={styles.item}
@@ -72,7 +73,7 @@ export default function ExportMenu() {
               disabled={!project}
               role="menuitem"
             >
-              📄 Exportar JSON
+              <JsonIcon size={15} /> Exportar JSON
             </button>
             <div className={styles.divider} />
             <button
@@ -80,7 +81,7 @@ export default function ExportMenu() {
               onClick={handleImportJSON}
               role="menuitem"
             >
-              📥 Importar JSON
+              <ImportIcon size={15} /> Importar JSON
             </button>
           </div>
         )}

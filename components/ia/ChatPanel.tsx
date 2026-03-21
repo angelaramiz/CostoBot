@@ -5,6 +5,7 @@ import { useIAChat } from '@/hooks/useIAChat';
 import ChatMessageBubble from './ChatMessage';
 import ChatInput from './ChatInput';
 import ProjectContextSummary from './ProjectContextSummary';
+import { BotIcon, CloseIcon, TrashIcon } from '@/components/ui/icons';
 import styles from './ChatPanel.module.css';
 
 interface ChatPanelProps {
@@ -33,22 +34,22 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
         aria-label={open ? 'Cerrar asistente IA' : 'Abrir asistente IA'}
         aria-expanded={open}
       >
-        {open ? '✕' : '🤖'}
+        {open ? <CloseIcon size={18} /> : <BotIcon size={22} />}
       </button>
 
       {/* Panel de chat */}
       <div className={`${styles.panel} ${open ? styles.panelOpen : ''}`}>
         {/* Header */}
         <div className={styles.header}>
-          <span className={styles.headerTitle}>🤖 Asistente CostoBot</span>
+          <span className={styles.headerTitle}><BotIcon size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} />Asistente CostoBot</span>
           <div className={styles.headerActions}>
             {messages.length > 0 && (
               <button className={styles.clearBtn} onClick={clearMessages} title="Limpiar chat" aria-label="Limpiar conversación">
-                🗑
+                <TrashIcon size={15} />
               </button>
             )}
             <button className={styles.closeBtn} onClick={() => setOpen(false)} title="Cerrar" aria-label="Cerrar asistente">
-              ✕
+              <CloseIcon size={15} />
             </button>
           </div>
         </div>

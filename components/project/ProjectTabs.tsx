@@ -5,16 +5,18 @@ import Layer1InsumoSheet from '@/components/sheets/Layer1InsumoSheet';
 import Layer2ProcesoSheet from '@/components/sheets/Layer2ProcesoSheet';
 import Layer3ProductoSheet from '@/components/sheets/Layer3ProductoSheet';
 import Layer4PrecioSheet from '@/components/sheets/Layer4PrecioSheet';
+import { InsumoIcon, GearIcon, BoxIcon, MoneyIcon } from '@/components/ui/icons';
+import type { ReactNode } from 'react';
 import styles from './ProjectTabs.module.css';
 
-const TABS = [
-  { id: 'layer1', label: 'Capa 1 — Insumos', icon: '🌿' },
-  { id: 'layer2', label: 'Capa 2 — Procesos', icon: '⚙️' },
-  { id: 'layer3', label: 'Capa 3 — Productos', icon: '📦' },
-  { id: 'layer4', label: 'Capa 4 — Precios', icon: '💰' },
-] as const;
+const TABS: { id: 'layer1' | 'layer2' | 'layer3' | 'layer4'; label: string; icon: ReactNode }[] = [
+  { id: 'layer1', label: 'Capa 1 — Insumos', icon: <InsumoIcon size={16} /> },
+  { id: 'layer2', label: 'Capa 2 — Procesos', icon: <GearIcon size={16} /> },
+  { id: 'layer3', label: 'Capa 3 — Productos', icon: <BoxIcon size={16} /> },
+  { id: 'layer4', label: 'Capa 4 — Precios', icon: <MoneyIcon size={16} /> },
+];
 
-type TabId = (typeof TABS)[number]['id'];
+type TabId = 'layer1' | 'layer2' | 'layer3' | 'layer4';
 
 export default function ProjectTabs() {
   const [active, setActive] = useState<TabId>('layer1');

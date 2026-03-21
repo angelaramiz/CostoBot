@@ -29,13 +29,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <footer
           style={{
             display: 'flex',
-            justifyContent: 'flex-end',
+            justifyContent: 'space-between',
             alignItems: 'center',
             padding: '6px 16px',
             borderTop: '1px solid var(--color-border)',
             background: 'var(--color-surface)',
           }}
         >
+          <img src="/logo.svg" alt="CostoBot" height={24} style={{ display: 'block' }} />
           <VersionBadge />
         </footer>
       </div>
