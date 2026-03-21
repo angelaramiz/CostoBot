@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.13.3
+# 🚀 Release Notes — CostoBot v0.14.0
 
 **Fecha:** 2026-03-21
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: eliminar signInWithRedirect — usar solo signInWithPopup para evitar bloqueo de iframe firebaseapp.com en Chrome móvil
+- ✨ feat: modelos gratuitos OpenRouter con fallback automatico
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
