@@ -11,7 +11,6 @@
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-
     "version:patch": "node frontend/pre-bump-validation.js && node frontend/bump-version.js patch",
     "version:minor": "node frontend/pre-bump-validation.js && node frontend/bump-version.js minor",
     "version:major": "node frontend/pre-bump-validation.js && node frontend/bump-version.js major",
@@ -20,38 +19,36 @@
     "version:remove-hooks": "node frontend/setup-hooks.js --remove",
     "version:audit": "node frontend/pre-bump-validation.js",
     "version:check": "node -e \"const {checkVersion}=require('./frontend/version-checker');checkVersion()\"",
-
     "context:audit": "node .claude/scripts/context-audit.js",
     "context:update": "node .claude/scripts/context-update.js",
     "context:adr": "node .claude/scripts/context-adr.js",
-
     "rules:add": "node .claude/scripts/rules-add.js",
     "rules:list": "node .claude/scripts/rules-list.js",
-
     "memory:export": "node .claude/scripts/memory-export.js",
     "memory:import": "node .claude/scripts/memory-import.js"
   },
   "dependencies": {
+    "dotenv": "^16.0.0",
+    "firebase": "^10.0.0",
     "next": "^14.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "zustand": "^4.5.0",
-    "zod": "^3.22.0",
     "xlsx": "^0.18.5",
-    "firebase": "^10.0.0",
-    "dotenv": "^16.0.0"
+    "zod": "^3.22.0",
+    "zustand": "^4.5.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "jest": "^29.0.0",
-    "@testing-library/react": "^14.0.0",
-    "@testing-library/jest-dom": "^6.0.0",
-    "jest-environment-jsdom": "^29.0.0",
     "eslint": "^8.0.0",
-    "eslint-config-next": "^14.0.0"
+    "eslint-config-next": "^14.0.0",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^29.0.0",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
