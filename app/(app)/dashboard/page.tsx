@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/auth.store';
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import NewProjectButton from '@/components/dashboard/NewProjectButton';
+import ChatPanel from '@/components/ia/ChatPanel';
 import styles from '@/components/dashboard/Dashboard.module.css';
 import type { BusinessProject } from '@/types/business-project';
 
@@ -86,6 +87,8 @@ export default function DashboardPage() {
           )}
         </div>
       )}
+
+      <ChatPanel />
     </main>
   );
 }

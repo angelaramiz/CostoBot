@@ -8,7 +8,7 @@ import ProjectContextSummary from './ProjectContextSummary';
 import styles from './ChatPanel.module.css';
 
 interface ChatPanelProps {
-  projectId: string;
+  projectId?: string;
 }
 
 export default function ChatPanel({ projectId }: ChatPanelProps) {

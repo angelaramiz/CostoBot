@@ -10,7 +10,7 @@ export interface ChatMessage {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
-export function useIAChat(projectId: string) {
+export function useIAChat(projectId?: string) {
   const token = useAuthStore((s) => s.token) ?? '';
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
