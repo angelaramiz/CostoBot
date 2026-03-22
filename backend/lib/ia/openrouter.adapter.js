@@ -14,7 +14,7 @@ const FREE_MODELS = [
   'qwen/qwen3-next-80b-a3b-instruct:free',
   'meta-llama/llama-3.3-70b-instruct:free',
   'google/gemma-3-27b-it:free',
-  'mistralai/mistral-7b-instruct:free',
+  'deepseek/deepseek-r1:free',
 ];
 const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || FREE_MODELS[0];
 

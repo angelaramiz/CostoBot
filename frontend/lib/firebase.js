@@ -10,7 +10,9 @@ import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_APIKEY,
-  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTHDOMAIN,
+  // Hardcoded a web.app: evita bloqueos de Chrome Better Ads (firebaseapp.com está en blocklist).
+  // NEXT_PUBLIC_* se bake en build-time y no cambia en caliente en Render.
+  authDomain:        'costobot-79a76.web.app',
   projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECTID,
   storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGEBUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID,
