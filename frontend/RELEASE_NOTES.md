@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.15.1
+# 🚀 Release Notes — CostoBot v0.16.0
 
 **Fecha:** 2026-03-22
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: hardcode authDomain to web.app (bypass build-time env bake), replace dead mistral model with deepseek-r1
+- ✨ feat: rename and delete projects from dashboard cards
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
