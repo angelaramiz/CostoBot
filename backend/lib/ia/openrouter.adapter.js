@@ -41,7 +41,6 @@ class OpenRouterAdapter extends IIAAdapter {
       ],
       temperature: 0.7,
       max_tokens: 4096,
-      reasoning: { enabled: true },
     };
 
     const controller = new AbortController();

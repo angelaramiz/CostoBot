@@ -105,7 +105,6 @@ router.post('/chat', async (req, res) => {
 
     return res.json({
       reply: replyText.trim(),
-      reasoning_details: typeof result === 'object' ? (result.reasoning_details ?? null) : null,
     });
   } catch (err) {
     console.error('[IA] Error en /api/ia/chat:', err.message);
