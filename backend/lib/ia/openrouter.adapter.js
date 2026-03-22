@@ -11,10 +11,10 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 // Modelos gratuitos disponibles en OpenRouter (en orden de preferencia).
 // Se puede sobreescribir con la variable de entorno OPENROUTER_MODEL.
 const FREE_MODELS = [
-  'qwen/qwen3-next-80b-a3b-instruct:free',
   'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemma-3-27b-it:free',
   'deepseek/deepseek-r1:free',
+  'google/gemma-3-27b-it:free',
+  'mistralai/mistral-small-3.1-24b-instruct:free',
 ];
 const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || FREE_MODELS[0];
 
