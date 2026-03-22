@@ -93,14 +93,20 @@ router.post('/chat', async (req, res) => {
 
     // Llamar al adapter con contexto y modo
     const adapter = getIAAdapter();
-    const reply = await adapter.chat(validMessages.slice(-10), context, chatMode);
+    const result = await adapter.chat(validMessages.slice(-10), context, chatMode);
+
+    // El adapter devuelve { content, reasoning_details } o string (adapters legacy)
+    const replyText = typeof result === 'string' ? result : result?.content;
 
     // Validar respuesta
-    if (!reply || typeof reply !== 'string' || reply.trim().length === 0) {
+    if (!replyText || replyText.trim().length === 0) {
       throw new Error('La IA devolvió una respuesta vacía');
     }
 
-    return res.json({ reply: reply.trim() });
+    return res.json({
+      reply: replyText.trim(),
+      reasoning_details: typeof result === 'object' ? (result.reasoning_details ?? null) : null,
+    });
   } catch (err) {
     console.error('[IA] Error en /api/ia/chat:', err.message);
     return res.status(502).json({

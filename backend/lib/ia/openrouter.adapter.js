@@ -8,12 +8,8 @@ const { IIAAdapter } = require('./ia.adapter');
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// Modelos gratuitos disponibles en OpenRouter (en orden de preferencia).
-// Se puede sobreescribir con la variable de entorno OPENROUTER_MODEL.
-const FREE_MODELS = [
-  'qwen/qwen3-next-80b-a3b-instruct:free',
-];
-const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || FREE_MODELS[0];
+// Modelo activo. Se puede sobreescribir con la variable de entorno OPENROUTER_MODEL.
+const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3-super-120b-a12b:free';
 
 class OpenRouterAdapter extends IIAAdapter {
   constructor() {
@@ -30,64 +26,60 @@ class OpenRouterAdapter extends IIAAdapter {
   async chat(messages, context, mode = 'project') {
     const systemPrompt = buildSystemPrompt(context, mode);
 
-    const basePayload = {
+    // Construir historial preservando reasoning_details si existen
+    const history = messages.slice(-10).map((m) => {
+      const msg = { role: m.role, content: m.content };
+      if (m.reasoning_details) msg.reasoning_details = m.reasoning_details;
+      return msg;
+    });
+
+    const payload = {
+      model: DEFAULT_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
-        ...messages.slice(-10),
+        ...history,
       ],
       temperature: 0.7,
       max_tokens: 1024,
+      reasoning: { enabled: true },
     };
 
-    // Intentar con el modelo configurado y, si falla, probar el fallback gratuito
-    const modelsToTry =
-      DEFAULT_MODEL === FREE_MODELS[0]
-        ? FREE_MODELS
-        : [DEFAULT_MODEL, ...FREE_MODELS];
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25_000);
 
-    let lastError = null;
-    for (const model of modelsToTry) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25_000); // 25s por modelo
-
-        let res;
-        try {
-          res = await fetch(OPENROUTER_API_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${this.apiKey}`,
-              'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
-              'X-Title': 'CostoBot',
-            },
-            body: JSON.stringify({ ...basePayload, model }),
-            signal: controller.signal,
-          });
-        } finally {
-          clearTimeout(timeoutId);
-        }
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          lastError = new Error(`OpenRouter error ${res.status} (${model}): ${err.error?.message ?? 'Unknown error'}`);
-          console.warn(`[IA] Modelo ${model} falló (${res.status}), probando siguiente...`);
-          continue; // intentar siguiente modelo
-        }
-
-        const data = await res.json();
-        const reply = data.choices?.[0]?.message?.content;
-        if (!reply) {
-          lastError = new Error(`OpenRouter devolvió respuesta vacía (${model})`);
-          continue;
-        }
-        return reply;
-      } catch (err) {
-        lastError = err;
-      }
+    let res;
+    try {
+      res = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+          'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
+          'X-Title': 'CostoBot',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
     }
 
-    throw lastError ?? new Error('Todos los modelos de OpenRouter fallaron');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(`OpenRouter error ${res.status}: ${err.error?.message ?? 'Unknown error'}`);
+    }
+
+    const data = await res.json();
+    const message = data.choices?.[0]?.message;
+    if (!message?.content) {
+      throw new Error('OpenRouter devolvió respuesta vacía');
+    }
+
+    // Devolver objeto con content + reasoning_details para preservar en historial
+    return {
+      content: message.content,
+      reasoning_details: message.reasoning_details ?? null,
+    };
   }
 
   async isAvailable() {
