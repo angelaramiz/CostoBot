@@ -101,9 +101,9 @@
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  text-decoration: none;
   color: inherit;
   transition: box-shadow 0.15s, border-color 0.15s, transform 0.1s;
+  position: relative;
 }
 
 .card:hover {
@@ -184,4 +184,118 @@
   text-align: center;
   padding: 48px;
   color: var(--color-text-disabled);
+}
+
+/* ── Card link (reemplaza el <Link> directo que era .card) ── */
+.cardLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── Card busy (renombrando/eliminando) ── */
+.cardBusy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ── Menú de opciones ⋯ ─────────────────────────────── */
+.cardMenu {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
+.cardMenuBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-disabled);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.cardMenuBtn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.cardMenuDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  min-width: 140px;
+  overflow: hidden;
+}
+
+.cardMenuItem {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.1s;
+}
+
+.cardMenuItem:hover {
+  background: var(--color-bg-hover);
+}
+
+.cardMenuItemDanger {
+  color: #dc2626;
+}
+
+.cardMenuItemDanger:hover {
+  background: #fef2f2;
+}
+
+/* ── Rename inline ──────────────────────────────────── */
+.renameForm {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 0 8px;
+}
+
+.renameInput {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+  min-width: 0;
+}
+
+.renameConfirm {
+  padding: 5px 10px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.renameCancel {
+  padding: 5px 10px;
+  background: none;
+  border: 1px solid var(--color-border-input);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
 }

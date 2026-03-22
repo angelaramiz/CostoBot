@@ -58,6 +58,31 @@ export default function DashboardPage() {
     router.replace('/login');
   }
 
+  async function handleRename(id: string, newName: string) {
+    if (!token) return;
+    const res = await fetch(`${API_URL}/api/projects/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name: newName }),
+    });
+    if (res.ok) {
+      setProjects((prev) =>
+        (prev ?? []).map((p) => (p.id === id ? { ...p, name: newName, updatedAt: new Date() } : p))
+      );
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!token) return;
+    const res = await fetch(`${API_URL}/api/projects/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      setProjects((prev) => (prev ?? []).filter((p) => p.id !== id));
+    }
+  }
+
   const firstName = displayName?.split(' ')[0] ?? null;
   const onboardingWelcome = `¡Bienvenido${firstName ? ` ${firstName}` : ''} a CostoBot! 🎉
 
@@ -110,7 +135,9 @@ Para comenzar, cuéntame: ¿qué tipo de negocio tienes? ¿Fabricas algo, revend
               <small>Crea uno con el botón de arriba o pregúntale al asistente IA cómo empezar.</small>
             </div>
           ) : (
-            (projects ?? []).map((p) => <ProjectCard key={p.id} project={p} />)
+            (projects ?? []).map((p) => (
+              <ProjectCard key={p.id} project={p} onRename={handleRename} onDelete={handleDelete} />
+            ))
           )}
         </div>
       )}
