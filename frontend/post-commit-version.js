@@ -62,16 +62,28 @@ const newVersion =
   bumpType === 'minor' ? `${maj}.${min + 1}.0` :
                          `${maj}.${min}.${pat + 1}`;
 
-// --- Ask user for confirmation ---
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
+// --- Ask user for confirmation (or auto-answer via env var) ---
 console.log(`\n🤖 CostoBot AUTONOMOUS Versioning`);
 console.log(`   Prefijo detectado: ${bumpType.toUpperCase()} (${commitMsg})`);
 console.log(`   Versión actual: v${oldVersion}`);
 console.log(`   Nueva versión:  v${newVersion}\n`);
 
-rl.question(`¿Versionar y pushear a v${newVersion}? (s/n): `, async (answer) => {
-  rl.close();
+// Si COSTOBOT_AUTO_VERSION=s está definida, no se crea readline (no requiere TTY)
+const autoAnswer = process.env.COSTOBOT_AUTO_VERSION;
+const askQuestion = (cb) => {
+  if (autoAnswer) {
+    console.log(`¿Versionar y pushear a v${newVersion}? (s/n): ${autoAnswer}`);
+    cb(autoAnswer);
+  } else {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(`¿Versionar y pushear a v${newVersion}? (s/n): `, (answer) => {
+      rl.close();
+      cb(answer);
+    });
+  }
+};
+
+askQuestion(async (answer) => {
 
   if (answer.toLowerCase() !== 's' && answer.toLowerCase() !== 'si') {
     console.log('⏸️  Versioning skipped. Commit stays local.');
