@@ -45,19 +45,10 @@ export function useIAChat({ projectId, mode = 'project', welcomeMessage }: UseIA
       setError(null);
 
       try {
-        // Retry una vez en 502 (backend despertando en Render free tier)
-        let res = await fetch(`${API_URL}/api/ia/chat`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ messages: updated, projectId, mode }),
-        });
-
-        if (res.status === 502) {
-          await new Promise((r) => setTimeout(r, 4000));
-          res = await fetch(`${API_URL}/api/ia/chat`, {
+        // Retry con backoff para 502 (backend durmiendo en Render free tier).
+        // Render tarda ~15-30s en despertar — esperamos hasta 3 intentos.
+        const doFetch = () =>
+          fetch(`${API_URL}/api/ia/chat`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -65,6 +56,17 @@ export function useIAChat({ projectId, mode = 'project', welcomeMessage }: UseIA
             },
             body: JSON.stringify({ messages: updated, projectId, mode }),
           });
+
+        let res = await doFetch();
+
+        if (res.status === 502) {
+          await new Promise((r) => setTimeout(r, 12000)); // esperar 12s
+          res = await doFetch();
+        }
+
+        if (res.status === 502) {
+          await new Promise((r) => setTimeout(r, 15000)); // esperar 15s más
+          res = await doFetch();
         }
 
         const body = await res.json();
