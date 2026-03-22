@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.16.2
+# 🚀 Release Notes — CostoBot v0.16.3
 
 **Fecha:** 2026-03-22
 **Tipo:** patch
 
 ## Cambios en esta versión
 
-- 🐛 fix: add 25s timeout per OpenRouter model + auto-retry on 502 in useIAChat
+- 🐛 fix: increase 502 retry backoff to 12s+15s for Render cold start (~30s wakeup)
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
