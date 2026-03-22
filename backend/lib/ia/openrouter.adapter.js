@@ -40,7 +40,7 @@ class OpenRouterAdapter extends IIAAdapter {
         ...history,
       ],
       temperature: 0.7,
-      max_tokens: 1024,
+      max_tokens: 4096,
       reasoning: { enabled: true },
     };
 
