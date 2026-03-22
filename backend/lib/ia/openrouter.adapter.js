@@ -51,20 +51,30 @@ class OpenRouterAdapter extends IIAAdapter {
     let lastError = null;
     for (const model of modelsToTry) {
       try {
-        const res = await fetch(OPENROUTER_API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.apiKey}`,
-            'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
-            'X-Title': 'CostoBot',
-          },
-          body: JSON.stringify({ ...basePayload, model }),
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25_000); // 25s por modelo
+
+        let res;
+        try {
+          res = await fetch(OPENROUTER_API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.apiKey}`,
+              'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
+              'X-Title': 'CostoBot',
+            },
+            body: JSON.stringify({ ...basePayload, model }),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           lastError = new Error(`OpenRouter error ${res.status} (${model}): ${err.error?.message ?? 'Unknown error'}`);
+          console.warn(`[IA] Modelo ${model} falló (${res.status}), probando siguiente...`);
           continue; // intentar siguiente modelo
         }
 

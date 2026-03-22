@@ -45,7 +45,8 @@ export function useIAChat({ projectId, mode = 'project', welcomeMessage }: UseIA
       setError(null);
 
       try {
-        const res = await fetch(`${API_URL}/api/ia/chat`, {
+        // Retry una vez en 502 (backend despertando en Render free tier)
+        let res = await fetch(`${API_URL}/api/ia/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -53,6 +54,18 @@ export function useIAChat({ projectId, mode = 'project', welcomeMessage }: UseIA
           },
           body: JSON.stringify({ messages: updated, projectId, mode }),
         });
+
+        if (res.status === 502) {
+          await new Promise((r) => setTimeout(r, 4000));
+          res = await fetch(`${API_URL}/api/ia/chat`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ messages: updated, projectId, mode }),
+          });
+        }
 
         const body = await res.json();
 
