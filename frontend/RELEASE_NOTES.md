@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.16.7
+# 🚀 Release Notes — CostoBot v0.16.8
 
 **Fecha:** 2026-03-22
 **Tipo:** patch
 
 ## Cambios en esta versión
 
-- 🐛 fix: use qwen3-next-80b as sole IA model, remove all fallbacks
+- 🐛 fix: switch to nvidia/nemotron-3-super-120b-a12b:free with reasoning support
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
