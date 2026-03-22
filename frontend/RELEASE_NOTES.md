@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.16.0
+# 🚀 Release Notes — CostoBot v0.16.1
 
 **Fecha:** 2026-03-22
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: rename and delete projects from dashboard cards
+- 🐛 fix: replace invalid qwen3 model with verified free models on OpenRouter
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
