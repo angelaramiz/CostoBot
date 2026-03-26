@@ -16,10 +16,20 @@ const TABS: { id: 'layer1' | 'layer2' | 'layer3' | 'settings'; label: string; ic
   { id: 'settings', label: 'Ajustes', icon: <SettingsIcon size={16} /> },
 ];
 
-type TabId = 'layer1' | 'layer2' | 'layer3' | 'settings';
+export type TabId = 'layer1' | 'layer2' | 'layer3' | 'settings';
 
-export default function ProjectTabs() {
-  const [active, setActive] = useState<TabId>('layer1');
+interface ProjectTabsProps {
+  activeTab?: TabId;
+  onTabChange?: (tab: TabId) => void;
+}
+
+export default function ProjectTabs({ activeTab, onTabChange }: ProjectTabsProps = {}) {
+  const [localActive, setLocalActive] = useState<TabId>('layer1');
+  const active = activeTab ?? localActive;
+  const setActive = (tab: TabId) => {
+    setLocalActive(tab);
+    onTabChange?.(tab);
+  };
 
   return (
     <div className={styles.tabsWrapper}>
