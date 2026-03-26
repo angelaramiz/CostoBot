@@ -53,27 +53,28 @@ export default function Layer3ProductoSheet() {
   }
 
   function handleAddService() {
-    if (!newServiceName || !newServiceRate || !newServiceUnit) return;
+    if (!newServiceName || !newServiceRate || !newServiceUnit || !project) return;
     const keyName = newServiceName.toLowerCase().replace(/\s+/g, '_');
     const updatedServices = {
       ...services,
       [keyName]: {
         baseRate: Math.round(parseFloat(newServiceRate) * 100),
         unit: newServiceUnit,
-        currency: project?.settings?.currency ?? 'MXN',
+        currency: project.settings?.currency ?? 'MXN',
       },
     };
-    updateProjectData(
-      { ...project, layers: { ...project.layers, layer3: { ...project.layers.layer3, services: updatedServices } } },
-      token
-    );
+    const updatedProject: typeof project = {
+      ...project,
+      layers: { ...project.layers, layer3: { ...project.layers.layer3, services: updatedServices } },
+    };
+    updateProjectData(updatedProject, token);
     setNewServiceName('');
     setNewServiceRate('');
     setNewServiceUnit('');
   }
 
   function handleAddTax() {
-    if (!newTaxName || !newTaxRate) return;
+    if (!newTaxName || !newTaxRate || !project) return;
     const keyName = newTaxName.toLowerCase().replace(/\s+/g, '_');
     const updatedTaxes = {
       ...taxes,
@@ -83,10 +84,11 @@ export default function Layer3ProductoSheet() {
         country: newTaxCountry,
       },
     };
-    updateProjectData(
-      { ...project, layers: { ...project.layers, layer3: { ...project.layers.layer3, taxes: updatedTaxes } } },
-      token
-    );
+    const updatedProject: typeof project = {
+      ...project,
+      layers: { ...project.layers, layer3: { ...project.layers.layer3, taxes: updatedTaxes } },
+    };
+    updateProjectData(updatedProject, token);
     setNewTaxName('');
     setNewTaxRate('');
     setNewTaxCountry('MX');
@@ -149,12 +151,14 @@ export default function Layer3ProductoSheet() {
                     <td>
                       <button
                         onClick={() => {
+                          if (!project) return;
                           const updatedServices = { ...services };
                           delete updatedServices[key];
-                          updateProjectData(
-                            { ...project, layers: { ...project.layers, layer3: { ...project.layers.layer3, services: updatedServices } } },
-                            token
-                          );
+                          const updatedProject: typeof project = {
+                            ...project,
+                            layers: { ...project.layers, layer3: { ...project.layers.layer3, services: updatedServices } },
+                          };
+                          updateProjectData(updatedProject, token);
                         }}
                         style={{
                           background: 'none',
@@ -307,12 +311,14 @@ export default function Layer3ProductoSheet() {
                     <td>
                       <button
                         onClick={() => {
+                          if (!project) return;
                           const updatedTaxes = { ...taxes };
                           delete updatedTaxes[key];
-                          updateProjectData(
-                            { ...project, layers: { ...project.layers, layer3: { ...project.layers.layer3, taxes: updatedTaxes } } },
-                            token
-                          );
+                          const updatedProject: typeof project = {
+                            ...project,
+                            layers: { ...project.layers, layer3: { ...project.layers.layer3, taxes: updatedTaxes } },
+                          };
+                          updateProjectData(updatedProject, token);
                         }}
                         style={{
                           background: 'none',

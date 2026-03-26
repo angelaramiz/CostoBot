@@ -35,8 +35,13 @@ export default function SettingsSheet() {
   const settings = project.settings ?? { country: 'MX', currency: 'MXN', businessName: '' };
 
   function handleUpdateSetting(key: string, value: unknown) {
+    if (!project) return;
     const updatedSettings = { ...settings, [key]: value };
-    updateProjectData({ ...project, settings: updatedSettings }, token);
+    const updatedProject: typeof project = {
+      ...project,
+      settings: updatedSettings,
+    };
+    updateProjectData(updatedProject, token);
   }
 
   return (

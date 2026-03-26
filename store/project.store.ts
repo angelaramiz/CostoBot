@@ -56,6 +56,9 @@ interface ProjectActions {
   addProductPricing: (pricing: ProductPricing, token: string) => void;
   removeProductPricing: (productId: string, token: string) => void;
 
+  /** Actualiza el proyecto completo (usado para settings, servicios, impuestos) */
+  updateProjectData: (project: BusinessProject, token: string) => void;
+
   /** Uso interno: propaga un cambio a través del cascade engine */
   _applyChange: (
     layerId: keyof ProjectLayers,
@@ -350,6 +353,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           },
         },
       }),
+      token
+    ),
+
+  // ── updateProjectData (para settings, servicios, impuestos) ───────────────
+  updateProjectData: (project, token) =>
+    get()._applyStructural(
+      () => project,
       token
     ),
 

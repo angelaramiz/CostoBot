@@ -37,4 +37,12 @@ export interface BusinessProject {
   createdAt: Date;
   updatedAt: Date;
   layers: ProjectLayers;
+  /** Configuración general del proyecto (país, moneda, nombre empresa) */
+  settings?: {
+    country: string;
+    currency: string;
+    businessName: string;
+  };
+  /** Versión del proyecto para seguimiento */
+  version?: string;
 }
