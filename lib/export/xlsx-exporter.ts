@@ -72,8 +72,9 @@ function buildProductGraphSheet(project: BusinessProject): XLSX.WorkSheet {
 
   const rows = layer2.map((graph) => [
     graph.productName,
-    graph.nodes.length,
-    graph.edges.length,
+    // Validación defensiva: usar length solo si son arrays
+    Array.isArray(graph.nodes) ? graph.nodes.length : 0,
+    Array.isArray(graph.edges) ? graph.edges.length : 0,
     toPesos(graph.laborCost),
     toPesos(graph.totalCost),
   ]);

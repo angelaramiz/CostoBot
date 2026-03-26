@@ -52,7 +52,10 @@ function calculateGraphCostBreakdown(
   let utensils = 0;
   let services = 0;
 
-  for (const node of graph.nodes) {
+  // Validación defensiva: asegurar que nodes es un array
+  const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
+
+  for (const node of nodes) {
     if (isIngredientData(node)) {
       const insumo = insumoMap.get(node.data.insumoId);
       if (insumo) {
@@ -78,7 +81,8 @@ function calculateGraphCostBreakdown(
       }
     } else if (isImportData(node)) {
       const parentGraph = graphMap.get(node.data.sourceProductId);
-      if (parentGraph) {
+      // Validación defensiva para parentGraph.nodes
+      if (parentGraph && Array.isArray(parentGraph.nodes)) {
         const resultNode = parentGraph.nodes.find(
           (n) => n.type === 'resultado'
         ) as ProductNode & { data: ResultadoNodeData } | undefined;
@@ -161,7 +165,9 @@ export function propagateInsumoChange(
 
   // Recalcular grafos de Layer 2 que usen este insumo
   updated.layers.layer2 = updated.layers.layer2.map((graph) => {
-    const usesInsumo = graph.nodes.some((node) => {
+    // Validación defensiva: asegurar que nodes es un array
+    const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
+    const usesInsumo = nodes.some((node) => {
       if (isIngredientData(node) || isUtensilData(node) || isMachineData(node)) {
         return node.data.insumoId === insumoId;
       }

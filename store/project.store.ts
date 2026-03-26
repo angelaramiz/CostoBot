@@ -109,6 +109,22 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         products: Array.isArray(layer3Raw?.products) ? layer3Raw.products : [],
       };
 
+      // Normalizar layer2: asegurar que cada ProductGraph tiene nodes y edges válidos (arrays)
+      const layer2Raw = Array.isArray(data.layers?.layer2) ? data.layers.layer2 : [];
+      const layer2: ProductGraph[] = layer2Raw.map((graph: unknown) => {
+        const g = graph as Record<string, unknown>;
+        return {
+          productId: g.productId ?? '',
+          productName: g.productName ?? '',
+          version: g.version ?? '1.0',
+          nodes: Array.isArray(g.nodes) ? g.nodes : [],
+          edges: Array.isArray(g.edges) ? g.edges : [],
+          totalCost: typeof g.totalCost === 'number' ? g.totalCost : 0,
+          laborCost: typeof g.laborCost === 'number' ? g.laborCost : 0,
+          servicesUsage: g.servicesUsage ? (g.servicesUsage as Record<string, number>) : undefined,
+        };
+      });
+
       const project: BusinessProject = {
         ...data,
         id: data._id ?? data.id,
@@ -116,7 +132,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         updatedAt: new Date(data.updatedAt),
         layers: {
           layer1: data.layers?.layer1 ?? [],
-          layer2: data.layers?.layer2 ?? [],
+          layer2,
           layer3,
         },
       };
@@ -268,7 +284,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
           // Limpiar nodos de grafos que referencien este insumo
           layer2: p.layers.layer2.map((graph) => ({
             ...graph,
-            nodes: graph.nodes.filter((node) => {
+            // Validación defensiva: asegurar que nodes es un array antes de filtrar
+            nodes: (Array.isArray(graph.nodes) ? graph.nodes : []).filter((node) => {
               const data = node.data as unknown as Record<string, unknown>;
               return !('insumoId' in data && data['insumoId'] === id);
             }),

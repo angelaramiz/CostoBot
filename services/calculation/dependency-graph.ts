@@ -39,7 +39,10 @@ export function buildDependencyGraph(project: BusinessProject): DependencyGraph 
 
   // Layer1 → Layer2: insumo → grafos de productos que lo usan
   for (const productGraph of layer2) {
-    for (const node of productGraph.nodes) {
+    // Validación defensiva: asegurar que nodes es un array
+    const nodes = Array.isArray(productGraph.nodes) ? productGraph.nodes : [];
+    
+    for (const node of nodes) {
       const data = node.data as unknown as Record<string, unknown>;
       if ('insumoId' in data && typeof data['insumoId'] === 'string') {
         const insumoId = data['insumoId'];
@@ -49,7 +52,7 @@ export function buildDependencyGraph(project: BusinessProject): DependencyGraph 
     }
 
     // Import nodes: producto padre → este producto
-    for (const node of productGraph.nodes) {
+    for (const node of nodes) {
       if (node.type === 'import') {
         const importData = node.data as { sourceProductId: string };
         if (!graph.has(importData.sourceProductId)) {
