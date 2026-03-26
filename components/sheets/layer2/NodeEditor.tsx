@@ -81,11 +81,13 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
   const [isDirty, setIsDirty] = useState(false);
 
   // Sync when graph changes (different product selected)
+  // Intencionalmente no incluimos graph.nodes/edges para evitar re-desincronización
   useEffect(() => {
     setNodes(toFlowNodes(graph.nodes));
     setEdges(toFlowEdges(graph.edges));
     setSelectedNode(null);
     setIsDirty(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph.productId]);
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
@@ -148,7 +150,7 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
     setIsDirty(true);
   }, [nodes]);
 
-  function handleAddNode(type: typeof PALETTE[number]['type']) {
+  const handleAddNode = useCallback((type: typeof PALETTE[number]['type']) => {
     const id = crypto.randomUUID();
     const position = { x: 80 + Math.random() * 200, y: 80 + Math.random() * 200 };
     let data: Record<string, unknown> = {};
@@ -165,7 +167,7 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
     const newNode: Node = { id, type, position, data };
     setNodes((prev) => [...prev, newNode]);
     setIsDirty(true);
-  }
+  }, [graph.productName]);
 
   function handleNodePropsSave(nodeId: string, data: Record<string, unknown>) {
     setNodes((prev) =>

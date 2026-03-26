@@ -28,6 +28,8 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
 
   useEffect(() => {
     setForm({ ...node.data as Record<string, unknown> });
+    // Intencionalmente no incluimos node.data en dependencias para evitar re-render excesivo
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node.id]);
 
   function set(key: string, value: unknown) {
