@@ -2,9 +2,6 @@
 const { version } = require('./frontend/package.json');
 
 const nextConfig = {
-  // Output standalone build — reduces bundle size on Render
-  output: 'standalone',
-
   // Environment variables exposed to the browser
   env: {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'CostoBot',
