@@ -7,6 +7,7 @@
 'use strict';
 
 const admin = require('firebase-admin');
+
 const logger = require('./logger');
 
 if (!admin.apps.length) {

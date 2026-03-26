@@ -7,7 +7,7 @@
 'use strict';
 
 const mongoose = require('mongoose');
-const logger = require('./lib/logger');
+const logger = require('../lib/logger');
 
 let isConnected = false;
 
