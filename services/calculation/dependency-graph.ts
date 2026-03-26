@@ -15,23 +15,30 @@ export type DependencyGraph = Map<string, Set<string>>;
 export function buildDependencyGraph(project: BusinessProject): DependencyGraph {
   const graph: DependencyGraph = new Map();
 
+  // Validación defensiva: asegurar que todos los layers existen y son iterables
+  const layer1 = Array.isArray(project.layers?.layer1) ? project.layers.layer1 : [];
+  const layer2 = Array.isArray(project.layers?.layer2) ? project.layers.layer2 : [];
+  const layer3Products = Array.isArray(project.layers?.layer3?.products)
+    ? project.layers.layer3.products
+    : [];
+
   // Inicializar todos los IDs de insumos
-  for (const insumo of project.layers.layer1) {
+  for (const insumo of layer1) {
     graph.set(insumo.id, new Set());
   }
 
   // Inicializar todos los IDs de grafos de productos
-  for (const productGraph of project.layers.layer2) {
+  for (const productGraph of layer2) {
     graph.set(productGraph.productId, new Set());
   }
 
   // Inicializar IDs de pricings
-  for (const pricing of project.layers.layer3.products) {
+  for (const pricing of layer3Products) {
     graph.set(pricing.productId + ':pricing', new Set());
   }
 
   // Layer1 → Layer2: insumo → grafos de productos que lo usan
-  for (const productGraph of project.layers.layer2) {
+  for (const productGraph of layer2) {
     for (const node of productGraph.nodes) {
       const data = node.data as unknown as Record<string, unknown>;
       if ('insumoId' in data && typeof data['insumoId'] === 'string') {
@@ -54,7 +61,7 @@ export function buildDependencyGraph(project: BusinessProject): DependencyGraph 
   }
 
   // Layer2 → Layer3: grafo de producto → pricing
-  for (const pricing of project.layers.layer3.products) {
+  for (const pricing of layer3Products) {
     if (!graph.has(pricing.productId)) graph.set(pricing.productId, new Set());
     graph.get(pricing.productId)!.add(pricing.productId + ':pricing');
   }

@@ -98,6 +98,17 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
       const { data } = await res.json();
 
+      // Normalizar layer3 para asegurar estructura correcta
+      const layer3Raw = data.layers?.layer3;
+      const layer3: Layer3Precios = {
+        version: layer3Raw?.version ?? '1.0',
+        updatedAt: layer3Raw?.updatedAt ?? new Date().toISOString(),
+        services: layer3Raw?.services ?? {},
+        taxes: layer3Raw?.taxes ?? {},
+        // Garantizar que products siempre es un array
+        products: Array.isArray(layer3Raw?.products) ? layer3Raw.products : [],
+      };
+
       const project: BusinessProject = {
         ...data,
         id: data._id ?? data.id,
@@ -106,7 +117,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         layers: {
           layer1: data.layers?.layer1 ?? [],
           layer2: data.layers?.layer2 ?? [],
-          layer3: data.layers?.layer3 ?? DEFAULT_LAYER3,
+          layer3,
         },
       };
 
