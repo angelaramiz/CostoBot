@@ -1,5 +1,73 @@
 import { z } from 'zod';
 
+/**
+ * Schemas para Layer 3 — Precios (servicios, impuestos, productos)
+ * @see types/layer3-precios.ts
+ */
+
+// ── Servicios ───────────────────────────────────────────────────────────────
+
+export const ServiceRateSchema = z.object({
+  baseRate: z.number().nonnegative(),
+  unit: z.string().min(1),
+  currency: z.string().min(1),
+});
+
+export const ServicesConfigSchema = z.record(z.string(), ServiceRateSchema).default({});
+
+// ── Impuestos ───────────────────────────────────────────────────────────────
+
+export const TaxConfigSchema = z.object({
+  rate: z.number().min(0).max(1),
+  enabled: z.boolean(),
+  country: z.string().min(1),
+});
+
+export const TaxesConfigSchema = z.record(z.string(), TaxConfigSchema).default({});
+
+// ── Desglose de costos ──────────────────────────────────────────────────────
+
+export const CostBreakdownSchema = z.object({
+  ingredients: z.number().int().nonnegative(),
+  machines: z.number().int().nonnegative(),
+  utensils: z.number().int().nonnegative(),
+  services: z.number().int().nonnegative(),
+  labor: z.number().int().nonnegative(),
+  totalCost: z.number().int().nonnegative(),
+});
+
+// ── Pricing por producto ────────────────────────────────────────────────────
+
+export const ProductPricingSchema = z.object({
+  productId: z.string().min(1, 'El ID del producto es requerido'),
+  productName: z.string().min(1, 'El nombre del producto es requerido'),
+  costBreakdown: CostBreakdownSchema,
+  margenPorcentaje: z
+    .number()
+    .nonnegative('El margen de ganancia no puede ser negativo'),
+  precioVenta: z
+    .number()
+    .int('El precio de venta debe ser un entero en centavos')
+    .nonnegative('El precio de venta no puede ser negativo'),
+  roi: z.number({ required_error: 'El ROI es requerido' }),
+});
+
+// ── Layer 3 completa ────────────────────────────────────────────────────────
+
+export const Layer3PreciosSchema = z.object({
+  version: z.string().min(1),
+  updatedAt: z.string(),
+  services: ServicesConfigSchema,
+  taxes: TaxesConfigSchema,
+  products: z.array(ProductPricingSchema),
+});
+
+export type Layer3PreciosInput = z.infer<typeof Layer3PreciosSchema>;
+export type ProductPricingInput = z.infer<typeof ProductPricingSchema>;
+
+/**
+ * @deprecated Schema legacy — mantener temporalmente para compatibilidad.
+ */
 export const ProductoSchema = z.object({
   id: z.string().min(1, 'El ID es requerido'),
   name: z.string().min(1, 'El nombre es requerido'),

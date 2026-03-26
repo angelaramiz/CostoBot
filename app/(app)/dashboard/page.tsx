@@ -9,8 +9,7 @@ import NewProjectButton from '@/components/dashboard/NewProjectButton';
 import ChatPanel from '@/components/ia/ChatPanel';
 import styles from '@/components/dashboard/Dashboard.module.css';
 import type { BusinessProject } from '@/types/business-project';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+import { API_URL } from '@/lib/config';
 
 /** Clave en localStorage para rastrear si el usuario ya fue bienvenido */
 function getWelcomedKey(uid: string) {
@@ -22,7 +21,8 @@ export default function DashboardPage() {
   const { token, uid } = useAuthStore((s) => ({ token: s.token ?? '', uid: s.uid }));
   const router = useRouter();
   const [projects, setProjects] = useState<BusinessProject[] | null>(null);
-  const loading = projects === null && !!token;
+  const [fetchError, setFetchError] = useState(false);
+  const loading = projects === null && !!token && !fetchError;
 
   // Detectar si es usuario nuevo: sin proyectos y nunca fue bienvenido
   const [isNewUser, setIsNewUser] = useState(false);
@@ -50,7 +50,10 @@ export default function DashboardPage() {
           localStorage.setItem(getWelcomedKey(uid), '1');
         }
       })
-      .catch(() => setProjects([]));
+      .catch(() => {
+        setProjects([]);
+        setFetchError(true);
+      });
   }, [token, uid]);
 
   async function handleSignOut() {
@@ -88,11 +91,10 @@ export default function DashboardPage() {
 
 Soy tu asistente de costos. Estoy aquí para ayudarte a estructurar los costos de tu negocio de forma fácil y ordenada.
 
-CostoBot organiza todo en 4 capas:
-📦 **Capa 1 — Insumos**: materias primas y materiales
-⚙️ **Capa 2 — Procesos**: pasos de producción
-📦 **Capa 3 — Productos**: costo total calculado automáticamente
-💰 **Capa 4 — Precios**: precio de venta y margen de ganancia
+CostoBot organiza todo en 3 capas:
+📦 **Capa 1 — Insumos**: materias primas, utensilios y maquinaria
+🔗 **Capa 2 — Productos**: grafos visuales que conectan insumos para calcular costos
+💰 **Capa 3 — Precios**: servicios, impuestos, márgenes y precio de venta
 
 Para comenzar, cuéntame: ¿qué tipo de negocio tienes? ¿Fabricas algo, revendes productos o ofreces servicios?`;
 
@@ -126,20 +128,29 @@ Para comenzar, cuéntame: ¿qué tipo de negocio tienes? ¿Fabricas algo, revend
       </div>
 
       {loading ? (
-        <div className={styles.loadingSpinner}>Cargando proyectos…</div>
-      ) : (
-        <div className={styles.grid}>
-          {(projects ?? []).length === 0 ? (
-            <div className={styles.emptyState}>
-              <p>Aún no tienes proyectos.</p>
-              <small>Crea uno con el botón de arriba o pregúntale al asistente IA cómo empezar.</small>
-            </div>
-          ) : (
-            (projects ?? []).map((p) => (
-              <ProjectCard key={p.id} project={p} onRename={handleRename} onDelete={handleDelete} />
-            ))
-          )}
+        <div className={styles.loadingSpinner} role="status" aria-live="polite">
+          Cargando proyectos…
         </div>
+      ) : (
+        <>
+          {fetchError && (
+            <div className={styles.errorBanner} role="alert">
+              No se pudieron cargar los proyectos. Verifica tu conexión e intenta de nuevo.
+            </div>
+          )}
+          <div className={styles.grid}>
+            {(projects ?? []).length === 0 && !fetchError ? (
+              <div className={styles.emptyState}>
+                <p>Aún no tienes proyectos.</p>
+                <small>Crea uno con el botón de arriba o pregúntale al asistente IA cómo empezar.</small>
+              </div>
+            ) : (
+              (projects ?? []).map((p) => (
+                <ProjectCard key={p.id} project={p} onRename={handleRename} onDelete={handleDelete} />
+              ))
+            )}
+          </div>
+        </>
       )}
 
       {/* ChatPanel en modo onboarding para usuarios nuevos, dashboard para el resto */}

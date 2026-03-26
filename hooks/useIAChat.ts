@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
+import { auth } from '@/lib/firebase';
+import { API_URL } from '@/lib/config';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -9,8 +11,6 @@ export interface ChatMessage {
 }
 
 export type ChatMode = 'project' | 'dashboard' | 'onboarding';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 interface UseIAChatOptions {
   projectId?: string;
@@ -21,6 +21,11 @@ interface UseIAChatOptions {
 
 export function useIAChat({ projectId, mode = 'project', welcomeMessage }: UseIAChatOptions = {}) {
   const token = useAuthStore((s) => s.token) ?? '';
+
+  /** Siempre obtiene un token válido (se renueva automáticamente si expiró) */
+  async function getFreshToken(): Promise<string> {
+    return (await auth.currentUser?.getIdToken()) ?? token;
+  }
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     welcomeMessage ? [{ role: 'assistant', content: welcomeMessage }] : []
   );
@@ -47,25 +52,31 @@ export function useIAChat({ projectId, mode = 'project', welcomeMessage }: UseIA
       try {
         // Retry con backoff para 502 (backend durmiendo en Render free tier).
         // Render tarda ~15-30s en despertar — esperamos hasta 3 intentos.
-        const doFetch = () =>
-          fetch(`${API_URL}/api/ia/chat`, {
+        const doFetch = async () => {
+          const freshToken = await getFreshToken();
+          return fetch(`${API_URL}/api/ia/chat`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${freshToken}`,
             },
             body: JSON.stringify({ messages: updated, projectId, mode }),
           });
+        };
 
         let res = await doFetch();
 
         if (res.status === 502) {
-          await new Promise((r) => setTimeout(r, 12000)); // esperar 12s
+          setError('El servidor está iniciando, espera un momento…');
+          await new Promise((r) => setTimeout(r, 12000));
+          setError(null);
           res = await doFetch();
         }
 
         if (res.status === 502) {
-          await new Promise((r) => setTimeout(r, 15000)); // esperar 15s más
+          setError('Conectando de nuevo, casi listo…');
+          await new Promise((r) => setTimeout(r, 15000));
+          setError(null);
           res = await doFetch();
         }
 
@@ -85,6 +96,7 @@ export function useIAChat({ projectId, mode = 'project', welcomeMessage }: UseIA
         setIsLoading(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [messages, isLoading, token, projectId, mode]
   );
 

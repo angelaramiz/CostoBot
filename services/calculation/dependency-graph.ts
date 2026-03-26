@@ -1,4 +1,5 @@
 import type { BusinessProject } from '@/types/business-project';
+import type { ProductNode } from '@/types/layer2-productos';
 
 /**
  * Grafo de dependencias: key = ID del ítem, value = conjunto de IDs que dependen de él.
@@ -8,45 +9,54 @@ export type DependencyGraph = Map<string, Set<string>>;
 
 /**
  * Construye el grafo de dependencias hacia adelante para un BusinessProject.
- * Insumo → Proceso → Producto → Precio
+ * Nueva arquitectura de 3 capas:
+ *   Insumo → ProductGraph (nodos que lo referencian) → ProductPricing
  */
 export function buildDependencyGraph(project: BusinessProject): DependencyGraph {
   const graph: DependencyGraph = new Map();
 
-  // Inicializar todos los IDs en el grafo
+  // Inicializar todos los IDs de insumos
   for (const insumo of project.layers.layer1) {
     graph.set(insumo.id, new Set());
   }
-  for (const proceso of project.layers.layer2) {
-    graph.set(proceso.id, new Set());
-  }
-  for (const producto of project.layers.layer3) {
-    graph.set(producto.id, new Set());
-  }
-  for (const precio of project.layers.layer4) {
-    graph.set(precio.id, new Set());
+
+  // Inicializar todos los IDs de grafos de productos
+  for (const productGraph of project.layers.layer2) {
+    graph.set(productGraph.productId, new Set());
   }
 
-  // Layer1 → Layer2: insumo → procesos que lo usan
-  for (const proceso of project.layers.layer2) {
-    for (const insumoId of proceso.insumoIds) {
-      if (!graph.has(insumoId)) graph.set(insumoId, new Set());
-      graph.get(insumoId)!.add(proceso.id);
+  // Inicializar IDs de pricings
+  for (const pricing of project.layers.layer3.products) {
+    graph.set(pricing.productId + ':pricing', new Set());
+  }
+
+  // Layer1 → Layer2: insumo → grafos de productos que lo usan
+  for (const productGraph of project.layers.layer2) {
+    for (const node of productGraph.nodes) {
+      const data = node.data as unknown as Record<string, unknown>;
+      if ('insumoId' in data && typeof data['insumoId'] === 'string') {
+        const insumoId = data['insumoId'];
+        if (!graph.has(insumoId)) graph.set(insumoId, new Set());
+        graph.get(insumoId)!.add(productGraph.productId);
+      }
+    }
+
+    // Import nodes: producto padre → este producto
+    for (const node of productGraph.nodes) {
+      if (node.type === 'import') {
+        const importData = node.data as { sourceProductId: string };
+        if (!graph.has(importData.sourceProductId)) {
+          graph.set(importData.sourceProductId, new Set());
+        }
+        graph.get(importData.sourceProductId)!.add(productGraph.productId);
+      }
     }
   }
 
-  // Layer2 → Layer3: proceso → productos que lo usan
-  for (const producto of project.layers.layer3) {
-    for (const procesoId of producto.procesoIds) {
-      if (!graph.has(procesoId)) graph.set(procesoId, new Set());
-      graph.get(procesoId)!.add(producto.id);
-    }
-  }
-
-  // Layer3 → Layer4: producto → precios que lo referencian
-  for (const precio of project.layers.layer4) {
-    if (!graph.has(precio.productoId)) graph.set(precio.productoId, new Set());
-    graph.get(precio.productoId)!.add(precio.id);
+  // Layer2 → Layer3: grafo de producto → pricing
+  for (const pricing of project.layers.layer3.products) {
+    if (!graph.has(pricing.productId)) graph.set(pricing.productId, new Set());
+    graph.get(pricing.productId)!.add(pricing.productId + ':pricing');
   }
 
   return graph;

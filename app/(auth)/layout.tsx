@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'CostoBot — Acceder',
@@ -20,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         gap: '24px',
       }}
     >
-      <img src="/logo.svg" alt="CostoBot" height={36} style={{ display: 'block' }} />
+      <Image src="/logo.svg" alt="CostoBot" width={120} height={36} style={{ display: 'block' }} />
       {children}
     </div>
   );

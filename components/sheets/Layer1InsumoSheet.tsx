@@ -27,6 +27,8 @@ export default function Layer1InsumoSheet() {
       unit: 'pza',
       costPerUnit: 0,
       quantity: 1,
+      category: 'ingrediente',
+      isReusable: false,
     };
     addInsumo(newItem, token);
   }
@@ -94,6 +96,7 @@ export default function Layer1InsumoSheet() {
                     className={styles.deleteBtn}
                     onClick={() => removeInsumo(insumo.id, token)}
                     title="Eliminar insumo"
+                    aria-label={`Eliminar insumo ${insumo.name}`}
                   >
                     ✕
                   </button>

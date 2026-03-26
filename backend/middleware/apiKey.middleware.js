@@ -14,14 +14,15 @@
  */
 'use strict';
 
+const logger = require('../lib/logger');
+
 const PUBLIC_KEY    = process.env.PUBLIC_API_KEY    || '';
 const INTERNAL_KEY  = process.env.INTERNAL_API_KEY  || '';
 
 if (!PUBLIC_KEY || !INTERNAL_KEY) {
-  console.warn(
-    '[apiKey.middleware] WARNING: PUBLIC_API_KEY or INTERNAL_API_KEY not set. ' +
-    'All API key checks will FAIL until .env is configured.'
-  );
+  logger.warn('api_key_not_configured', {
+    msg: 'PUBLIC_API_KEY or INTERNAL_API_KEY not set. All API key checks will FAIL until .env is configured.',
+  });
 }
 
 /**

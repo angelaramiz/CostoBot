@@ -1,48 +1,43 @@
 'use client';
 
 import EditableCell from '@/components/ui/EditableCell';
-import TagSelector from '@/components/ui/TagSelector';
 import styles from '@/components/ui/Sheet.module.css';
 import { useProjectStore } from '@/store/project.store';
 import { useAuthStore } from '@/store/auth.store';
-import type { Producto, ProductType } from '@/types/layer3-productos';
-import { formatCurrency } from '@/lib/format';
-
-const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
-  fabricado: '🏭 Fabricado',
-  retail: '🛍 Reventa',
-  servicio: '🎯 Servicio',
-};
+import type { ProductPricing } from '@/types/layer3-precios';
+import { formatCurrency, formatPercent } from '@/lib/format';
 
 export default function Layer3ProductoSheet() {
   const token = useAuthStore((s) => s.token) ?? '';
   const project = useProjectStore((s) => s.currentProject);
-  const updateProducto = useProjectStore((s) => s.updateProducto);
-  const addProducto = useProjectStore((s) => s.addProducto);
-  const removeProducto = useProjectStore((s) => s.removeProducto);
+  const updateProductPricing = useProjectStore((s) => s.updateProductPricing);
+  const addProductPricing = useProjectStore((s) => s.addProductPricing);
+  const removeProductPricing = useProjectStore((s) => s.removeProductPricing);
 
   if (!project) return null;
 
-  const productos = project.layers.layer3;
-  const procesoOptions = project.layers.layer2.map((p) => ({
-    id: p.id,
-    label: p.name,
-  }));
+  const products = project.layers.layer3.products;
+  const graphs = project.layers.layer2;
 
   function handleAdd() {
-    const newItem: Producto = {
-      id: crypto.randomUUID(),
-      name: 'Nuevo producto',
-      productType: 'fabricado',
-      procesoIds: [],
-      costoCompra: 0,
-      costoUnitario: 0,
+    const firstGraph = graphs[0];
+    if (!firstGraph) return;
+    const newItem: ProductPricing = {
+      productId: firstGraph.productId,
+      productName: firstGraph.productName,
+      costBreakdown: {
+        ingredients: 0,
+        machines: 0,
+        utensils: 0,
+        services: 0,
+        labor: 0,
+        totalCost: 0,
+      },
+      margenPorcentaje: 30,
+      precioVenta: 0,
+      roi: 0,
     };
-    addProducto(newItem, token);
-  }
-
-  function handleTypeChange(id: string, nextType: ProductType) {
-    updateProducto(id, { productType: nextType }, token);
+    addProductPricing(newItem, token);
   }
 
   return (
@@ -50,105 +45,73 @@ export default function Layer3ProductoSheet() {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th>Tipo</th>
-            <th>Insumos / Costo base</th>
-            <th>Costo unitario</th>
+            <th>Producto</th>
+            <th>Costo total</th>
+            <th>Margen %</th>
+            <th>Precio de venta</th>
+            <th>ROI</th>
             <th style={{ width: 32 }}></th>
           </tr>
         </thead>
         <tbody>
-          {productos.length === 0 && (
+          {products.length === 0 && (
             <tr>
-              <td colSpan={5} className={styles.emptyState}>
-                Sin productos. Agrega el primero ↓
+              <td colSpan={6} className={styles.emptyState}>
+                {graphs.length === 0
+                  ? 'Agrega grafos de producto en Capa 2 primero'
+                  : 'Sin precios. Agrega el primero ↓'}
               </td>
             </tr>
           )}
-          {productos.map((producto) => {
-            const type: ProductType = producto.productType ?? 'fabricado';
-            const isFabricado = type === 'fabricado';
-            return (
-              <tr key={producto.id}>
-                {/* Nombre */}
-                <td>
-                  <EditableCell
-                    value={producto.name}
-                    type="text"
-                    placeholder="Nombre"
-                    onSave={(v) => updateProducto(producto.id, { name: String(v) }, token)}
-                  />
-                </td>
-
-                {/* Selector de tipo */}
-                <td>
-                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                    {(Object.keys(PRODUCT_TYPE_LABELS) as ProductType[]).map((t) => (
-                      <button
-                        key={t}
-                        title={PRODUCT_TYPE_LABELS[t]}
-                        onClick={() => handleTypeChange(producto.id, t)}
-                        style={{
-                          padding: '3px 8px',
-                          fontSize: '0.75rem',
-                          borderRadius: 6,
-                          border: '1px solid',
-                          cursor: 'pointer',
-                          borderColor: type === t ? '#6366f1' : '#d1d5db',
-                          background: type === t ? '#eef2ff' : '#fff',
-                          color: type === t ? '#4338ca' : '#6b7280',
-                          fontWeight: type === t ? 600 : 400,
-                        }}
-                      >
-                        {PRODUCT_TYPE_LABELS[t]}
-                      </button>
-                    ))}
-                  </div>
-                </td>
-
-                {/* Procesos (fabricado) ó Costo de compra (retail/servicio) */}
-                <td>
-                  {isFabricado ? (
-                    <TagSelector
-                      selected={producto.procesoIds}
-                      options={procesoOptions}
-                      placeholder="Sin procesos"
-                      onChange={(ids) => updateProducto(producto.id, { procesoIds: ids }, token)}
-                    />
-                  ) : (
-                    <EditableCell
-                      value={producto.costoCompra ?? 0}
-                      type="number"
-                      placeholder="Costo base (centavos)"
-                      onSave={(v) =>
-                        updateProducto(producto.id, { costoCompra: Number(v) }, token)
-                      }
-                    />
-                  )}
-                </td>
-
-                {/* Costo unitario calculado */}
-                <td>
-                  <span className={styles.calcCell}>{formatCurrency(producto.costoUnitario)}</span>
-                </td>
-
-                <td>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={() => removeProducto(producto.id, token)}
-                    title="Eliminar producto"
-                  >
-                    ✕
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+          {products.map((pricing) => (
+            <tr key={pricing.productId}>
+              <td style={{ fontWeight: 500 }}>{pricing.productName}</td>
+              <td>
+                <span className={styles.calcCell}>
+                  {formatCurrency(pricing.costBreakdown.totalCost)}
+                </span>
+              </td>
+              <td>
+                <EditableCell
+                  value={pricing.margenPorcentaje}
+                  type="percent"
+                  onSave={(v) =>
+                    updateProductPricing(pricing.productId, { margenPorcentaje: v as number }, token)
+                  }
+                />
+              </td>
+              <td>
+                <span className={styles.calcCell}>{formatCurrency(pricing.precioVenta)}</span>
+              </td>
+              <td>
+                <span
+                  className={styles.calcCell}
+                  style={{ color: pricing.roi >= 0 ? '#16a34a' : '#dc2626' }}
+                >
+                  {formatPercent(pricing.roi)}
+                </span>
+              </td>
+              <td>
+                <button
+                  className={styles.deleteBtn}
+                  onClick={() => removeProductPricing(pricing.productId, token)}
+                  title="Eliminar precio"
+                >
+                  ✕
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
       <div className={styles.addRow}>
-        <button className={styles.addBtn} onClick={handleAdd}>
-          + Agregar producto
+        <button
+          className={styles.addBtn}
+          onClick={handleAdd}
+          disabled={graphs.length === 0}
+          title={graphs.length === 0 ? 'Agrega grafos de producto primero' : undefined}
+        >
+          + Agregar precio
         </button>
       </div>
     </div>

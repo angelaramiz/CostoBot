@@ -64,89 +64,54 @@ function buildInsumoSheet(project: BusinessProject): XLSX.WorkSheet {
   return ws;
 }
 
-/** Genera la hoja de Procesos (Layer 2). */
-function buildProcesoSheet(project: BusinessProject): XLSX.WorkSheet {
-  const { layer1, layer2 } = project.layers;
+/** Genera la hoja de Grafos de Producto (Layer 2). */
+function buildProductGraphSheet(project: BusinessProject): XLSX.WorkSheet {
+  const { layer2 } = project.layers;
 
-  const insumoNames = new Map(layer1.map((i) => [i.id, i.name]));
+  const headers = ['Producto', 'Nodos', 'Aristas', 'Costo laboral ($)', 'Costo total ($)'];
 
-  const headers = ['Nombre', 'Insumos incluidos', 'Costo laboral ($)', 'Costo total ($)'];
-
-  const rows = layer2.map((proc) => {
-    const insumos = proc.insumoIds
-      .map((id) => insumoNames.get(id) ?? id)
-      .join(', ');
-    return [
-      proc.name,
-      insumos || '—',
-      toPesos(proc.laborCost),
-      toPesos(proc.totalCost),
-    ];
-  });
+  const rows = layer2.map((graph) => [
+    graph.productName,
+    graph.nodes.length,
+    graph.edges.length,
+    toPesos(graph.laborCost),
+    toPesos(graph.totalCost),
+  ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
   const range = XLSX.utils.decode_range(ws['!ref'] ?? 'A1');
 
-  applyFormat(ws, range, 2, '"$"#,##0.00');
   applyFormat(ws, range, 3, '"$"#,##0.00');
+  applyFormat(ws, range, 4, '"$"#,##0.00');
 
-  setColWidths(ws, [30, 40, 18, 18]);
+  setColWidths(ws, [30, 10, 10, 18, 18]);
   return ws;
 }
 
-/** Genera la hoja de Productos (Layer 3). */
-function buildProductoSheet(project: BusinessProject): XLSX.WorkSheet {
-  const { layer2, layer3 } = project.layers;
-
-  const procesoNames = new Map(layer2.map((p) => [p.id, p.name]));
-
-  const headers = ['Nombre', 'Procesos incluidos', 'Costo unitario ($)'];
-
-  const rows = layer3.map((prod) => {
-    const procesos = prod.procesoIds
-      .map((id) => procesoNames.get(id) ?? id)
-      .join(', ');
-    return [
-      prod.name,
-      procesos || '—',
-      toPesos(prod.costoUnitario),
-    ];
-  });
-
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  const range = XLSX.utils.decode_range(ws['!ref'] ?? 'A1');
-
-  applyFormat(ws, range, 2, '"$"#,##0.00');
-
-  setColWidths(ws, [30, 40, 20]);
-  return ws;
-}
-
-/** Genera la hoja de Precios (Layer 4). */
+/** Genera la hoja de Precios (Layer 3). */
 function buildPrecioSheet(project: BusinessProject): XLSX.WorkSheet {
-  const { layer3, layer4 } = project.layers;
+  const { layer3 } = project.layers;
+  const products = layer3.products;
 
-  const productoNames = new Map(layer3.map((p) => [p.id, p.name]));
+  const headers = ['Producto', 'Costo total ($)', 'Margen %', 'Precio de venta ($)', 'ROI %'];
 
-  const headers = ['Producto', 'Margen %', 'Precio de venta ($)', 'ROI %'];
-
-  const rows = layer4.map((precio) => {
-    return [
-      productoNames.get(precio.productoId) ?? precio.productoId,
-      precio.margenPorcentaje / 100,   // Excel percentage format
-      toPesos(precio.precioVenta),
-      precio.roi / 100,                 // Excel percentage format
-    ];
-  });
+  const rows = products.map((pricing) => [
+    pricing.productName,
+    toPesos(pricing.costBreakdown.totalCost),
+    pricing.margenPorcentaje / 100,
+    toPesos(pricing.precioVenta),
+    pricing.roi / 100,
+  ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
   const range = XLSX.utils.decode_range(ws['!ref'] ?? 'A1');
 
-  applyFormat(ws, range, 1, '0.00%');
-  applyFormat(ws, range, 2, '"$"#,##0.00');
-  applyFormat(ws, range, 3, '0.00%');
+  applyFormat(ws, range, 1, '"$"#,##0.00');
+  applyFormat(ws, range, 2, '0.00%');
+  applyFormat(ws, range, 3, '"$"#,##0.00');
+  applyFormat(ws, range, 4, '0.00%');
 
-  setColWidths(ws, [30, 12, 20, 12]);
+  setColWidths(ws, [30, 18, 12, 20, 12]);
   return ws;
 }
 
@@ -158,8 +123,7 @@ export function exportToXLSX(project: BusinessProject): void {
   const wb = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(wb, buildInsumoSheet(project), 'Insumos');
-  XLSX.utils.book_append_sheet(wb, buildProcesoSheet(project), 'Procesos');
-  XLSX.utils.book_append_sheet(wb, buildProductoSheet(project), 'Productos');
+  XLSX.utils.book_append_sheet(wb, buildProductGraphSheet(project), 'Productos');
   XLSX.utils.book_append_sheet(wb, buildPrecioSheet(project), 'Precios');
 
   const safeName = project.name.replace(/[^a-zA-Z0-9-_\u00C0-\u024F]/g, '_');

@@ -252,6 +252,7 @@ Archivo: CostoBot_Panaderia_Lima_Mar2026.xlsx
 ## 📦 Instalación & Setup
 
 
+
 ---
 
 ## 📊 Casos de Uso

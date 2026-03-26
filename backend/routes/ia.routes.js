@@ -17,6 +17,7 @@ const router = express.Router();
 const verifyFirebaseToken = require('../middleware/verifyFirebaseToken.middleware');
 const BusinessProject = require('../db/BusinessProject.model');
 const { getIAAdapter } = require('../lib/ia/ia.factory');
+const logger = require('../lib/logger');
 
 // ── Rate limiting por usuario (uid) — 20 req/hora ──────────────────────────
 const iaLimiter = rateLimit({
@@ -28,14 +29,25 @@ const iaLimiter = rateLimit({
   message: { error: 'Too Many Requests', message: 'Límite de 20 mensajes por hora alcanzado.' },
 });
 
-// ── GET /api/ia/status — público, no requiere auth ─────────────────────────
-router.get('/status', async (_req, res) => {
+// ── GET /api/ia/status — requiere autenticación (información de infraestructura sensible) ──
+router.get('/status', verifyFirebaseToken, async (req, res) => {
   try {
     const adapter = getIAAdapter();
     const available = await adapter.isAvailable();
     const provider = process.env.IA_PROVIDER || 'openrouter';
+    logger.info('ia_status_checked', {
+      userId: req.uid,
+      provider,
+      available,
+      ip: req.ip,
+    });
     return res.json({ provider, available });
-  } catch {
+  } catch (err) {
+    logger.error('ia_status_check_failed', {
+      userId: req.uid,
+      error: err.message,
+      ip: req.ip,
+    });
     return res.json({ provider: process.env.IA_PROVIDER || 'openrouter', available: false });
   }
 });
@@ -85,6 +97,11 @@ router.post('/chat', async (req, res) => {
       }).lean();
 
       if (!project) {
+        logger.warn('ia_chat_project_not_found', {
+          userId: req.uid,
+          projectId,
+          ip: req.ip,
+        });
         return res.status(404).json({ error: 'Proyecto no encontrado' });
       }
 
@@ -103,11 +120,26 @@ router.post('/chat', async (req, res) => {
       throw new Error('La IA devolvió una respuesta vacía');
     }
 
+    logger.info('ia_chat_response', {
+      userId: req.uid,
+      projectId: projectId || null,
+      mode: chatMode,
+      messageCount: validMessages.length,
+      replyLength: replyText.trim().length,
+      ip: req.ip,
+    });
+
     return res.json({
       reply: replyText.trim(),
     });
   } catch (err) {
-    console.error('[IA] Error en /api/ia/chat:', err.message);
+    logger.error('ia_chat_failed', {
+      userId: req.uid,
+      projectId: projectId || null,
+      mode: chatMode,
+      error: err.message,
+      ip: req.ip,
+    });
     return res.status(502).json({
       error: 'Error al contactar la IA',
       message: err.message,
@@ -128,31 +160,34 @@ router.post('/chat', async (req, res) => {
  */
 function buildProjectContext(project) {
   const layer1 = project.layers?.layer1 ?? [];
-  const layer3 = project.layers?.layer3 ?? [];
-  const layer4 = project.layers?.layer4 ?? [];
+  const layer2 = project.layers?.layer2 ?? [];
+  const layer3 = project.layers?.layer3 ?? { version: '1.0', services: {}, taxes: {}, products: [] };
+  const products = layer3.products ?? [];
 
   // Top 5 insumos por valor total (costPerUnit * quantity)
   const topInsumos = [...layer1]
     .sort((a, b) => b.costPerUnit * b.quantity - a.costPerUnit * a.quantity)
     .slice(0, 5);
 
-  // Costo unitario promedio de productos (en centavos)
-  const totalCostLayer3 =
-    layer3.length > 0
-      ? Math.round(layer3.reduce((acc, p) => acc + (p.costoUnitario ?? 0), 0) / layer3.length)
+  // Costo promedio de productos (desde pricing en layer3)
+  const avgProductCost =
+    products.length > 0
+      ? Math.round(
+          products.reduce((acc, p) => acc + (p.costBreakdown?.totalCost ?? 0), 0) / products.length
+        )
       : 0;
 
   // Margen promedio de precios configurados
   const margenPromedio =
-    layer4.length > 0
-      ? layer4.reduce((acc, p) => acc + (p.margenPorcentaje ?? 0), 0) / layer4.length
+    products.length > 0
+      ? products.reduce((acc, p) => acc + (p.margenPorcentaje ?? 0), 0) / products.length
       : 0;
 
-  const resumen = generateResumen(project, topInsumos, totalCostLayer3, margenPromedio);
+  const resumen = generateResumen(project, topInsumos, avgProductCost, margenPromedio);
 
   return {
     projectName: project.name,
-    totalCostLayer3,
+    avgProductCost,
     topInsumosByValue: topInsumos,
     margenPromedio,
     resumen,
@@ -163,14 +198,14 @@ function generateResumen(project, topInsumos, avgCost, margenPromedio) {
   const layers = project.layers ?? {};
   const l1 = layers.layer1?.length ?? 0;
   const l2 = layers.layer2?.length ?? 0;
-  const l3 = layers.layer3?.length ?? 0;
-  const l4 = layers.layer4?.length ?? 0;
+  const products = layers.layer3?.products ?? [];
+  const l3 = products.length;
 
   const lines = [
     `- Insumos registrados: ${l1}`,
-    `- Procesos definidos: ${l2}`,
-    `- Productos: ${l3} (costo unitario promedio: $${(avgCost / 100).toFixed(2)} MXN)`,
-    `- Precios configurados: ${l4} (margen promedio: ${margenPromedio.toFixed(1)}%)`,
+    `- Grafos de producto: ${l2}`,
+    `- Productos con precio: ${l3} (costo promedio: $${(avgCost / 100).toFixed(2)} MXN)`,
+    `- Margen promedio: ${margenPromedio.toFixed(1)}%`,
   ];
 
   if (topInsumos.length > 0) {

@@ -7,6 +7,7 @@
 'use strict';
 
 const mongoose = require('mongoose');
+const logger = require('./lib/logger');
 
 let isConnected = false;
 
@@ -15,7 +16,7 @@ async function connectDB() {
 
   const uri = process.env.DATABASE_URL;
   if (!uri) {
-    console.warn('[DB] DATABASE_URL not set — skipping MongoDB connection (in-memory mode)');
+    logger.warn('db_no_uri', { msg: 'DATABASE_URL not set — skipping MongoDB connection (in-memory mode)' });
     return;
   }
 
@@ -24,9 +25,9 @@ async function connectDB() {
       serverSelectionTimeoutMS: 5000,
     });
     isConnected = true;
-    console.log('[DB] Connected to MongoDB Atlas');
+    logger.info('db_connected', { provider: 'MongoDB Atlas' });
   } catch (err) {
-    console.error('[DB] Connection failed:', err.message);
+    logger.error('db_connection_failed', { error: err.message });
     // Non-fatal: server continues with in-memory fallback
   }
 }

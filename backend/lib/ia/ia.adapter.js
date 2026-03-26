@@ -13,7 +13,7 @@
 /**
  * @typedef {Object} ProjectContext
  * @property {string} projectName
- * @property {number} totalCostLayer3  — costo unitario promedio en centavos
+ * @property {number} avgProductCost — costo promedio de productos en centavos
  * @property {Array} topInsumosByValue — top 5 insumos más caros
  * @property {number} margenPromedio
  * @property {string} resumen
@@ -27,7 +27,7 @@ class IIAAdapter {
    * Envía mensajes a la IA y retorna la respuesta como string.
    * @param {ChatMessage[]} messages
    * @param {ProjectContext} context
-   * @returns {Promise<string>}
+   * @returns {Promise<string | { content: string, reasoning_details?: unknown }>}
    */
   async chat(_messages, _context) {
     throw new Error('chat() not implemented');

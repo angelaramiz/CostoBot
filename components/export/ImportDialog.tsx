@@ -14,8 +14,7 @@ interface ImportDialogProps {
 interface PreviewData {
   project: BusinessProject;
   insumos: number;
-  procesos: number;
-  productos: number;
+  grafos: number;
   precios: number;
 }
 
@@ -65,9 +64,8 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
       setPreview({
         project,
         insumos: project.layers.layer1.length,
-        procesos: project.layers.layer2.length,
-        productos: project.layers.layer3.length,
-        precios: project.layers.layer4.length,
+        grafos: project.layers.layer2.length,
+        precios: project.layers.layer3.products.length,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al leer el archivo');
@@ -122,8 +120,7 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
               <p className={styles.projectName}>{preview.project.name}</p>
               <ul className={styles.statList}>
                 <li><span className={styles.statLabel}>Insumos</span><span className={styles.statValue}>{preview.insumos}</span></li>
-                <li><span className={styles.statLabel}>Procesos</span><span className={styles.statValue}>{preview.procesos}</span></li>
-                <li><span className={styles.statLabel}>Productos</span><span className={styles.statValue}>{preview.productos}</span></li>
+                <li><span className={styles.statLabel}>Grafos de producto</span><span className={styles.statValue}>{preview.grafos}</span></li>
                 <li><span className={styles.statLabel}>Precios</span><span className={styles.statValue}>{preview.precios}</span></li>
               </ul>
               <p className={styles.warning}>

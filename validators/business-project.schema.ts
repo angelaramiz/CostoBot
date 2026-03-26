@@ -1,14 +1,12 @@
 import { z } from 'zod';
 import { InsumoSchema } from './layer1.schema';
-import { ProcesoSchema } from './layer2.schema';
-import { ProductoSchema } from './layer3.schema';
-import { PrecioSchema } from './layer4.schema';
+import { ProductGraphSchema } from './layer2.schema';
+import { Layer3PreciosSchema } from './layer3.schema';
 
 export const ProjectLayersSchema = z.object({
   layer1: z.array(InsumoSchema),
-  layer2: z.array(ProcesoSchema),
-  layer3: z.array(ProductoSchema),
-  layer4: z.array(PrecioSchema),
+  layer2: z.array(ProductGraphSchema),
+  layer3: Layer3PreciosSchema,
 });
 
 export const BusinessProjectSchema = z.object({

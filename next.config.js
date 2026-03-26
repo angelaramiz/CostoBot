@@ -22,19 +22,41 @@ const nextConfig = {
     ];
   },
 
-  // COOP: unsafe-none — requerido para Firebase Auth signInWithPopup en móvil.
-  // Google (accounts.google.com) usa COOP: same-origin, lo que rompe window.closed
-  // con same-origin-allow-popups. unsafe-none permite la comunicación postMessage
-  // del popup sin restricciones de ventana cruzada.
+  // Security headers — aplicados en todas las rutas
+  // COOP: unsafe-none SOLO en páginas de autenticación (/login, /register)
+  // porque Firebase signInWithPopup requiere comunicación cross-origin con el popup de Google.
+  // Aplicarlo globalmente expone window.opener en toda la app.
   async headers() {
     return [
       {
+        // Headers de seguridad para todas las rutas
         source: '/(.*)',
         headers: [
+          { key: 'X-Frame-Options',          value: 'DENY' },
+          { key: 'X-Content-Type-Options',   value: 'nosniff' },
+          { key: 'Referrer-Policy',          value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy',       value: 'camera=(), microphone=(), geolocation=()' },
           {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'unsafe-none',
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: https: blob:",
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://*.firebaseio.com",
+              "frame-src https://accounts.google.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+            ].join('; '),
           },
+        ],
+      },
+      {
+        // COOP unsafe-none solo en páginas de autenticación (requerido para signInWithPopup)
+        source: '/(login|register)',
+        headers: [
+          { key: 'Cross-Origin-Opener-Policy', value: 'unsafe-none' },
         ],
       },
     ];

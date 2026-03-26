@@ -5,12 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import styles from './AuthForm.module.css';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+import { API_URL } from '@/lib/config';
 
 export default function RegisterForm() {
   const router = useRouter();
-  const { signUp, token } = useAuth();
+  const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,19 +21,18 @@ export default function RegisterForm() {
     setError(null);
     setLoading(true);
     try {
-      await signUp(name, email, password);
+      const idToken = await signUp(name, email, password);
 
-      // Crear proyecto inicial vacío en MongoDB
-      if (token) {
-        await fetch(`${API_URL}/api/projects`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ name: 'Mi primer proyecto' }),
-        });
-      }
+      // Crear proyecto inicial vacío en MongoDB usando el token recién obtenido
+      // (no leer del store: Zustand puede no haber re-renderizado todavía)
+      await fetch(`${API_URL}/api/projects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ name: 'Mi primer proyecto' }),
+      });
 
       router.push('/dashboard');
     } catch (err: unknown) {
@@ -48,7 +46,7 @@ export default function RegisterForm() {
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <h1 className={styles.title}>Crear cuenta</h1>
 
-      {error && <p className={styles.error}>{error}</p>}
+      {error && <p className={styles.error} role="alert">{error}</p>}
 
       <label className={styles.label}>
         Nombre

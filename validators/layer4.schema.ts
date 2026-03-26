@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+/**
+ * @deprecated Layer 4 ha sido absorbida por Layer 3 (Precios).
+ * Usar ProductPricingSchema de './layer3.schema' en su lugar.
+ */
 export const PrecioSchema = z.object({
   id: z.string().min(1, 'El ID es requerido'),
   productoId: z.string().min(1, 'El ID del producto es requerido'),

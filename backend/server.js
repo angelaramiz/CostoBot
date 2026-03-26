@@ -11,6 +11,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
+const logger = require('./lib/logger');
 const app = express();
 
 // ---------------------------------------------------------------------------
@@ -47,14 +48,6 @@ const generalLimiter = rateLimit({
   message: { error: 'Too Many Requests', message: 'Rate limit exceeded. Try again later.' },
 });
 
-const versionWriteLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 min
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too Many Requests', message: 'Version record rate limit exceeded.' },
-});
-
 app.use(generalLimiter);
 app.use(express.json({ limit: '10kb' }));
 
@@ -72,7 +65,6 @@ const versionRoutes = require('./routes/version.routes');
 const projectRoutes = require('./routes/project.routes');
 const iaRoutes = require('./routes/ia.routes');
 const { connectDB } = require('./db/connection');
-// versionWriteLimiter only on POST — GET uses the general limiter (100/15min)
 app.use('/api/version', versionRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/ia', iaRoutes);
@@ -97,7 +89,7 @@ app.use((err, _req, res, _next) => {
 // ---------------------------------------------------------------------------
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`[CostoBot Backend] Running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+    logger.info('server_started', { port: PORT, env: process.env.NODE_ENV || 'development' });
   });
 });
 

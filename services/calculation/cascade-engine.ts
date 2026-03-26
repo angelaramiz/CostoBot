@@ -1,67 +1,280 @@
 import type { BusinessProject } from '@/types/business-project';
 import type { Insumo } from '@/types/layer1-insumos';
-import type { Proceso } from '@/types/layer2-procesos';
-import type { Producto } from '@/types/layer3-productos';
-import type { Precio } from '@/types/layer4-precios';
+import type {
+  ProductGraph,
+  ProductNode,
+  IngredientNodeData,
+  UtensilNodeData,
+  MachineNodeData,
+  ResultadoNodeData,
+  ImportNodeData,
+} from '@/types/layer2-productos';
+import type { ProductPricing, CostBreakdown, ServicesConfig } from '@/types/layer3-precios';
+import {
+  calculateUtensilDepreciation,
+  calculateMachineCost,
+  calculateInheritedCost,
+  calculatePricing,
+} from './calculations';
 
-type LayerId = 'layer1' | 'layer2' | 'layer3' | 'layer4';
+type LayerId = 'layer1' | 'layer2' | 'layer3';
+
+// ── Helpers internos ────────────────────────────────────────────────────────
+
+function isIngredientData(node: ProductNode): node is ProductNode & { data: IngredientNodeData } {
+  return node.type === 'ingredient';
+}
+function isUtensilData(node: ProductNode): node is ProductNode & { data: UtensilNodeData } {
+  return node.type === 'utensil';
+}
+function isMachineData(node: ProductNode): node is ProductNode & { data: MachineNodeData } {
+  return node.type === 'machine';
+}
+function isImportData(node: ProductNode): node is ProductNode & { data: ImportNodeData } {
+  return node.type === 'import';
+}
 
 /**
- * Recalcula el totalCost de un proceso en base a los insumos activos del proyecto.
- * totalCost = Σ(insumo.costPerUnit * insumo.quantity) + proceso.laborCost
+ * Calcula el desglose de costos de un grafo de producto.
+ * @param servicesConfig Tarifas de servicios de Layer 3 (electricidad, agua, gas, etc.)
  */
-function recalculateProceso(proceso: Proceso, insumos: Insumo[]): Proceso {
+function calculateGraphCostBreakdown(
+  graph: ProductGraph,
+  insumos: Insumo[],
+  allGraphs: ProductGraph[],
+  servicesConfig?: ServicesConfig
+): CostBreakdown {
   const insumoMap = new Map(insumos.map((i) => [i.id, i]));
-  const costoInsumos = proceso.insumoIds.reduce((acc, id) => {
-    const insumo = insumoMap.get(id);
-    if (!insumo) return acc;
-    return acc + Math.round(insumo.costPerUnit * insumo.quantity);
-  }, 0);
-  return { ...proceso, totalCost: costoInsumos + proceso.laborCost };
-}
+  const graphMap = new Map(allGraphs.map((g) => [g.productId, g]));
 
-/**
- * Recalcula el costoUnitario de un producto en base a los procesos activos del proyecto.
- * - `fabricado` (default): costoUnitario = Σ proceso.totalCost
- * - `retail` / `servicio`:  costoUnitario = costoCompra (fijado manualmente)
- */
-function recalculateProducto(producto: Producto, procesos: Proceso[]): Producto {
-  if (producto.productType === 'retail' || producto.productType === 'servicio') {
-    return { ...producto, costoUnitario: producto.costoCompra ?? 0 };
+  let ingredients = 0;
+  let machines = 0;
+  let utensils = 0;
+  let services = 0;
+
+  for (const node of graph.nodes) {
+    if (isIngredientData(node)) {
+      const insumo = insumoMap.get(node.data.insumoId);
+      if (insumo) {
+        ingredients += Math.round(insumo.costPerUnit * node.data.quantity);
+      }
+    } else if (isUtensilData(node)) {
+      const insumo = insumoMap.get(node.data.insumoId);
+      if (insumo && insumo.acquisitionCost && insumo.usefulLifeMonths) {
+        utensils += calculateUtensilDepreciation(
+          insumo.acquisitionCost,
+          insumo.residualValue ?? 0,
+          insumo.usefulLifeMonths,
+          node.data.unitsProducedThisMonth
+        );
+      }
+    } else if (isMachineData(node)) {
+      const insumo = insumoMap.get(node.data.insumoId);
+      if (insumo) {
+        machines += calculateMachineCost(
+          insumo.costPerUnit,
+          node.data.timeMinutes
+        );
+      }
+    } else if (isImportData(node)) {
+      const parentGraph = graphMap.get(node.data.sourceProductId);
+      if (parentGraph) {
+        const resultNode = parentGraph.nodes.find(
+          (n) => n.type === 'resultado'
+        ) as ProductNode & { data: ResultadoNodeData } | undefined;
+        if (resultNode) {
+          ingredients += calculateInheritedCost(
+            parentGraph.totalCost,
+            resultNode.data.mainProduct.expectedQuantity,
+            node.data.quantity
+          );
+        }
+      }
+    }
   }
-  const procesoMap = new Map(procesos.map((p) => [p.id, p]));
-  const costoUnitario = producto.procesoIds.reduce((acc, id) => {
-    const proceso = procesoMap.get(id);
-    if (!proceso) return acc;
-    return acc + proceso.totalCost;
-  }, 0);
-  return { ...producto, costoUnitario };
+
+  // Calcular costo de servicios a partir del consumo declarado en el grafo
+  // Ejemplo: servicesUsage = { electricity: 2.5 } → 2.5 kWh * electricity.baseRate
+  if (servicesConfig && graph.servicesUsage) {
+    for (const [serviceKey, usage] of Object.entries(graph.servicesUsage)) {
+      if (usage <= 0) continue;
+      const rate = servicesConfig[serviceKey];
+      if (rate) {
+        services += Math.round(rate.baseRate * usage);
+      }
+    }
+  }
+
+  const totalCost = ingredients + machines + utensils + services + graph.laborCost;
+
+  return { ingredients, machines, utensils, services, labor: graph.laborCost, totalCost };
 }
 
 /**
- * Recalcula el precioVenta y el ROI de un precio en base al producto referenciado.
- * precioVenta = costoUnitario * (1 + margenPorcentaje / 100)
- * roi = (precioVenta - costoUnitario) / costoUnitario * 100
+ * Recalcula el totalCost de un grafo de producto en base a sus nodos, insumos y servicios.
  */
-function recalculatePrecio(precio: Precio, productos: Producto[]): Precio {
-  const producto = productos.find((p) => p.id === precio.productoId);
-  if (!producto) return precio;
-
-  const { costoUnitario } = producto;
-  const precioVenta = Math.round(costoUnitario * (1 + precio.margenPorcentaje / 100));
-  const roi =
-    costoUnitario > 0
-      ? ((precioVenta - costoUnitario) / costoUnitario) * 100
-      : 0;
-
-  return { ...precio, precioVenta, roi };
+function recalculateProductGraph(
+  graph: ProductGraph,
+  insumos: Insumo[],
+  allGraphs: ProductGraph[],
+  servicesConfig?: ServicesConfig
+): ProductGraph {
+  const breakdown = calculateGraphCostBreakdown(graph, insumos, allGraphs, servicesConfig);
+  return { ...graph, totalCost: breakdown.totalCost };
 }
 
 /**
- * Aplica un cambio de valor a un ítem específico del proyecto y propaga
- * los recálculos en cascada por todas las capas dependientes.
- *
- * @returns Un nuevo BusinessProject con todos los valores actualizados (inmutable).
+ * Recalcula el pricing de un producto en Layer 3, incluyendo el desglose completo de costos.
+ */
+function recalculateProductPricing(
+  pricing: ProductPricing,
+  graphs: ProductGraph[],
+  insumos: Insumo[],
+  servicesConfig?: ServicesConfig
+): ProductPricing {
+  const graph = graphs.find((g) => g.productId === pricing.productId);
+  if (!graph) return pricing;
+
+  const breakdown = calculateGraphCostBreakdown(graph, insumos, graphs, servicesConfig);
+  const { precioVenta, roi } = calculatePricing(breakdown.totalCost, pricing.margenPorcentaje);
+
+  return { ...pricing, costBreakdown: breakdown, precioVenta, roi };
+}
+
+// ── API pública ─────────────────────────────────────────────────────────────
+
+/**
+ * Aplica un cambio en Layer 1 (insumos) y propaga en cascada a Layer 2 y 3.
+ */
+export function propagateInsumoChange(
+  project: BusinessProject,
+  insumoId: string,
+  field: string,
+  newValue: number | string
+): BusinessProject {
+  const updated: BusinessProject = structuredClone(project);
+
+  // Aplicar cambio directo en Layer 1
+  const idx = updated.layers.layer1.findIndex((i) => i.id === insumoId);
+  if (idx === -1) return project;
+  (updated.layers.layer1[idx] as unknown as Record<string, unknown>)[field] = newValue;
+
+  // Recalcular grafos de Layer 2 que usen este insumo
+  updated.layers.layer2 = updated.layers.layer2.map((graph) => {
+    const usesInsumo = graph.nodes.some((node) => {
+      if (isIngredientData(node) || isUtensilData(node) || isMachineData(node)) {
+        return node.data.insumoId === insumoId;
+      }
+      return false;
+    });
+    if (!usesInsumo) return graph;
+    return recalculateProductGraph(
+      graph,
+      updated.layers.layer1,
+      updated.layers.layer2,
+      updated.layers.layer3.services
+    );
+  });
+
+  // Recalcular Layer 3 pricing (incluyendo desglose completo con servicios)
+  updated.layers.layer3 = {
+    ...updated.layers.layer3,
+    updatedAt: new Date().toISOString(),
+    products: updated.layers.layer3.products.map((pricing) =>
+      recalculateProductPricing(
+        pricing,
+        updated.layers.layer2,
+        updated.layers.layer1,
+        updated.layers.layer3.services
+      )
+    ),
+  };
+
+  updated.updatedAt = new Date();
+  return updated;
+}
+
+/**
+ * Aplica un cambio en un grafo de producto (Layer 2) y propaga a Layer 3.
+ */
+export function propagateGraphChange(
+  project: BusinessProject,
+  productId: string,
+  updatedGraph: ProductGraph
+): BusinessProject {
+  const updated: BusinessProject = structuredClone(project);
+
+  const idx = updated.layers.layer2.findIndex((g) => g.productId === productId);
+  if (idx === -1) return project;
+
+  // Recalcular el grafo actualizado
+  updated.layers.layer2[idx] = recalculateProductGraph(
+    updatedGraph,
+    updated.layers.layer1,
+    updated.layers.layer2,
+    updated.layers.layer3.services
+  );
+
+  // Recalcular Layer 3 para este producto
+  updated.layers.layer3 = {
+    ...updated.layers.layer3,
+    updatedAt: new Date().toISOString(),
+    products: updated.layers.layer3.products.map((pricing) => {
+      if (pricing.productId !== productId) return pricing;
+
+      const graph = updated.layers.layer2[idx];
+      const breakdown = calculateGraphCostBreakdown(
+        graph,
+        updated.layers.layer1,
+        updated.layers.layer2,
+        updated.layers.layer3.services
+      );
+      const { precioVenta, roi } = calculatePricing(
+        breakdown.totalCost,
+        pricing.margenPorcentaje
+      );
+      return { ...pricing, costBreakdown: breakdown, precioVenta, roi };
+    }),
+  };
+
+  updated.updatedAt = new Date();
+  return updated;
+}
+
+/**
+ * Aplica un cambio en Layer 3 (pricing: margen, servicios, impuestos).
+ */
+export function propagatePricingChange(
+  project: BusinessProject,
+  productId: string,
+  field: string,
+  newValue: number | string
+): BusinessProject {
+  const updated: BusinessProject = structuredClone(project);
+
+  const pIdx = updated.layers.layer3.products.findIndex(
+    (p) => p.productId === productId
+  );
+  if (pIdx === -1) return project;
+
+  (updated.layers.layer3.products[pIdx] as unknown as Record<string, unknown>)[field] = newValue;
+
+  // Recalcular precioVenta y roi
+  const pricing = updated.layers.layer3.products[pIdx];
+  const { precioVenta, roi } = calculatePricing(
+    pricing.costBreakdown.totalCost,
+    pricing.margenPorcentaje
+  );
+  updated.layers.layer3.products[pIdx] = { ...pricing, precioVenta, roi };
+  updated.layers.layer3.updatedAt = new Date().toISOString();
+
+  updated.updatedAt = new Date();
+  return updated;
+}
+
+/**
+ * Wrapper de compatibilidad: propaga un cambio genérico por layerId.
+ * Usa las funciones específicas según la capa.
  */
 export function propagateChange(
   project: BusinessProject,
@@ -70,91 +283,14 @@ export function propagateChange(
   field: string,
   newValue: number | string
 ): BusinessProject {
-  const updatedProject: BusinessProject = structuredClone(project);
-
-  // Aplicar el cambio directo en la capa indicada
-  // La doble aserción es intencional: necesitamos acceso genérico por campo dinámico
-  const layerItems = updatedProject.layers[layerId] as unknown as Array<Record<string, unknown>>;
-  const itemIndex = layerItems.findIndex((item) => item['id'] === itemId);
-  if (itemIndex === -1) return project;
-  layerItems[itemIndex] = { ...layerItems[itemIndex], [field]: newValue };
-
-  // Determinar qué ítems aguas abajo necesitan recalcularse
-  const affectedL2Ids = new Set<string>();
-  const affectedL3Ids = new Set<string>();
-  const affectedL4Ids = new Set<string>();
-
-  // Layer1 → detectar procesos afectados
-  if (layerId === 'layer1') {
-    for (const proceso of updatedProject.layers.layer2) {
-      if (proceso.insumoIds.includes(itemId)) {
-        affectedL2Ids.add(proceso.id);
-      }
-    }
+  switch (layerId) {
+    case 'layer1':
+      return propagateInsumoChange(project, itemId, field, newValue);
+    case 'layer3':
+      return propagatePricingChange(project, itemId, field, newValue);
+    default:
+      return project;
   }
-
-  // Layer2 (cambio directo o cascada desde L1) → detectar productos afectados
-  const changedProcesos =
-    layerId === 'layer2'
-      ? new Set([itemId, ...affectedL2Ids])
-      : affectedL2Ids;
-
-  if (changedProcesos.size > 0) {
-    for (const producto of updatedProject.layers.layer3) {
-      if (producto.procesoIds.some((id) => changedProcesos.has(id))) {
-        affectedL3Ids.add(producto.id);
-      }
-    }
-  }
-
-  // Layer3 (cambio directo o cascada desde L2) → detectar precios afectados
-  const changedProductos =
-    layerId === 'layer3'
-      ? new Set([itemId, ...affectedL3Ids])
-      : affectedL3Ids;
-
-  if (changedProductos.size > 0) {
-    for (const precio of updatedProject.layers.layer4) {
-      if (changedProductos.has(precio.productoId)) {
-        affectedL4Ids.add(precio.id);
-      }
-    }
-  }
-
-  // Layer4: cambio directo (ej: cambio de margen)
-  if (layerId === 'layer4') {
-    affectedL4Ids.add(itemId);
-  }
-
-  // Recalcular Layer 2
-  if (affectedL2Ids.size > 0) {
-    updatedProject.layers.layer2 = updatedProject.layers.layer2.map((proceso) =>
-      affectedL2Ids.has(proceso.id)
-        ? recalculateProceso(proceso, updatedProject.layers.layer1)
-        : proceso
-    );
-  }
-
-  // Recalcular Layer 3
-  if (affectedL3Ids.size > 0) {
-    updatedProject.layers.layer3 = updatedProject.layers.layer3.map((producto) =>
-      affectedL3Ids.has(producto.id)
-        ? recalculateProducto(producto, updatedProject.layers.layer2)
-        : producto
-    );
-  }
-
-  // Recalcular Layer 4
-  if (affectedL4Ids.size > 0) {
-    updatedProject.layers.layer4 = updatedProject.layers.layer4.map((precio) =>
-      affectedL4Ids.has(precio.id)
-        ? recalculatePrecio(precio, updatedProject.layers.layer3)
-        : precio
-    );
-  }
-
-  updatedProject.updatedAt = new Date();
-  return updatedProject;
 }
 
 /**
@@ -164,20 +300,39 @@ export function propagateChange(
 export function recalculateAllLayers(project: BusinessProject): BusinessProject {
   const updated = structuredClone(project) as BusinessProject;
 
-  // Recalcular Layer2 totalCost
-  updated.layers.layer2 = updated.layers.layer2.map((proceso) =>
-    recalculateProceso(proceso, updated.layers.layer1)
+  // Recalcular todos los grafos de Layer 2
+  updated.layers.layer2 = updated.layers.layer2.map((graph) =>
+    recalculateProductGraph(
+      graph,
+      updated.layers.layer1,
+      updated.layers.layer2,
+      updated.layers.layer3.services
+    )
   );
 
-  // Recalcular Layer3 costoUnitario
-  updated.layers.layer3 = updated.layers.layer3.map((producto) =>
-    recalculateProducto(producto, updated.layers.layer2)
-  );
+  // Recalcular todos los pricings de Layer 3
+  updated.layers.layer3 = {
+    ...updated.layers.layer3,
+    updatedAt: new Date().toISOString(),
+    products: updated.layers.layer3.products.map((pricing) => {
+      const graph = updated.layers.layer2.find(
+        (g) => g.productId === pricing.productId
+      );
+      if (!graph) return pricing;
 
-  // Recalcular Layer4 precioVenta + roi
-  updated.layers.layer4 = updated.layers.layer4.map((precio) =>
-    recalculatePrecio(precio, updated.layers.layer3)
-  );
+      const breakdown = calculateGraphCostBreakdown(
+        graph,
+        updated.layers.layer1,
+        updated.layers.layer2,
+        updated.layers.layer3.services
+      );
+      const { precioVenta, roi } = calculatePricing(
+        breakdown.totalCost,
+        pricing.margenPorcentaje
+      );
+      return { ...pricing, costBreakdown: breakdown, precioVenta, roi };
+    }),
+  };
 
   updated.updatedAt = new Date();
   return updated;

@@ -7,6 +7,7 @@
 'use strict';
 
 const admin = require('firebase-admin');
+const logger = require('./logger');
 
 if (!admin.apps.length) {
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY
@@ -14,7 +15,7 @@ if (!admin.apps.length) {
     : undefined;
 
   if (!privateKey || !process.env.FIREBASE_ADMIN_PROJECT_ID || !process.env.FIREBASE_ADMIN_CLIENT_EMAIL) {
-    console.warn('[Firebase Admin] Credentials not set — auth middleware will be disabled');
+    logger.warn('firebase_admin_no_credentials', { msg: 'Credentials not set — auth middleware will be disabled' });
   } else {
     admin.initializeApp({
       credential: admin.credential.cert({
@@ -23,7 +24,7 @@ if (!admin.apps.length) {
         privateKey,
       }),
     });
-    console.log('[Firebase Admin] Initialized for project:', process.env.FIREBASE_ADMIN_PROJECT_ID);
+    logger.info('firebase_admin_initialized', { projectId: process.env.FIREBASE_ADMIN_PROJECT_ID });
   }
 }
 

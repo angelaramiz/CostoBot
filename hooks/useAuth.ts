@@ -61,13 +61,15 @@ export function useAuth() {
     }
   }
 
-  async function signUp(name: string, email: string, password: string): Promise<void> {
+  /** Registra un usuario y devuelve el idToken para uso inmediato (evita race condition con el store) */
+  async function signUp(name: string, email: string, password: string): Promise<string> {
     try {
       setLoading(true);
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(credential.user, { displayName: name });
       const idToken = await credential.user.getIdToken();
       setUser({ ...credential.user, displayName: name }, idToken);
+      return idToken;
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
       throw new Error(parseAuthError(code));

@@ -10,6 +10,7 @@
 'use strict';
 
 const admin = require('../lib/firebase-admin');
+const logger = require('../lib/logger');
 
 /**
  * @param {import('express').Request} req
@@ -42,9 +43,12 @@ async function verifyFirebaseToken(req, res, next) {
     next();
   } catch (err) {
     const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
-    console.warn(
-      `[Auth] 401 invalid token — ip=${ip} ua=${req.headers['user-agent'] || '-'} ts=${new Date().toISOString()} reason=${err.code || err.message}`
-    );
+    logger.warn('auth_token_invalid', {
+      ip,
+      userAgent: req.headers['user-agent'] || '-',
+      reason: err.code || 'unknown',
+      path: req.path,
+    });
     return res.status(401).json({
       error: 'Unauthorized',
       message: 'Token inválido o expirado.',

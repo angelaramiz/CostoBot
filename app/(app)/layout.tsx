@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AuthGuard from '@/components/auth/AuthGuard';
 import VersionBadge from '@/components/ui/VersionBadge';
+import Image from 'next/image';
 
 // Pinga el backend al cargar; devuelve true cuando responde.
 function useBackendWakeup() {
-  const [ready, setReady] = useState(false);
+  // Si no hay URL configurada, se considera listo de inmediato.
+  const [ready, setReady] = useState(() => !process.env.NEXT_PUBLIC_API_URL);
 
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_API_URL;
-    if (!url) { setReady(true); return; }
+    if (!url) return; // ready ya es true por lazy init
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30_000);
@@ -106,7 +108,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             background: 'var(--color-surface)',
           }}
         >
-          <img src="/logo.svg" alt="CostoBot" height={24} style={{ display: 'block' }} />
+          <Image src="/logo.svg" alt="CostoBot" width={100} height={24} style={{ display: 'block' }} />
           <VersionBadge />
         </footer>
       </div>

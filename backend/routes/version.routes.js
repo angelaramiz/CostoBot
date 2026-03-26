@@ -22,6 +22,7 @@ const router = express.Router();
 const { requirePublicKey, requireInternalKey } = require('../middleware/apiKey.middleware');
 const { getConnectionState } = require('../db/connection');
 const VersionHistory = require('../db/VersionHistory.model');
+const logger = require('../lib/logger');
 
 // Rate limiter only for write operations
 const versionWriteLimiter = rateLimit({
@@ -56,7 +57,7 @@ router.get('/', requirePublicKey, async (req, res) => {
         return res.json({ version: latest.version, project: latest.project, updatedAt: latest.pushedAt });
       }
     } catch (err) {
-      console.error('[version] GET / DB error:', err.message);
+      logger.error('version_fetch_db_failed', { error: err.message, ip: req.ip });
     }
   }
   res.json({ version: currentVersion.version, project: currentVersion.project, updatedAt: currentVersion.updatedAt });
@@ -69,11 +70,20 @@ router.post('/record', versionWriteLimiter, requireInternalKey, async (req, res)
   const { version, bumpType, message, commitHash, branch, project } = req.body;
 
   if (!version || !bumpType || !message) {
+    logger.warn('version_record_validation_failed', {
+      reason: 'missing_required_fields',
+      body: { version, bumpType, message: message?.slice(0, 50) },
+      ip: req.ip,
+    });
     return res.status(400).json({ error: 'Bad Request', message: 'Required fields: version, bumpType, message' });
   }
 
   const validBumpTypes = ['patch', 'minor', 'major', 'rollback'];
   if (!validBumpTypes.includes(bumpType)) {
+    logger.warn('version_record_invalid_bump_type', {
+      bumpType,
+      ip: req.ip,
+    });
     return res.status(400).json({ error: 'Bad Request', message: `bumpType must be one of: ${validBumpTypes.join(', ')}` });
   }
 
@@ -91,14 +101,21 @@ router.post('/record', versionWriteLimiter, requireInternalKey, async (req, res)
     try {
       await VersionHistory.create(entry);
     } catch (err) {
-      console.error('[version] POST /record DB error:', err.message);
+      logger.error('version_record_db_failed', { error: err.message, version, bumpType, ip: req.ip });
     }
   } else {
     versionHistoryMemory.unshift(entry);
   }
 
   currentVersion = { version, project: entry.project, updatedAt: entry.pushedAt };
-  console.info(`[version] Recorded ${bumpType} bump to ${version}: ${message}`);
+  logger.info('version_recorded', {
+    version,
+    bumpType,
+    project: entry.project,
+    branch: entry.branch,
+    commitHash: entry.commitHash,
+    ip: req.ip,
+  });
   res.status(201).json({ ok: true, recorded: entry });
 });
 
@@ -116,7 +133,7 @@ router.get('/history', requireInternalKey, async (req, res) => {
         .sort({ pushedAt: -1 }).skip((page - 1) * limit).limit(limit).lean();
       return res.json({ page, limit, total, data });
     } catch (err) {
-      console.error('[version] GET /history DB error:', err.message);
+      logger.error('version_history_db_failed', { error: err.message, ip: req.ip });
     }
   }
 

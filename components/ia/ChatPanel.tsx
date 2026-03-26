@@ -25,6 +25,13 @@ export default function ChatPanel({
   welcomeMessage,
 }: ChatPanelProps) {
   const [open, setOpen] = useState(autoOpen);
+  // Patrón React docs para ajustar estado cuando cambia una prop sin useEffect:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [autoOpenPrev, setAutoOpenPrev] = useState(autoOpen);
+  if (autoOpen !== autoOpenPrev) {
+    setAutoOpenPrev(autoOpen);
+    if (autoOpen) setOpen(true);
+  }
   const { messages, isLoading, error, sendMessage, clearMessages } = useIAChat({
     projectId,
     mode,
@@ -35,11 +42,6 @@ export default function ChatPanel({
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
-
-  // Si autoOpen cambia externamente (ej. tras onboarding), sincronizar
-  useEffect(() => {
-    if (autoOpen) setOpen(true);
-  }, [autoOpen]);
 
   const isDashboard = mode === 'dashboard' || mode === 'onboarding';
   const title = isDashboard ? 'Guía CostoBot' : 'Asistente CostoBot';

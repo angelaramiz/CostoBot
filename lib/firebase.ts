@@ -8,8 +8,8 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_APIKEY,
-  // Hardcoded a web.app: evita bloqueos de Chrome Better Ads.
-  authDomain:        'costobot-79a76.web.app',
+  // Usa env variable, con fallback a web.app para evitar bloqueos de Chrome Better Ads.
+  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTHDOMAIN ?? 'costobot-79a76.web.app',
   projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECTID,
   storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGEBUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID,
