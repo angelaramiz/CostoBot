@@ -22,6 +22,8 @@ import IngredientNode from './nodes/IngredientNode';
 import MachineNode from './nodes/MachineNode';
 import UtensilNode from './nodes/UtensilNode';
 import ResultadoNode from './nodes/ResultadoNode';
+import ExportNode from './nodes/ExportNode';
+import ImportNode from './nodes/ImportNode';
 import NodePropsPanel from './NodePropsPanel';
 import type { ProductGraph, ProductNode, ProductEdge } from '@/types/layer2-productos';
 import type { Insumo } from '@/types/layer1-insumos';
@@ -32,6 +34,8 @@ const NODE_TYPES = {
   machine: MachineNode,
   utensil: UtensilNode,
   resultado: ResultadoNode,
+  export: ExportNode,
+  import: ImportNode,
 };
 
 const PALETTE = [
@@ -39,6 +43,8 @@ const PALETTE = [
   { type: 'utensil', label: 'Utensilio', icon: '🔧' },
   { type: 'machine', label: 'Máquina', icon: '⚙️' },
   { type: 'resultado', label: 'Resultado', icon: '🎯' },
+  { type: 'export', label: 'Exportar', icon: '📤' },
+  { type: 'import', label: 'Importar', icon: '📥' },
 ] as const;
 
 function toFlowNodes(nodes: ProductNode[]): Node[] {
@@ -93,6 +99,41 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
   }, []);
 
   const onConnect = useCallback((conn: Connection) => {
+    // Validación: no permitir conexiones de un nodo a sí mismo
+    if (conn.source === conn.target) {
+      console.warn('❌ No se puede conectar un nodo a sí mismo');
+      return;
+    }
+
+    // Validación: solo permitir conexiones válidas
+    const sourceNode = nodes.find((n) => n.id === conn.source);
+    const targetNode = nodes.find((n) => n.id === conn.target);
+    
+    if (!sourceNode || !targetNode) {
+      console.warn('❌ Nodo no existe');
+      return;
+    }
+
+    // Regla: ingrediente/utensilio/máquina → resultado
+    // Regla: resultado → export (para marcar como reutilizable)
+    // Regla: import → resultado (usar producto reutilizable)
+    const validConnections = [
+      ['ingredient', 'resultado'],
+      ['machine', 'resultado'],
+      ['utensil', 'resultado'],
+      ['resultado', 'export'],
+      ['import', 'resultado'],
+    ];
+
+    const isValid = validConnections.some(
+      ([src, tgt]) => sourceNode.type === src && targetNode.type === tgt
+    );
+
+    if (!isValid) {
+      console.warn(`❌ No se puede conectar ${sourceNode.type} → ${targetNode.type}`);
+      return; // Silenciosamente rechazar conexión inválida
+    }
+
     setEdges((eds) =>
       addEdge(
         {
@@ -105,7 +146,7 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
       )
     );
     setIsDirty(true);
-  }, []);
+  }, [nodes]);
 
   function handleAddNode(type: typeof PALETTE[number]['type']) {
     const id = crypto.randomUUID();
@@ -178,6 +219,15 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
     setIsDirty(false);
   }
 
+  const [showNodeMenu, setShowNodeMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+
+  function handleCanvasDoubleClick(e: React.MouseEvent) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setShowNodeMenu(true);
+  }
+
   return (
     <div className={styles.editorWrapper}>
       {/* Toolbar */}
@@ -218,7 +268,7 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
         </div>
 
         {/* Canvas React Flow */}
-        <div className={styles.canvasFlow}>
+        <div className={styles.canvasFlow} onDoubleClick={handleCanvasDoubleClick}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -246,6 +296,79 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
               style={{ background: '#1e293b', border: '1px solid #334155' }}
             />
           </ReactFlow>
+
+          {/* Menú de doble-clic para agregar nodos */}
+          {showNodeMenu && (
+            <div
+              style={{
+                position: 'absolute',
+                left: menuPos.x,
+                top: menuPos.y,
+                background: '#1e293b',
+                border: '1px solid #334155',
+                borderRadius: 8,
+                boxShadow: '0 8px 32px #0008',
+                zIndex: 20,
+                minWidth: 160,
+              }}
+              onMouseLeave={() => setShowNodeMenu(false)}
+            >
+              {PALETTE.map((p) => (
+                <button
+                  key={p.type}
+                  onClick={() => {
+                    const id = crypto.randomUUID();
+                    const newNode: Node = {
+                      id,
+                      type: p.type,
+                      position: { x: menuPos.x - 80, y: menuPos.y - 40 },
+                      data: {} as Record<string, unknown>,
+                    };
+
+                    if (p.type === 'ingredient') newNode.data = { insumoId: '', insumoName: 'Nuevo insumo', quantity: 1, unit: 'pza' };
+                    if (p.type === 'machine') newNode.data = { insumoId: '', insumoName: 'Nueva máquina', timeMinutes: 10, temperature: undefined, temperatureUnit: 'C' };
+                    if (p.type === 'utensil') newNode.data = { insumoId: '', insumoName: 'Nuevo utensilio', unitsProducedThisMonth: 1 };
+                    if (p.type === 'resultado') newNode.data = {
+                      mainProduct: { name: graph.productName, expectedQuantity: 1, unit: 'pza' },
+                      inputTotal: 0,
+                      yield: 1,
+                    };
+                    if (p.type === 'export') newNode.data = { exportedProductId: graph.productId, exportedProductName: graph.productName, isReusable: true };
+                    if (p.type === 'import') newNode.data = { sourceProductId: '', sourceProductName: 'Producto', quantity: 1, unit: 'pza' };
+
+                    setNodes((prev) => [...prev, newNode]);
+                    setShowNodeMenu(false);
+                    setIsDirty(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    fontSize: '0.82rem',
+                    transition: 'all 0.15s',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = '#0f172a';
+                    (e.currentTarget as HTMLElement).style.color = '#e2e8f0';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = 'none';
+                    (e.currentTarget as HTMLElement).style.color = '#94a3b8';
+                  }}
+                >
+                  <span style={{ fontSize: '1rem' }}>{p.icon}</span>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Panel de propiedades */}
           {selectedNode && (

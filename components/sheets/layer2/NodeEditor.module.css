@@ -266,6 +266,12 @@
   font-weight: 500;
 }
 
+.formHint {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
 .formInput {
   background: #0f172a;
   border: 1px solid #334155;
@@ -303,6 +309,16 @@
 
 .propPanelSave:hover {
   background: #1d4ed8;
+}
+
+.sectionTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #334155;
 }
 
 /* ── Estado vacío ──────────────────────────────────────────────────── */

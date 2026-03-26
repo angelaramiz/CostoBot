@@ -8,6 +8,8 @@ import type {
   MachineNodeData,
   UtensilNodeData,
   ResultadoNodeData,
+  ExportNodeData,
+  ImportNodeData,
 } from '@/types/layer2-productos';
 import type { Insumo } from '@/types/layer1-insumos';
 import styles from './NodeEditor.module.css';
@@ -185,65 +187,267 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
       )}
 
       {/* ── Resultado ─────────────────────────────────────────────── */}
-      {nodeType === 'resultado' && (
-        <>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Nombre del producto</label>
-            <input
-              className={styles.formInput}
-              type="text"
-              value={String((form.mainProduct as ResultadoNodeData['mainProduct'])?.name ?? '')}
-              onChange={(e) =>
-                set('mainProduct', {
-                  ...(form.mainProduct as object ?? {}),
-                  name: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Cantidad esperada de salida</label>
-            <input
-              className={styles.formInput}
-              type="number"
-              min={0}
-              step={0.01}
-              value={String((form.mainProduct as ResultadoNodeData['mainProduct'])?.expectedQuantity ?? 0)}
-              onChange={(e) =>
-                set('mainProduct', {
-                  ...(form.mainProduct as object ?? {}),
-                  expectedQuantity: parseFloat(e.target.value) || 0,
-                })
-              }
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Unidad de salida</label>
-            <input
-              className={styles.formInput}
-              type="text"
-              value={String((form.mainProduct as ResultadoNodeData['mainProduct'])?.unit ?? '')}
-              onChange={(e) =>
-                set('mainProduct', {
-                  ...(form.mainProduct as object ?? {}),
-                  unit: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Total de entrada (suma ingredientes)</label>
-            <input
-              className={styles.formInput}
-              type="number"
-              min={0}
-              step={0.01}
-              value={String(form.inputTotal ?? 0)}
-              onChange={(e) => set('inputTotal', parseFloat(e.target.value) || 0)}
-            />
-          </div>
-        </>
-      )}
+      {nodeType === 'resultado' && (() => {
+        const resultadoData = form as ResultadoNodeData;
+        const mainProd = resultadoData.mainProduct ?? { name: '', expectedQuantity: 0, unit: '' };
+        const byProd = resultadoData.byProduct;
+
+        return (
+          <>
+            {/* Producto Principal */}
+            <div className={styles.sectionTitle}>📦 Producto Principal</div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Nombre del producto</label>
+              <input
+                className={styles.formInput}
+                type="text"
+                value={String(mainProd.name ?? '')}
+                onChange={(e) =>
+                  set('mainProduct', {
+                    ...mainProd,
+                    name: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Cantidad esperada de salida</label>
+              <input
+                className={styles.formInput}
+                type="number"
+                min={0}
+                step={0.01}
+                value={String(mainProd.expectedQuantity ?? 0)}
+                onChange={(e) =>
+                  set('mainProduct', {
+                    ...mainProd,
+                    expectedQuantity: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Unidad de salida</label>
+              <input
+                className={styles.formInput}
+                type="text"
+                value={String(mainProd.unit ?? '')}
+                onChange={(e) =>
+                  set('mainProduct', {
+                    ...mainProd,
+                    unit: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            {/* Sub-producto (Byproduct) */}
+            <div className={styles.sectionTitle}>🔄 Sub-producto (Opcional)</div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>
+                <input
+                  type="checkbox"
+                  checked={!!byProd}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      set('byProduct', {
+                        name: '',
+                        expectedQuantity: 0,
+                        unit: '',
+                        canBeIngredient: false,
+                        globalIngredientId: undefined,
+                      });
+                    } else {
+                      set('byProduct', undefined);
+                    }
+                  }}
+                />
+                {' '}
+                Usar sub-producto
+              </label>
+            </div>
+
+            {byProd && (
+              <>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Nombre del sub-producto</label>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    value={String(byProd.name ?? '')}
+                    onChange={(e) =>
+                      set('byProduct', {
+                        ...byProd,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Cantidad esperada</label>
+                  <input
+                    className={styles.formInput}
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={String(byProd.expectedQuantity ?? 0)}
+                    onChange={(e) =>
+                      set('byProduct', {
+                        ...byProd,
+                        expectedQuantity: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Unidad</label>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    value={String(byProd.unit ?? '')}
+                    onChange={(e) =>
+                      set('byProduct', {
+                        ...byProd,
+                        unit: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    <input
+                      type="checkbox"
+                      checked={!!byProd.canBeIngredient}
+                      onChange={(e) =>
+                        set('byProduct', {
+                          ...byProd,
+                          canBeIngredient: e.target.checked,
+                        })
+                      }
+                    />
+                    {' '}
+                    Registrable como insumo en Layer 1
+                  </label>
+                </div>
+              </>
+            )}
+
+            {/* Rendimiento */}
+            <div className={styles.sectionTitle}>📊 Rendimiento</div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Total de entrada (suma ingredientes)</label>
+              <input
+                className={styles.formInput}
+                type="number"
+                min={0}
+                step={0.01}
+                value={String(resultadoData.inputTotal ?? 0)}
+                onChange={(e) => set('inputTotal', parseFloat(e.target.value) || 0)}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Rendimiento (0-1)</label>
+              <input
+                className={styles.formInput}
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                value={String(resultadoData.yield ?? 0.8)}
+                onChange={(e) => set('yield', parseFloat(e.target.value) || 0)}
+              />
+              <span className={styles.formHint}>Ej: 0.80 = 80% de rendimiento</span>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* ── Export ────────────────────────────────────────────────── */}
+      {nodeType === 'export' && (() => {
+        const exportData = form as ExportNodeData;
+        return (
+          <>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>ID del producto exportado</label>
+              <input
+                className={styles.formInput}
+                type="text"
+                readOnly
+                value={String(exportData.exportedProductId ?? '')}
+              />
+              <span className={styles.formHint}>Asignado automáticamente</span>
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Nombre del producto</label>
+              <input
+                className={styles.formInput}
+                type="text"
+                value={String(exportData.exportedProductName ?? '')}
+                onChange={(e) => set('exportedProductName', e.target.value)}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>
+                <input
+                  type="checkbox"
+                  checked={!!exportData.isReusable}
+                  onChange={(e) => set('isReusable', e.target.checked)}
+                />
+                {' '}
+                Reutilizable en otros productos
+              </label>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* ── Import ────────────────────────────────────────────────── */}
+      {nodeType === 'import' && (() => {
+        const importData = form as ImportNodeData;
+        return (
+          <>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Producto a importar (ID)</label>
+              <input
+                className={styles.formInput}
+                type="text"
+                value={String(importData.sourceProductId ?? '')}
+                onChange={(e) => set('sourceProductId', e.target.value)}
+                placeholder="ID del producto exportado"
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Nombre del producto</label>
+              <input
+                className={styles.formInput}
+                type="text"
+                value={String(importData.sourceProductName ?? '')}
+                onChange={(e) => set('sourceProductName', e.target.value)}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Cantidad usada</label>
+              <input
+                className={styles.formInput}
+                type="number"
+                min={0}
+                step={0.01}
+                value={String(importData.quantity ?? 0)}
+                onChange={(e) => set('quantity', parseFloat(e.target.value) || 0)}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Unidad</label>
+              <input
+                className={styles.formInput}
+                type="text"
+                value={String(importData.unit ?? 'pza')}
+                onChange={(e) => set('unit', e.target.value)}
+              />
+            </div>
+          </>
+        );
+      })()}
 
       <button className={styles.propPanelSave} onClick={handleSave}>
         Guardar cambios
