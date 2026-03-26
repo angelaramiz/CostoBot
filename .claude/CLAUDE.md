@@ -27,6 +27,8 @@
 - Test critical functions: auth, cascade engine, calculations, schema validation
 - Commit with emoji prefixes for AUTONOMOUS hook: 🐛 fix, ✨ feat, 💥 BREAKING
 - Never hardcode API keys — always use .env variables
+- **Defensive validation on data load**: Normalize ALL collections (layer1, layer2 ProductGraph.nodes/edges, layer3.products) on load from backend — backend serialization can produce `undefined` instead of arrays. Use `Array.isArray()` pattern before any iteration/access.
+- **Defensive iteration**: Before iterating/mapping/filtering over arrays, validate with `Array.isArray()` or fallback to empty array: `for (const x of Array.isArray(data) ? data : [])`
 
 ### ❌ NEVER do:
 - Store API keys in source files or .claude/ folder
