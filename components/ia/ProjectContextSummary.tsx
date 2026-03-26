@@ -2,24 +2,33 @@
 
 import { useEffect, useState } from 'react';
 import { useProjectStore } from '@/store/project.store';
+import { useAuthStore } from '@/store/auth.store';
 import { formatCurrency } from '@/lib/format';
 import styles from './ProjectContextSummary.module.css';
 import { API_URL } from '@/lib/config';
 
 export default function ProjectContextSummary() {
   const project = useProjectStore((s) => s.currentProject);
+  const token = useAuthStore((s) => s.token);
   const [provider, setProvider] = useState<string>('openrouter');
   const [available, setAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/ia/status`)
+    if (!token) {
+      setAvailable(false);
+      return;
+    }
+
+    fetch(`${API_URL}/api/ia/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((r) => r.json())
       .then((d) => {
         setProvider(d.provider ?? 'openrouter');
         setAvailable(d.available ?? false);
       })
       .catch(() => setAvailable(false));
-  }, []);
+  }, [token]);
 
   if (!project) return null;
 
