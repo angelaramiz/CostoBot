@@ -50,6 +50,9 @@
 
 .tabPanel {
   padding-top: 16px;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 640px) {

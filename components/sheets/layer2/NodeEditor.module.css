@@ -1,0 +1,347 @@
+/* NodeEditor.module.css — Estilos del editor visual de nodos (Capa 2) */
+
+/* ── Wrapper principal ─────────────────────────────────────────────── */
+.editorWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 520px;
+  background: #0f172a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  flex-wrap: wrap;
+}
+
+.toolbarTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-right: 8px;
+}
+
+.toolbarBtn {
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.toolbarBtn:hover {
+  background: #1e3a5f;
+  color: #60a5fa;
+  border-color: #3b82f6;
+}
+
+.toolbarBtnDanger {
+  composes: toolbarBtn;
+  color: #f87171;
+  border-color: #7f1d1d;
+}
+
+.toolbarBtnDanger:hover {
+  background: #450a0a;
+  color: #fca5a5;
+  border-color: #ef4444;
+}
+
+.toolbarSep {
+  flex: 1;
+}
+
+/* ── Área del canvas ───────────────────────────────────────────────── */
+.canvasArea {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.canvasSidebar {
+  width: 200px;
+  min-width: 180px;
+  background: #1e293b;
+  border-right: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 8px;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.sidebarTitle {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
+
+.paletteItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  cursor: grab;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.paletteItem:hover {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.paletteIcon {
+  font-size: 1rem;
+}
+
+.canvasFlow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Nodos ─────────────────────────────────────────────────────────── */
+.node {
+  min-width: 160px;
+  border-radius: 8px;
+  border: 1.5px solid #334155;
+  background: #1e293b;
+  box-shadow: 0 2px 8px #0008;
+  padding: 0;
+  font-family: inherit;
+  transition: box-shadow 0.15s;
+}
+
+.nodeSelected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px #3b82f640;
+}
+
+.nodeHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px 6px 0 0;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+}
+
+.nodeIcon {
+  font-size: 0.95rem;
+}
+
+.nodeType {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.nodeBody {
+  padding: 8px 10px;
+}
+
+.nodeLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.nodeMeta {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* ── Variantes de color por tipo ──────────────────────────────────── */
+.nodeIngredient .nodeHeader {
+  background: #052e16;
+  border-bottom-color: #166534;
+}
+.nodeIngredient {
+  border-color: #166534;
+}
+
+.nodeMachine .nodeHeader {
+  background: #1c1917;
+  border-bottom-color: #78350f;
+}
+.nodeMachine {
+  border-color: #78350f;
+}
+
+.nodeUtensil .nodeHeader {
+  background: #1e1b4b;
+  border-bottom-color: #3730a3;
+}
+.nodeUtensil {
+  border-color: #3730a3;
+}
+
+.nodeResultado .nodeHeader {
+  background: #1e1b4b;
+  border-bottom-color: #7c3aed;
+}
+.nodeResultado {
+  border-color: #7c3aed;
+}
+
+/* ── Modal / Panel de propiedades ─────────────────────────────────── */
+.propPanel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 280px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px #0008;
+  padding: 16px;
+  z-index: 10;
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+}
+
+.propPanelTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.propPanelClose {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px;
+  line-height: 1;
+}
+
+.propPanelClose:hover {
+  color: #f87171;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.formLabel {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.formInput {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 5px;
+  color: #e2e8f0;
+  padding: 6px 8px;
+  font-size: 0.83rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.formInput:focus {
+  border-color: #3b82f6;
+}
+
+.formSelect {
+  composes: formInput;
+  cursor: pointer;
+}
+
+.propPanelSave {
+  width: 100%;
+  padding: 7px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.15s;
+}
+
+.propPanelSave:hover {
+  background: #1d4ed8;
+}
+
+/* ── Estado vacío ──────────────────────────────────────────────────── */
+.emptyCanvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  color: #475569;
+  font-size: 0.88rem;
+  text-align: center;
+  padding: 24px;
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  opacity: 0.5;
+}
+
+/* ── Selector de grafo ─────────────────────────────────────────────── */
+.graphSelector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.graphSelect {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 5px;
+  color: #e2e8f0;
+  padding: 5px 8px;
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.graphSelect:focus {
+  border-color: #3b82f6;
+}
