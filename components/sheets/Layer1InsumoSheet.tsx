@@ -43,21 +43,18 @@ export default function Layer1InsumoSheet() {
             <th>Tipo</th>
             <th>Unidad</th>
             <th>Costo / unidad</th>
-            <th>Cantidad</th>
-            <th>Subtotal</th>
             <th style={{ width: 32 }}></th>
           </tr>
         </thead>
         <tbody>
           {insumos.length === 0 && (
             <tr>
-              <td colSpan={7} className={styles.emptyState}>
+              <td colSpan={5} className={styles.emptyState}>
                 Sin insumos. Agrega el primero ↓
               </td>
             </tr>
           )}
           {insumos.map((insumo) => {
-            const subtotal = Math.round(insumo.costPerUnit * insumo.quantity);
             return (
               <tr key={insumo.id}>
                 <td>
@@ -90,16 +87,6 @@ export default function Layer1InsumoSheet() {
                     type="currency"
                     onSave={(v) => updateInsumo(insumo.id, { costPerUnit: v as number }, token)}
                   />
-                </td>
-                <td>
-                  <EditableCell
-                    value={insumo.quantity}
-                    type="number"
-                    onSave={(v) => updateInsumo(insumo.id, { quantity: v as number }, token)}
-                  />
-                </td>
-                <td>
-                  <span className={styles.calcCell}>{formatCurrency(subtotal)}</span>
                 </td>
                 <td>
                   <button

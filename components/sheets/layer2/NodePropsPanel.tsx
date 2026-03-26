@@ -190,7 +190,7 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
 
       {/* ── Resultado ─────────────────────────────────────────────── */}
       {nodeType === 'resultado' && (() => {
-        const resultadoData = form as ResultadoNodeData;
+        const resultadoData = form as unknown as ResultadoNodeData;
         const mainProd = resultadoData.mainProduct ?? { name: '', expectedQuantity: 0, unit: '' };
         const byProd = resultadoData.byProduct;
 
@@ -366,7 +366,7 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
 
       {/* ── Export ────────────────────────────────────────────────── */}
       {nodeType === 'export' && (() => {
-        const exportData = form as ExportNodeData;
+        const exportData = form as unknown as ExportNodeData;
         return (
           <>
             <div className={styles.formGroup}>
@@ -405,7 +405,7 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
 
       {/* ── Import ────────────────────────────────────────────────── */}
       {nodeType === 'import' && (() => {
-        const importData = form as ImportNodeData;
+        const importData = form as unknown as ImportNodeData;
         return (
           <>
             <div className={styles.formGroup}>

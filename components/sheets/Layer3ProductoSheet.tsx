@@ -11,11 +11,18 @@ import { formatCurrency, formatPercent } from '@/lib/format';
 export default function Layer3ProductoSheet() {
   const token = useAuthStore((s) => s.token) ?? '';
   const project = useProjectStore((s) => s.currentProject);
+  const updateProjectData = useProjectStore((s) => s.updateProjectData);
   const updateProductPricing = useProjectStore((s) => s.updateProductPricing);
   const addProductPricing = useProjectStore((s) => s.addProductPricing);
   const removeProductPricing = useProjectStore((s) => s.removeProductPricing);
 
   const [expandedSection, setExpandedSection] = useState<'services' | 'taxes' | 'extra' | 'products'>('products');
+  const [newServiceName, setNewServiceName] = useState('');
+  const [newServiceRate, setNewServiceRate] = useState('');
+  const [newServiceUnit, setNewServiceUnit] = useState('');
+  const [newTaxName, setNewTaxName] = useState('');
+  const [newTaxRate, setNewTaxRate] = useState('');
+  const [newTaxCountry, setNewTaxCountry] = useState('MX');
 
   if (!project) return null;
 
@@ -43,6 +50,46 @@ export default function Layer3ProductoSheet() {
       roi: 0,
     };
     addProductPricing(newItem, token);
+  }
+
+  function handleAddService() {
+    if (!newServiceName || !newServiceRate || !newServiceUnit) return;
+    const keyName = newServiceName.toLowerCase().replace(/\s+/g, '_');
+    const updatedServices = {
+      ...services,
+      [keyName]: {
+        baseRate: Math.round(parseFloat(newServiceRate) * 100),
+        unit: newServiceUnit,
+        currency: project?.settings?.currency ?? 'MXN',
+      },
+    };
+    updateProjectData(
+      { ...project, layers: { ...project.layers, layer3: { ...project.layers.layer3, services: updatedServices } } },
+      token
+    );
+    setNewServiceName('');
+    setNewServiceRate('');
+    setNewServiceUnit('');
+  }
+
+  function handleAddTax() {
+    if (!newTaxName || !newTaxRate) return;
+    const keyName = newTaxName.toLowerCase().replace(/\s+/g, '_');
+    const updatedTaxes = {
+      ...taxes,
+      [keyName]: {
+        rate: parseFloat(newTaxRate),
+        enabled: true,
+        country: newTaxCountry,
+      },
+    };
+    updateProjectData(
+      { ...project, layers: { ...project.layers, layer3: { ...project.layers.layer3, taxes: updatedTaxes } } },
+      token
+    );
+    setNewTaxName('');
+    setNewTaxRate('');
+    setNewTaxCountry('MX');
   }
 
   return (
@@ -80,12 +127,13 @@ export default function Layer3ProductoSheet() {
                   <th>Tarifa base</th>
                   <th>Unidad</th>
                   <th>Moneda</th>
+                  <th style={{ width: 32 }}></th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(services).length === 0 && (
                   <tr>
-                    <td colSpan={4} className={styles.emptyState}>
+                    <td colSpan={5} className={styles.emptyState}>
                       Sin servicios configurados
                     </td>
                   </tr>
@@ -98,12 +146,103 @@ export default function Layer3ProductoSheet() {
                     </td>
                     <td style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{service?.unit}</td>
                     <td style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{service?.currency ?? 'MXN'}</td>
+                    <td>
+                      <button
+                        onClick={() => {
+                          const updatedServices = { ...services };
+                          delete updatedServices[key];
+                          updateProjectData(
+                            { ...project, layers: { ...project.layers, layer3: { ...project.layers.layer3, services: updatedServices } } },
+                            token
+                          );
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                          padding: 0,
+                          width: 24,
+                          height: 24,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        title="Eliminar servicio"
+                      >
+                        ✕
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 8, marginBottom: 12 }}>
+              <input
+                type="text"
+                placeholder="Nombre del servicio"
+                value={newServiceName}
+                onChange={(e) => setNewServiceName(e.target.value)}
+                style={{
+                  padding: '6px 8px',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 5,
+                  color: '#e2e8f0',
+                  fontSize: '0.82rem',
+                }}
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Tarifa (en moneda)"
+                value={newServiceRate}
+                onChange={(e) => setNewServiceRate(e.target.value)}
+                style={{
+                  padding: '6px 8px',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 5,
+                  color: '#e2e8f0',
+                  fontSize: '0.82rem',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Unidad (kWh, m³, etc)"
+                value={newServiceUnit}
+                onChange={(e) => setNewServiceUnit(e.target.value)}
+                style={{
+                  padding: '6px 8px',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 5,
+                  color: '#e2e8f0',
+                  fontSize: '0.82rem',
+                }}
+              />
+              <button
+                onClick={handleAddService}
+                style={{
+                  padding: '6px 12px',
+                  background: '#2563eb',
+                  border: 'none',
+                  borderRadius: 5,
+                  color: '#fff',
+                  fontSize: '0.82rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}
+              >
+                + Agregar
+              </button>
+            </div>
             <div style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic' }}>
-              💡 Configurar servicios en la ventana de ajustes o con el agente IA
+              💡 Agrega servicios como electricidad, agua, gas o cualquier otro costo variable
             </div>
           </div>
         )}
@@ -142,12 +281,13 @@ export default function Layer3ProductoSheet() {
                   <th>Tasa %</th>
                   <th>País</th>
                   <th>Estado</th>
+                  <th style={{ width: 32 }}></th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(taxes).length === 0 && (
                   <tr>
-                    <td colSpan={4} className={styles.emptyState}>
+                    <td colSpan={5} className={styles.emptyState}>
                       Sin impuestos configurados
                     </td>
                   </tr>
@@ -164,12 +304,110 @@ export default function Layer3ProductoSheet() {
                         {tax?.enabled ? '✓ Activo' : '✗ Inactivo'}
                       </span>
                     </td>
+                    <td>
+                      <button
+                        onClick={() => {
+                          const updatedTaxes = { ...taxes };
+                          delete updatedTaxes[key];
+                          updateProjectData(
+                            { ...project, layers: { ...project.layers, layer3: { ...project.layers.layer3, taxes: updatedTaxes } } },
+                            token
+                          );
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                          padding: 0,
+                          width: 24,
+                          height: 24,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        title="Eliminar impuesto"
+                      >
+                        ✕
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 8, marginBottom: 12 }}>
+              <input
+                type="text"
+                placeholder="Tipo de impuesto (IVA, Retención, etc)"
+                value={newTaxName}
+                onChange={(e) => setNewTaxName(e.target.value)}
+                style={{
+                  padding: '6px 8px',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 5,
+                  color: '#e2e8f0',
+                  fontSize: '0.82rem',
+                }}
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Tasa % (ej: 16)"
+                value={newTaxRate}
+                onChange={(e) => setNewTaxRate(e.target.value)}
+                style={{
+                  padding: '6px 8px',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 5,
+                  color: '#e2e8f0',
+                  fontSize: '0.82rem',
+                }}
+              />
+              <select
+                value={newTaxCountry}
+                onChange={(e) => setNewTaxCountry(e.target.value)}
+                style={{
+                  padding: '6px 8px',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 5,
+                  color: '#e2e8f0',
+                  fontSize: '0.82rem',
+                }}
+              >
+                <option value="MX">México</option>
+                <option value="CO">Colombia</option>
+                <option value="AR">Argentina</option>
+                <option value="CL">Chile</option>
+                <option value="PE">Perú</option>
+                <option value="ES">España</option>
+                <option value="US">USA</option>
+                <option value="OTHER">Otro</option>
+              </select>
+              <button
+                onClick={handleAddTax}
+                style={{
+                  padding: '6px 12px',
+                  background: '#2563eb',
+                  border: 'none',
+                  borderRadius: 5,
+                  color: '#fff',
+                  fontSize: '0.82rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}
+              >
+                + Agregar
+              </button>
+            </div>
             <div style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic' }}>
-              💡 Configurar impuestos según tu país/región
+              💡 Configura impuestos según tu país y tipo de empresa
             </div>
           </div>
         )}
