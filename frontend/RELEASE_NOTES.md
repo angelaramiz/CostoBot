@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.21.2
+# 🚀 Release Notes — CostoBot v0.22.0
 
 **Fecha:** 2026-04-01
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: IVA tax rate input - detectar decimal vs porcentaje
+- ✨ feat: Mejorar selección de productos importados con dropdown
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
