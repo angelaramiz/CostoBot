@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.22.0
+# 🚀 Release Notes — CostoBot v0.22.1
 
 **Fecha:** 2026-04-01
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: Mejorar selección de productos importados con dropdown
+- 🐛 fix: Recalcular productos dependientes cuando grafo se actualiza (cascada)
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
