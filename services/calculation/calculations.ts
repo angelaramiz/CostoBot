@@ -80,17 +80,15 @@ export function calculateInheritedCost(
 }
 
 /**
- * Calcula el precio de venta y ROI a partir del costo unitario y margen.
+ * Calcula el precio de venta y ganancia a partir del costo unitario y margen.
  * precioVenta = costoUnitario * (1 + margenPorcentaje / 100)
- * roi = (precioVenta - costoUnitario) / costoUnitario * 100
+ * ganancia = precioVenta - costoUnitario (en centavos)
  */
 export function calculatePricing(
   costoUnitario: number,
   margenPorcentaje: number
-): { precioVenta: number; roi: number } {
+): { precioVenta: number; ganancia: number } {
   const precioVenta = Math.round(costoUnitario * (1 + margenPorcentaje / 100));
-  const roi = costoUnitario > 0
-    ? ((precioVenta - costoUnitario) / costoUnitario) * 100
-    : 0;
-  return { precioVenta, roi };
+  const ganancia = precioVenta - costoUnitario;
+  return { precioVenta, ganancia };
 }

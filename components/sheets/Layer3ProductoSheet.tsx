@@ -32,24 +32,29 @@ export default function Layer3ProductoSheet() {
   const graphs = project.layers.layer2;
 
   function handleAddProduct() {
-    const firstGraph = graphs[0];
-    if (!firstGraph) return;
-    const newItem: ProductPricing = {
-      productId: firstGraph.productId,
-      productName: firstGraph.productName,
-      costBreakdown: {
-        ingredients: 0,
-        machines: 0,
-        utensils: 0,
-        services: 0,
-        labor: 0,
-        totalCost: 0,
-      },
-      margenPorcentaje: 30,
-      precioVenta: 0,
-      roi: 0,
-    };
-    addProductPricing(newItem, token);
+    if (!graphs || graphs.length === 0) return;
+    // Agregar TODOS los grafos que no estén ya en productos
+    const existingProductIds = new Set(products.map(p => p.productId));
+    const graphsToAdd = graphs.filter(g => !existingProductIds.has(g.productId));
+    
+    graphsToAdd.forEach((graph) => {
+      const newItem: ProductPricing = {
+        productId: graph.productId,
+        productName: graph.productName,
+        costBreakdown: {
+          ingredients: 0,
+          machines: 0,
+          utensils: 0,
+          services: 0,
+          labor: 0,
+          totalCost: 0,
+        },
+        margenPorcentaje: 30,
+        precioVenta: 0,
+        ganancia: 0,
+      };
+      addProductPricing(newItem, token);
+    });
   }
 
   function handleAddService() {
@@ -527,7 +532,7 @@ export default function Layer3ProductoSheet() {
                   <th>Costo/unidad</th>
                   <th>Margen %</th>
                   <th>Precio de venta</th>
-                  <th>ROI %</th>
+                  <th>Ganancia</th>
                   <th style={{ width: 32 }}></th>
                 </tr>
               </thead>
@@ -560,9 +565,9 @@ export default function Layer3ProductoSheet() {
                     <td>
                       <span
                         className={styles.calcCell}
-                        style={{ color: pricing.roi >= 0 ? '#16a34a' : '#dc2626' }}
+                        style={{ color: pricing.ganancia >= 0 ? '#16a34a' : '#dc2626' }}
                       >
-                        {formatPercent(pricing.roi)}
+                        {formatCurrency(pricing.ganancia)}
                       </span>
                     </td>
                     <td>

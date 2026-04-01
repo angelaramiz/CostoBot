@@ -14,7 +14,7 @@ export const PrecioSchema = z.object({
     .number()
     .int('El precio de venta debe ser un entero en centavos')
     .nonnegative('El precio de venta no puede ser negativo'),
-  roi: z.number({ required_error: 'El ROI es requerido' }),
+  ganancia: z.number({ required_error: 'La ganancia es requerida' }),
 });
 
 export type PrecioInput = z.infer<typeof PrecioSchema>;

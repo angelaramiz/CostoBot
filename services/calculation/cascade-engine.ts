@@ -150,9 +150,9 @@ function recalculateProductPricing(
   if (!graph) return pricing;
 
   const breakdown = calculateGraphCostBreakdown(graph, insumos, graphs, servicesConfig);
-  const { precioVenta, roi } = calculatePricing(breakdown.totalCost, pricing.margenPorcentaje);
+  const { precioVenta, ganancia } = calculatePricing(breakdown.totalCost, pricing.margenPorcentaje);
 
-  return { ...pricing, costBreakdown: breakdown, precioVenta, roi };
+  return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia };
 }
 
 // ── API pública ─────────────────────────────────────────────────────────────
@@ -245,11 +245,11 @@ export function propagateGraphChange(
         updated.layers.layer2,
         updated.layers.layer3.services
       );
-      const { precioVenta, roi } = calculatePricing(
+      const { precioVenta, ganancia } = calculatePricing(
         breakdown.totalCost,
         pricing.margenPorcentaje
       );
-      return { ...pricing, costBreakdown: breakdown, precioVenta, roi };
+      return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia };
     }),
   };
 
@@ -275,13 +275,13 @@ export function propagatePricingChange(
 
   (updated.layers.layer3.products[pIdx] as unknown as Record<string, unknown>)[field] = newValue;
 
-  // Recalcular precioVenta y roi
+  // Recalcular precioVenta y ganancia
   const pricing = updated.layers.layer3.products[pIdx];
-  const { precioVenta, roi } = calculatePricing(
+  const { precioVenta, ganancia } = calculatePricing(
     pricing.costBreakdown.totalCost,
     pricing.margenPorcentaje
   );
-  updated.layers.layer3.products[pIdx] = { ...pricing, precioVenta, roi };
+  updated.layers.layer3.products[pIdx] = { ...pricing, precioVenta, ganancia };
   updated.layers.layer3.updatedAt = new Date().toISOString();
 
   updated.updatedAt = new Date();
@@ -342,11 +342,11 @@ export function recalculateAllLayers(project: BusinessProject): BusinessProject 
         updated.layers.layer2,
         updated.layers.layer3.services
       );
-      const { precioVenta, roi } = calculatePricing(
+      const { precioVenta, ganancia } = calculatePricing(
         breakdown.totalCost,
         pricing.margenPorcentaje
       );
-      return { ...pricing, costBreakdown: breakdown, precioVenta, roi };
+      return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia };
     }),
   };
 

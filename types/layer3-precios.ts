@@ -55,8 +55,8 @@ export interface ProductPricing {
   margenPorcentaje: number;
   /** Precio de venta en centavos — calculado */
   precioVenta: number;
-  /** Retorno sobre inversión en porcentaje — calculado */
-  roi: number;
+  /** Ganancia en dinero (centavos) — diferencia entre precioVenta y costoTotal */
+  ganancia: number;
 }
 
 // ── Layer 3 completa ────────────────────────────────────────────────────────
