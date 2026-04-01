@@ -79,7 +79,7 @@ export default function Layer3ProductoSheet() {
     const updatedTaxes = {
       ...taxes,
       [keyName]: {
-        rate: parseFloat(newTaxRate),
+        rate: parseFloat(newTaxRate) / 100, // Convertir de porcentaje a decimal (ej: 16 → 0.16)
         enabled: true,
         country: newTaxCountry,
       },

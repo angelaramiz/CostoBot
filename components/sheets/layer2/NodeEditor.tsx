@@ -129,6 +129,9 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
       // Entradas a utensilio (ingrediente puede alimentar utensilio)
       ['ingredient', 'utensil'],
       ['machine', 'utensil'],
+      // Import puede alimentar máquina y utensilio
+      ['import', 'machine'],
+      ['import', 'utensil'],
       // Salidas de máquina
       ['machine', 'resultado'],
       // Directas al resultado (alternativa)
