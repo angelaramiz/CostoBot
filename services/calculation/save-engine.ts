@@ -162,7 +162,6 @@ export async function smartSaveProject(
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
-            'X-Idempotency-Key': `save-${projectId}-${Date.now()}`,
           },
           body: JSON.stringify({
             name: project.name,
