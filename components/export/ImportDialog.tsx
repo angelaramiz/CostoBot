@@ -28,19 +28,23 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [wasSavingRef, setWasSaving] = useState(false); // Trackear transición de guardado
   const fileRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Cerrar automáticamente si la importación fue exitosa
+  // Cerrar automáticamente SOLO después de guardar exitosamente
   useEffect(() => {
-    if (!isSaving && preview && !syncProgress && !syncError) {
-      // Esperar a que se actualice el store y luego cerrar
+    // Si ESTABA guardando y ahora NO está guardando + no hay error = éxito
+    if (wasSavingRef && !isSaving && !syncError) {
       const timer = setTimeout(() => {
         onClose();
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [isSaving, preview, syncProgress, syncError, onClose]);
+    
+    // Actualizar el ref con estado actual
+    setWasSaving(isSaving);
+  }, [isSaving, syncError, onClose]);
 
   // Focus trap: mantiene el foco dentro del modal mientras está abierto
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
