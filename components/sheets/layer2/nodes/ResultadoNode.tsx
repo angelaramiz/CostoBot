@@ -15,6 +15,7 @@ export default function ResultadoNode({ data, selected }: NodeProps) {
         <span className={styles.nodeIcon}>🎯</span>
         <span className={styles.nodeType}>Resultado</span>
       </div>
+      <Handle type="source" position={Position.Right} />
       <div className={styles.nodeBody}>
         <div className={styles.nodeLabel}>
           {d.mainProduct?.name ?? 'Producto'}

@@ -19,7 +19,6 @@ export default function IngredientNode({ data, selected }: NodeProps) {
           {d.quantity} {d.unit}
         </div>
       </div>
-      <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
     </div>
   );

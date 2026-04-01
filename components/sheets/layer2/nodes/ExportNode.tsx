@@ -18,6 +18,7 @@ export default function ExportNode({ data, selected }: NodeProps) {
           {d.isReusable ? '✓ Reutilizable' : '✗ Solo lectura'}
         </div>
       </div>
+      <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
     </div>
   );

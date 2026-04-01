@@ -66,7 +66,7 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
                 const insumo = insumos.find((i) => i.id === e.target.value);
                 set('insumoId', e.target.value);
                 set('insumoName', insumo?.name ?? '');
-                set('unit', form.unit ?? insumo?.unit ?? 'pza');
+                set('unit', insumo?.unit ?? 'pza'); // Siempre desde Layer 1
               }}
             >
               <option value="">— Selecciona —</option>
@@ -84,15 +84,6 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
               step={0.01}
               value={String(form.quantity ?? 0)}
               onChange={(e) => set('quantity', parseFloat(e.target.value) || 0)}
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Unidad</label>
-            <input
-              className={styles.formInput}
-              type="text"
-              value={String(form.unit ?? '')}
-              onChange={(e) => set('unit', e.target.value)}
             />
           </div>
         </>
@@ -374,10 +365,10 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
               <input
                 className={styles.formInput}
                 type="text"
-                readOnly
                 value={String(exportData.exportedProductId ?? '')}
+                onChange={(e) => set('exportedProductId', e.target.value)}
               />
-              <span className={styles.formHint}>Asignado automáticamente</span>
+              <span className={styles.formHint}>Define el ID para reutilizar en otros productos</span>
             </div>
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>Nombre del producto</label>
