@@ -18,6 +18,7 @@ export default function UtensilNode({ data, selected }: NodeProps) {
           {d.unitsProducedThisMonth ?? 0} uds/mes
         </div>
       </div>
+      <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
     </div>
   );

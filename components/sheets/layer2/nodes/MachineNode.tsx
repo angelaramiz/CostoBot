@@ -19,6 +19,7 @@ export default function MachineNode({ data, selected }: NodeProps) {
           {d.temperature != null ? ` · ${d.temperature}°${d.temperatureUnit ?? 'C'}` : ''}
         </div>
       </div>
+      <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
     </div>
   );
