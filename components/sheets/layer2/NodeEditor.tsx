@@ -70,11 +70,12 @@ function toFlowEdges(edges: ProductEdge[]): Edge[] {
 
 interface Props {
   graph: ProductGraph;
+  allGraphs: ProductGraph[];
   insumos: Insumo[];
   onSave: (graph: ProductGraph) => void;
 }
 
-export default function NodeEditor({ graph, insumos, onSave }: Props) {
+export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props) {
   const [nodes, setNodes] = useState<Node[]>(() => toFlowNodes(graph.nodes));
   const [edges, setEdges] = useState<Edge[]>(() => toFlowEdges(graph.edges));
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -391,6 +392,7 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
           {selectedNode && (
             <NodePropsPanel
               node={selectedNode}
+              allGraphs={allGraphs}
               insumos={insumos}
               onSave={handleNodePropsSave}
               onClose={() => setSelectedNode(null)}

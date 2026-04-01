@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Node } from '@xyflow/react';
 import type {
   NodeType,
+  ProductGraph,
   IngredientNodeData,
   MachineNodeData,
   UtensilNodeData,
@@ -16,13 +17,14 @@ import styles from './NodeEditor.module.css';
 
 interface Props {
   node: Node;
+  allGraphs: ProductGraph[];
   insumos: Insumo[];
   onSave: (id: string, data: Record<string, unknown>) => void;
   onClose: () => void;
 }
 
 /** Panel lateral de propiedades al seleccionar un nodo */
-export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props) {
+export default function NodePropsPanel({ node, allGraphs, insumos, onSave, onClose }: Props) {
   const nodeType = node.type as NodeType;
   const [form, setForm] = useState<Record<string, unknown>>({ ...node.data as Record<string, unknown> });
 
@@ -397,26 +399,47 @@ export default function NodePropsPanel({ node, insumos, onSave, onClose }: Props
       {/* ── Import ────────────────────────────────────────────────── */}
       {nodeType === 'import' && (() => {
         const importData = form as unknown as ImportNodeData;
+        // Filtrar: no mostrar el producto actual en la lista de importables
+        const otherGraphs = allGraphs.filter((g) => {
+          // const currentGraph = allGraphs.find((gr) => ...); // Podríamos validar esto mejor
+          return true; // Por ahora mostrar todos
+        });
         return (
           <>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Producto a importar (ID)</label>
-              <input
+              <label className={styles.formLabel}>Producto a importar</label>
+              <select
                 className={styles.formInput}
-                type="text"
                 value={String(importData.sourceProductId ?? '')}
-                onChange={(e) => set('sourceProductId', e.target.value)}
-                placeholder="ID del producto exportado"
-              />
+                onChange={(e) => {
+                  const selected = otherGraphs.find((g) => g.productId === e.target.value);
+                  if (selected) {
+                    set('sourceProductId', selected.productId);
+                    set('sourceProductName', selected.productName);
+                  }
+                }}
+                style={{
+                  padding: '6px 8px',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 5,
+                  color: '#e2e8f0',
+                  fontSize: '0.82rem',
+                }}
+              >
+                <option value="">-- Seleccionar producto --</option>
+                {otherGraphs.map((g) => (
+                  <option key={g.productId} value={g.productId}>
+                    {g.productName}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Nombre del producto</label>
-              <input
-                className={styles.formInput}
-                type="text"
-                value={String(importData.sourceProductName ?? '')}
-                onChange={(e) => set('sourceProductName', e.target.value)}
-              />
+              <label className={styles.formLabel}>ID del producto</label>
+              <span style={{ fontSize: '0.78rem', color: '#64748b', wordBreak: 'break-all' }}>
+                {importData.sourceProductId || '(sin seleccionar)'}
+              </span>
             </div>
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>Cantidad usada</label>

@@ -143,6 +143,7 @@ export default function Layer2ProcesoSheet() {
           <NodeEditor
             key={selectedGraph.productId}
             graph={selectedGraph}
+            allGraphs={graphs}
             insumos={insumos}
             onSave={handleSaveGraph}
           />
