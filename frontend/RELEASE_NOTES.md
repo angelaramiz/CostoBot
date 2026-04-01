@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.20.2
+# 🚀 Release Notes — CostoBot v0.21.0
 
 **Fecha:** 2026-04-01
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: Permitir import→machine/utensil, convertir impuestos porcentaje a decimal para validación Mongoose
+- ✨ feat: Cambiar ROI a Ganancia en dinero, permitir agregar múltiples productos en Capa 3, actualizar cascada
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
