@@ -16,6 +16,7 @@ import {
   calculateInheritedCost,
   calculatePricing,
 } from './calculations';
+import { buildDependencyGraph, getTopologicalOrder } from './dependency-graph';
 
 type LayerId = 'layer1' | 'layer2' | 'layer3';
 
@@ -231,7 +232,8 @@ export function propagateInsumoChange(
 }
 
 /**
- * Aplica un cambio en un grafo de producto (Layer 2) y propaga a Layer 3.
+ * Aplica un cambio en un grafo de producto (Layer 2) y propaga a Layer 3 y otros productos que dependan.
+ * Usa buildDependencyGraph para encontrar y recalcular todos los dependientes (ej: productos que importan).
  */
 export function propagateGraphChange(
   project: BusinessProject,
@@ -251,14 +253,40 @@ export function propagateGraphChange(
     updated.layers.layer3.services
   );
 
-  // Recalcular Layer 3 para este producto
+  // Construir grafo de dependencias y obtener todos los productos que dependen de este
+  const depGraph = buildDependencyGraph(updated);
+  const dependents = getTopologicalOrder(depGraph, productId);
+  
+  // Recalcular todos los grafos dependientes (productos que importan de este)
+  const dependentGraphIds = dependents.filter((id) => {
+    // Solo son grafos los IDs sin sufijo ':pricing'
+    return !id.includes(':');
+  });
+
+  for (const depGraphId of dependentGraphIds) {
+    const depIdx = updated.layers.layer2.findIndex((g) => g.productId === depGraphId);
+    if (depIdx === -1) continue;
+    
+    updated.layers.layer2[depIdx] = recalculateProductGraph(
+      updated.layers.layer2[depIdx],
+      updated.layers.layer1,
+      updated.layers.layer2,
+      updated.layers.layer3.services
+    );
+  }
+
+  // Recalcular Layer 3 para todos los productos afectados (originalId + dependientes)
+  const affectedProductIds = new Set([productId, ...dependentGraphIds]);
   updated.layers.layer3 = {
     ...updated.layers.layer3,
     updatedAt: new Date().toISOString(),
     products: updated.layers.layer3.products.map((pricing) => {
-      if (pricing.productId !== productId) return pricing;
+      if (!affectedProductIds.has(pricing.productId)) return pricing;
 
-      const graph = updated.layers.layer2[idx];
+      const graphIdx = updated.layers.layer2.findIndex((g) => g.productId === pricing.productId);
+      if (graphIdx === -1) return pricing;
+
+      const graph = updated.layers.layer2[graphIdx];
       const breakdown = calculateGraphCostBreakdown(
         graph,
         updated.layers.layer1,
