@@ -20,6 +20,7 @@ interface PreviewData {
 
 export default function ImportDialog({ onClose }: ImportDialogProps) {
   const token = useAuthStore((s) => s.token) ?? '';
+  const currentProject = useProjectStore((s) => s.currentProject);
   const loadFromImport = useProjectStore((s) => s.loadFromImport);
   const syncProgress = useProjectStore((s) => s.syncProgress);
   const isSaving = useProjectStore((s) => s.isSaving);
@@ -93,11 +94,12 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
   }
 
   async function handleConfirm() {
-    if (!preview) return;
+    if (!preview || !currentProject) return;
     setIsLoading(true);
     setLocalError(null);
     try {
-      await loadFromImport(preview.project, token);
+      // Pasar el ID del proyecto actual donde se está haciendo la importación
+      await loadFromImport(preview.project, token, currentProject.id);
       // El diálogo se cerrará automáticamente cuando isSaving se ponga en false
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : 'Error al importar proyecto');

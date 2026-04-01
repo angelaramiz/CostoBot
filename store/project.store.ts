@@ -70,8 +70,8 @@ interface ProjectActions {
     newValue: number | string,
     token: string
   ) => void;
-  /** Carga un proyecto importado desde JSON (reemplaza el proyecto actual) */
-  loadFromImport: (project: BusinessProject, token: string) => Promise<void>;
+  /** Carga un proyecto importado desde JSON (reemplaza el proyecto actual con datos del JSON) */
+  loadFromImport: (project: BusinessProject, token: string, targetProjectId: string) => Promise<void>;
   /** Uso interno: aplica mutación estructural y recalcula todo */
   _applyStructural: (
     mutate: (p: BusinessProject) => BusinessProject,
@@ -285,7 +285,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   // ── loadFromImport ────────────────────────────────────────────────────────
-  loadFromImport: async (project, token) => {
+  loadFromImport: async (project, token, targetProjectId) => {
     const { _debounceTimer } = get();
     if (_debounceTimer) clearTimeout(_debounceTimer);
 
@@ -302,6 +302,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
     // 2️⃣ Recalcular cascada y construir grafo
     const recalculated = recalculateAllLayers(project);
+    // ⚠️ IMPORTANTE: Usar el ID del proyecto actual, NO el del JSON importado
+    recalculated.id = targetProjectId;
+    
     set({
       currentProject: recalculated,
       isDirty: true,
@@ -316,7 +319,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     // 3️⃣ Guardar con reintentos automáticos
     const saveStartTime = Date.now();
     const result = await smartSaveProject(
-      recalculated.id,
+      targetProjectId,
       recalculated,
       token,
       API_URL,
