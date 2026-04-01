@@ -1,15 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.16.11
+# 🚀 Release Notes — CostoBot v0.18.0
 
-**Fecha:** 2026-03-25
-**Tipo:** patch
+**Fecha:** 2026-04-01
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: Remove "cantidad" and "subtotal" columns from Layer 1 insumos sheet
-- ✨ feat: Add services (electricity, water, gas) and taxes (IVA, retenciones) management in Layer 3
-- ✨ feat: Create Settings page for country, currency, and business name configuration
-- 🐛 fix: Add updateProjectData method to Zustand store
-- 🐛 fix: TypeScript type safety across all sheet components
+- ✨ feat: Sistema de guardado inteligente con reintentos automáticos para importación de proyectos
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
