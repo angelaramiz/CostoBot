@@ -18,7 +18,8 @@
 .agente/
 contextoIA/
 agent-unified.md
-
+.playwright-mcp/
+archivos-prueba/
 # ----- VERSIONING (machine-specific) -----
 frontend/versionamiento.config.json
 

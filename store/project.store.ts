@@ -7,6 +7,7 @@ import {
   recalculateAllLayers,
 } from '@/services/calculation/cascade-engine';
 import { buildDependencyGraph } from '@/services/calculation/dependency-graph';
+import { smartSaveProject, isProjectSaveable } from '@/services/calculation/save-engine';
 import type { BusinessProject, ProjectLayers } from '@/types/business-project';
 import type { Insumo } from '@/types/layer1-insumos';
 import type { ProductGraph } from '@/types/layer2-productos';
@@ -30,6 +31,8 @@ interface ProjectState {
   isDirty: boolean;
   lastSyncedAt: Date | null;
   syncError: string | null;
+  syncProgress: string | null; // Estado de progreso durante guardado
+  isSaving: boolean; // Flag para indicar que se está guardando
   /** Grafo de dependencias, reconstruido al cargar el proyecto */
   _dependencyGraph: DependencyGraph | null;
   /** Timer ID del debounce de auto-guardado */
@@ -84,6 +87,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   isDirty: false,
   lastSyncedAt: null,
   syncError: null,
+  syncProgress: null,
+  isSaving: false,
   _dependencyGraph: null,
   _debounceTimer: null,
 
@@ -158,26 +163,53 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!currentProject) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/projects/${currentProject.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: currentProject.name,
-          layers: currentProject.layers,
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message ?? `Error ${res.status}`);
+      // ✅ Validar antes de guardar (local validation)
+      const validation = isProjectSaveable(currentProject);
+      if (!validation.saveable) {
+        const msg = `Datos inválidos: ${validation.issues.join('; ')}`;
+        set({ syncError: msg, syncProgress: null });
+        return;
       }
 
-      set({ isDirty: false, lastSyncedAt: new Date(), syncError: null });
+      set({ isSaving: true, syncProgress: 'Validando datos...' });
+
+      // 🔄 Usar smartSaveProject con reintentos automáticos
+      const result = await smartSaveProject(
+        currentProject.id,
+        currentProject,
+        token,
+        API_URL,
+        {
+          maxRetries: 3,
+          initialDelayMs: 500,
+          maxDelayMs: 5000,
+          onProgress: (msg) => {
+            set({ syncProgress: msg });
+          },
+        }
+      );
+
+      if (result.success) {
+        set({
+          isDirty: false,
+          lastSyncedAt: new Date(),
+          syncError: null,
+          syncProgress: null,
+          isSaving: false,
+        });
+      } else {
+        set({
+          syncError: result.error ?? 'Error desconocido al guardar',
+          syncProgress: null,
+          isSaving: false,
+        });
+      }
     } catch (err) {
-      set({ syncError: err instanceof Error ? err.message : 'Error al guardar proyecto' });
+      set({
+        syncError: err instanceof Error ? err.message : 'Error al guardar proyecto',
+        syncProgress: null,
+        isSaving: false,
+      });
     }
   },
 
@@ -257,17 +289,70 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const { _debounceTimer } = get();
     if (_debounceTimer) clearTimeout(_debounceTimer);
 
+    // 1️⃣ Validar proyecto importado
+    const validation = isProjectSaveable(project);
+    if (!validation.saveable) {
+      set({
+        syncError: `Proyecto inválido: ${validation.issues.join('; ')}`,
+        syncProgress: null,
+        isSaving: false,
+      });
+      return;
+    }
+
+    // 2️⃣ Recalcular cascada y construir grafo
     const recalculated = recalculateAllLayers(project);
     set({
       currentProject: recalculated,
       isDirty: true,
       lastSyncedAt: null,
       syncError: null,
+      syncProgress: 'Importando proyecto...',
+      isSaving: true,
       _dependencyGraph: buildDependencyGraph(recalculated),
       _debounceTimer: null,
     });
 
-    await get().saveProject(token);
+    // 3️⃣ Guardar con reintentos automáticos
+    const saveStartTime = Date.now();
+    const result = await smartSaveProject(
+      recalculated.id,
+      recalculated,
+      token,
+      API_URL,
+      {
+        maxRetries: 5, // Más reintentos para importación
+        initialDelayMs: 800,
+        maxDelayMs: 8000,
+        onProgress: (msg) => {
+          set({ syncProgress: msg });
+        },
+      }
+    );
+
+    const saveDuration = Date.now() - saveStartTime;
+
+    if (result.success) {
+      set({
+        isDirty: false,
+        lastSyncedAt: new Date(),
+        syncError: null,
+        syncProgress: `✅ Importación completada en ${Math.round(saveDuration / 1000)}s`,
+        isSaving: false,
+      });
+      // Limpiar el mensaje de progreso después de 3 segundos
+      setTimeout(() => {
+        set({ syncProgress: null });
+      }, 3000);
+    } else {
+      // ❌ Si falla, mantener el proyecto en memoria pero marcar error
+      set({
+        syncError: `Importación fallida: ${result.error ?? 'Error desconocido'}. Los datos están en la aplicación pero no se guardaron.`,
+        syncProgress: null,
+        isSaving: false,
+        isDirty: true, // Permitir reintento manual
+      });
+    }
   },
 
   // ── Insumos (Layer 1) ────────────────────────────────────────────────────

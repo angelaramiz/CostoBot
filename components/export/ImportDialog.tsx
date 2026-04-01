@@ -21,12 +21,26 @@ interface PreviewData {
 export default function ImportDialog({ onClose }: ImportDialogProps) {
   const token = useAuthStore((s) => s.token) ?? '';
   const loadFromImport = useProjectStore((s) => s.loadFromImport);
+  const syncProgress = useProjectStore((s) => s.syncProgress);
+  const isSaving = useProjectStore((s) => s.isSaving);
+  const syncError = useProjectStore((s) => s.syncError);
 
   const [preview, setPreview] = useState<PreviewData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Cerrar automáticamente si la importación fue exitosa
+  useEffect(() => {
+    if (!isSaving && preview && !syncProgress && !syncError) {
+      // Esperar a que se actualice el store y luego cerrar
+      const timer = setTimeout(() => {
+        onClose();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSaving, preview, syncProgress, syncError, onClose]);
 
   // Focus trap: mantiene el foco dentro del modal mientras está abierto
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -56,7 +70,7 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setError(null);
+    setLocalError(null);
     setPreview(null);
 
     try {
@@ -68,7 +82,7 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
         precios: project.layers.layer3.products.length,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al leer el archivo');
+      setLocalError(err instanceof Error ? err.message : 'Error al leer el archivo');
       // Limpiar input para permitir volver a seleccionar el mismo archivo
       if (fileRef.current) fileRef.current.value = '';
     }
@@ -77,69 +91,84 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
   async function handleConfirm() {
     if (!preview) return;
     setIsLoading(true);
+    setLocalError(null);
     try {
       await loadFromImport(preview.project, token);
-      onClose();
+      // El diálogo se cerrará automáticamente cuando isSaving se ponga en false
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al importar proyecto');
-    } finally {
+      setLocalError(err instanceof Error ? err.message : 'Error al importar proyecto');
       setIsLoading(false);
     }
   }
 
+  const errorToShow = syncError || localError;
+
   return (
-    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && !isLoading && onClose()}>
       <div className={styles.dialog} ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="import-title">
         <header className={styles.header}>
           <h2 id="import-title" className={styles.title}>Importar proyecto JSON</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">✕</button>
+          <button className={styles.closeBtn} onClick={onClose} disabled={isLoading || isSaving} aria-label="Cerrar">✕</button>
         </header>
 
         <div className={styles.body}>
-          <label className={styles.fileLabel}>
-            <span>Selecciona un archivo <code>.json</code> exportado por CostoBot:</span>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".json,application/json"
-              onChange={handleFileChange}
-              className={styles.fileInput}
-            />
-          </label>
-
-          {error && (
-            <div className={styles.errorBox} role="alert">
-              <strong>Error de validación:</strong>
-              <pre className={styles.errorPre}>{error}</pre>
-            </div>
-          )}
-
-          {preview && (
-            <div className={styles.preview}>
-              <h3 className={styles.previewTitle}>Vista previa</h3>
-              <p className={styles.projectName}>{preview.project.name}</p>
-              <ul className={styles.statList}>
-                <li><span className={styles.statLabel}>Insumos</span><span className={styles.statValue}>{preview.insumos}</span></li>
-                <li><span className={styles.statLabel}>Grafos de producto</span><span className={styles.statValue}>{preview.grafos}</span></li>
-                <li><span className={styles.statLabel}>Precios</span><span className={styles.statValue}>{preview.precios}</span></li>
-              </ul>
-              <p className={styles.warning}>
-                ⚠ Esto reemplazará los datos actuales del proyecto.
+          {isSaving ? (
+            // 📊 Estado de guardado en progreso
+            <div className={styles.progressBox} role="status" aria-live="polite">
+              <div className={styles.spinner} />
+              <p className={styles.progressText}>
+                {syncProgress || 'Importando...'}
               </p>
             </div>
+          ) : (
+            <>
+              <label className={styles.fileLabel}>
+                <span>Selecciona un archivo <code>.json</code> exportado por CostoBot:</span>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleFileChange}
+                  className={styles.fileInput}
+                  disabled={isLoading}
+                />
+              </label>
+
+              {errorToShow && (
+                <div className={styles.errorBox} role="alert">
+                  <strong>❌ Error:</strong>
+                  <pre className={styles.errorPre}>{errorToShow}</pre>
+                </div>
+              )}
+
+              {preview && (
+                <div className={styles.preview}>
+                  <h3 className={styles.previewTitle}>Vista previa</h3>
+                  <p className={styles.projectName}>{preview.project.name}</p>
+                  <ul className={styles.statList}>
+                    <li><span className={styles.statLabel}>Insumos</span><span className={styles.statValue}>{preview.insumos}</span></li>
+                    <li><span className={styles.statLabel}>Grafos de producto</span><span className={styles.statValue}>{preview.grafos}</span></li>
+                    <li><span className={styles.statLabel}>Precios</span><span className={styles.statValue}>{preview.precios}</span></li>
+                  </ul>
+                  <p className={styles.warning}>
+                    ⚠ Esto reemplazará los datos actuales del proyecto.
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         <footer className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={onClose} disabled={isLoading}>
+          <button className={styles.cancelBtn} onClick={onClose} disabled={isLoading || isSaving}>
             Cancelar
           </button>
           <button
             className={styles.confirmBtn}
             onClick={handleConfirm}
-            disabled={!preview || isLoading}
+            disabled={!preview || isLoading || isSaving}
           >
-            {isLoading ? 'Importando…' : 'Confirmar importación'}
+            {isLoading || isSaving ? 'Importando…' : 'Confirmar importación'}
           </button>
         </footer>
       </div>
