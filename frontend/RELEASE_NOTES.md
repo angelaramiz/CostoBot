@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.20.0
+# 🚀 Release Notes — CostoBot v0.20.1
 
 **Fecha:** 2026-04-01
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: Corregir arquitectura de nodos Capa 2 - IngredientNode solo salida, ExportNode/ResultadoNode entrada+salida, unidad automática desde Layer 1
+- 🐛 fix: Permitir conexiones source→utensil.target, remover target de import, agregar suppressHydrationWarning
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
