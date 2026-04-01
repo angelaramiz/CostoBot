@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.18.3
+# 🚀 Release Notes — CostoBot v0.19.0
 
 **Fecha:** 2026-04-01
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: ImportDialog usa ID del proyecto actual, no del JSON importado - resuelve error 403 Forbidden
+- ✨ feat: Permitir conexiones entrada→máquina y entrada→utensilio en Capa 2 - máquina/utensilio como concentradores
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
