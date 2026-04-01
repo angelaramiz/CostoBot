@@ -46,6 +46,21 @@ function calculateGraphCostBreakdown(
 ): CostBreakdown {
   const insumoMap = new Map(insumos.map((i) => [i.id, i]));
   const graphMap = new Map(allGraphs.map((g) => [g.productId, g]));
+  
+  // Crear también un mapa de exportedProductId → graph para que imports puedan referenciarlo
+  const exportedProductMap = new Map<string, ProductGraph>();
+  for (const g of allGraphs) {
+    const nodes = Array.isArray(g.nodes) ? g.nodes : [];
+    for (const node of nodes) {
+      if (node.type === 'export') {
+        const exportData = node.data as unknown as Record<string, unknown>;
+        const exportedId = exportData.exportedProductId as string;
+        if (exportedId) {
+          exportedProductMap.set(exportedId, g);
+        }
+      }
+    }
+  }
 
   let ingredients = 0;
   let machines = 0;
@@ -90,7 +105,12 @@ function calculateGraphCostBreakdown(
         );
       }
     } else if (isImportData(node)) {
-      const parentGraph = graphMap.get(node.data.sourceProductId);
+      // Buscar por productId primero, luego por exportedProductId
+      let parentGraph = graphMap.get(node.data.sourceProductId);
+      if (!parentGraph) {
+        parentGraph = exportedProductMap.get(node.data.sourceProductId);
+      }
+      
       // Validación defensiva para parentGraph.nodes
       if (parentGraph && Array.isArray(parentGraph.nodes)) {
         const resultNode = parentGraph.nodes.find(

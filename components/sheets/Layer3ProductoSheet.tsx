@@ -81,10 +81,14 @@ export default function Layer3ProductoSheet() {
   function handleAddTax() {
     if (!newTaxName || !newTaxRate || !project) return;
     const keyName = newTaxName.toLowerCase().replace(/\s+/g, '_');
+    const numRate = parseFloat(newTaxRate);
+    // Si el valor es >= 1, es porcentaje (ej: 16 → 0.16)
+    // Si es < 1, es decimal (ej: 0.16 ya es correcto)
+    const rate = numRate >= 1 ? numRate / 100 : numRate;
     const updatedTaxes = {
       ...taxes,
       [keyName]: {
-        rate: parseFloat(newTaxRate) / 100, // Convertir de porcentaje a decimal (ej: 16 → 0.16)
+        rate: rate,
         enabled: true,
         country: newTaxCountry,
       },
@@ -363,9 +367,9 @@ export default function Layer3ProductoSheet() {
                 }}
               />
               <input
-                type="number"
-                step="0.01"
-                placeholder="Tasa % (ej: 16)"
+                type="text"
+                inputMode="decimal"
+                placeholder="Tasa % (ej: 16 o 0.16)"
                 value={newTaxRate}
                 onChange={(e) => setNewTaxRate(e.target.value)}
                 style={{
