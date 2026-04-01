@@ -8,7 +8,6 @@ export default function ImportNode({ data, selected }: NodeProps) {
   const d = data as unknown as ImportNodeData;
   return (
     <div className={`${styles.node} ${styles.nodeImport} ${selected ? styles.nodeSelected : ''}`}>
-      <Handle type="target" position={Position.Left} />
       <div className={styles.nodeHeader}>
         <span className={styles.nodeIcon}>📥</span>
         <span className={styles.nodeType}>Importar</span>
