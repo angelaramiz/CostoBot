@@ -109,7 +109,20 @@ npm run rules:add "descripción"
 npm run rules:list
 ```
 
-## 🗄️ Database (MongoDB + Zustand)
+## � Project Memory System
+
+All project knowledge stored in `.claude/memory/`:
+- **architecture-rules.md** — Technical constraints, detected patterns, framework notes
+- **versioning-rules.md** — Commit conventions, AUTONOMOUS hook, version history
+- **corrections-log.md** — Learning log with corrections, patterns, and rules (auto-updated)
+- **security-audit.md** — CVE tracking, API key rotation schedule, infrastructure security
+- **contributors-checklist.md** — Onboarding guide, code review checklist, common tasks
+
+**Update these files when:** fixing common patterns, discovering new rules, or recording CVEs.
+
+---
+
+## �🗄️ Database (MongoDB + Zustand)
 
 ### Schema Definition (Zod + TypeScript)
 - Master schema in `types/business-project.ts` — defines BusinessProject interface

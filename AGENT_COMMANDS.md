@@ -183,8 +183,11 @@ Antes de generar cualquier código, leer:
 | `"Actualiza el contexto del proyecto"` | Re-scan y refresh de PROJECT_CONTEXT.md |
 | `agent:update` | Actualizar agente con backup automático |
 | `agent:add-specialist [uxui/security/chat]` | Instala agente especialista |
-| `task:new [título]` | Crear tarea en .agente/TODO/pendiente/ |
-| `task:start [nombre]` | Iniciar tarea pendiente (o la más crítica) |
+| `task:list` | Listar todas las tareas pendientes (Notion: CostoBot-TDL) |
+| `task:fetch` | Traer la siguiente tarea de mayor prioridad |
+| `task:execute [name]` | Ejecutar una tarea (flujo completo: mark → execute → archive) |
+| `task:stats` | Ver estadísticas del sistema de tareas |
+| `task:cron [on/off] [interval]` | Activar/desactivar sincronización automática (ej: `task:cron on 1h`) |
 | `config:update` | Actualizar configuración del proyecto |
 
 ### Protocolo `agent:update` (actualizado v2)
@@ -206,30 +209,189 @@ Antes de generar cualquier código, leer:
 
 **Rollback:** `"agent:update rollback"` → lista backups y restaura el elegido.
 
-### Protocolo `task:new`
+---
 
-| Forma | Ejemplo | Qué hace |
-|-------|---------|----------|
-| Desde chat | `"task:new Integrar Stripe"` | Crea `tarea_XX_integrar_stripe.md` en `pendiente/` |
-| Múltiples | `"task:new: 1) Migrar DB 2) Tests"` | Un archivo por ítem |
-| Desde archivo | `"task:new ancla contextoIA/requisitos.md"` | Lee el archivo y extrae tareas |
-| Desde carpeta | `"task:new ancla contextoIA/"` | Lee todos los archivos, genera tareas detectadas |
-| Sin argumentos | `"task:new"` | Pregunta: ¿desde chat o desde archivo/carpeta? |
+## 🔗 Sistema de Tareas — Notion MCP Integration (NUEVO)
 
-### Protocolo `task:start`
+> ⚠️ **Cambio importante:** El sistema de tareas ahora usa **Notion MCP** en lugar de archivos `.md` locales.  
+> Las carpetas `.agente/TODO/` y `.agente/HISTORIAL/` son **obsoletas** (pueden eliminarse).
 
-Muestra listado ordenado por prioridad y pide confirmación:
+### Bases de datos Notion utilizadas
+
+| Base | Propósito | Data Source |
+|------|----------|------------|
+| **CostoBot-TDL** | Tareas operativas (pendientes, en curso) | `collection://331e72c1-e746-8082-8e18-000bdb2076ec` |
+| **CostoBot-Hy** | Tareas completadas con reportes | `collection://331e72c1-e746-8046-9451-000bd835d62c` |
+
+### Protocolo `task:list` (Notion MCP)
+
+Usa `notion-search` para traer todas las tareas con Estado = "Sin empezar":
 
 ```
-📋 Tareas pendientes
-  🔴 tarea_03_correccion_critica.md   CRÍTICA
-  🟠 tarea_05_integrar_stripe.md      Alta
-  🟡 tarea_06_endpoints.md            Media
-  🟢 tarea_08_refactor_ui.md          Baja
-
-💡 Sugerencia: tarea_03 (CRÍTICA)
-¿Iniciar? (s / elegir otra / cancelar): _
+notion-search({
+  query: "tareas pendientes Estado='Sin empezar'",
+  data_source_url: "collection://331e72c1-e746-8082-8e18-000bdb2076ec",
+  page_size: 25
+})
 ```
+
+**Output esperado:**
+```
+📋 Tareas Pendientes — CostoBot-TDL
+
+  🔴 Implementar autenticación Firebase              [Backend, API]
+  🟠 Integrar Stripe checkout                        [Frontend, API]
+  🟡 Refactor de store Zustand                       [Frontend, Database]
+  🟢 Documentar endpoints                            [Backend]
+
+Total: 4 pendientes | 2 en proceso | 8 completadas hoy
+```
+
+### Protocolo `task:fetch` (Notion MCP)
+
+Trae la próxima tarea de mayor prioridad (similar a `task:list` pero limitado a 1):
+
+```
+Siguiente tarea (ALTA prioridad):
+🔴 Implementar autenticación Firebase
+    URL: https://notion.so/331e72c1e74680619407c101b2ee3dbb
+    Etiquetas: [Backend, API]
+    Creada: 2026-03-27
+
+¿Iniciar ejecución? (s/n): _
+```
+
+### Protocolo `task:execute [name]` (Notion MCP + Execution)
+
+Ejecuta el flujo completo de una tarea:
+
+1. **Buscar** tarea en CostoBot-TDL
+2. **Marcar "En curso"** — `notion-update-page`
+3. **Ejecutar** — Tu trabajo como agente
+4. **Generar reporte** — Markdown con detalles
+5. **Crear en CostoBot-Hy** — `notion-create-pages` con reporte adjunto
+6. **Marcar "Listo"** en CostoBot-TDL — `notion-update-page`
+
+**Ejemplo:**
+```
+task:execute Implementar autenticación Firebase
+
+✅ Paso 1: Buscando en Notion...
+✅ Paso 2: Marcando como "En curso"...
+⚙️  Paso 3: Ejecutando [847ms]...
+   - Instalado firebase-admin SDK
+   - Middleware creado: backend/middleware/verifyFirebaseToken.js
+   - Tests: 12 passed ✅
+📝 Paso 4: Generando reporte...
+📦 Paso 5: Archivando en CostoBot-Hy...
+✅ Paso 6: Marcando como "Listo" en CostoBot-TDL...
+
+✨ Tarea completada. Reporte: https://notion.so/xxxxxxx
+```
+
+### Protocolo `task:stats` (Notion MCP Query)
+
+Trae estadísticas de ejecución del sistema:
+
+```
+📊 Estadísticas del Sistema de Tareas
+
+Tareas Operativas (CostoBot-TDL):
+  • Sin empezar:  4
+  • En curso:     2
+  • Listo:        8
+
+Estadísticas de Ejecución:
+  • Completadas hoy:         8
+  • Tiempo promedio:         847ms
+  • Tareas CRÍTICA (Alta):   3 pendientes
+  • Tasa de éxito:           100% (8/8 completadas)
+
+Próxima tarea:
+  🔴 Integrar Stripe checkout (Alta) — creada hace 2h
+```
+
+### Protocolo `task:cron [on/off] [interval]` (Automático)
+
+Activa/desactiva sincronización automática con Notion:
+
+```
+task:cron on 1h
+✅ Sincronización automática ACTIVADA
+   Intervalo: cada 1 hora
+   Próxima sincronización: 2026-03-28 15:32
+
+task:cron off
+✅ Sincronización automática DESACTIVADA
+   Cambios manuales solo (task:execute, task:list)
+```
+
+### Protocolo `task:plan` (IA-powered Task Breakdown)
+
+Genera un plan detallado de tareas desde descripción del usuario, luego sube automáticamente a CostoBot-TDL:
+
+```
+task:plan Implementar sistema de autenticación JWT con refresh tokens y roles
+
+🎯 Analizando requisito...
+   • 5 tareas identificadas
+   • 2 dependencias críticas
+   • Tiempo estimado: 5.25 horas
+
+📋 Plan generado:
+   1️⃣  Instalar y configurar Firebase            [Backend, API]       — 30 min
+   2️⃣  Crear middleware de verificación JWT      [Backend, API]       — 45 min  → depende de 1
+   3️⃣  Implementar refresh tokens                [Backend, Database]  — 60 min  → depende de 2
+   4️⃣  Agregar sistema de roles/permisos         [Backend, API]       — 90 min  → depende de 2
+   5️⃣  Escribir tests                            [Backend, Bug]       — 120 min → depende de 2,3,4
+
+✅ ¿Subir este plan a CostoBot-TDL? (s/n): s
+
+📤 Subiendo tareas...
+   ✅ Tarea 1 creada: https://notion.so/xxxxx
+   ✅ Tarea 2 creada: https://notion.so/xxxxx
+   ✅ Tarea 3 creada: https://notion.so/xxxxx
+   ✅ Tarea 4 creada: https://notion.so/xxxxx
+   ✅ Tarea 5 creada: https://notion.so/xxxxx
+
+✨ Plan completado. 5 tareas listas para ejecutar con task:execute
+```
+
+**Cómo funciona:**
+
+1. **Análisis** — IA desglosa el requisito en tareas atómicas
+2. **Validación** — Verifica que cada tarea sea independiente (~1-2h de trabajo)
+3. **Formato Notion** — Convierte a formato CostoBot-TDL (Nombre, Prioridad, Etiquetas, Estado)
+4. **Carga** — Sube todas las tareas con Estado = "Sin empezar"
+5. **Reporte** — Muestra URLs y resumen
+
+**Ejemplo de uso:**
+```
+task:plan Integrar Stripe checkout con manejo de errores
+
+// == Resultado ==
+
+📋 5 tareas creadas:
+   📦 Setup Stripe SDK en backend
+   🎨 Crear componente CheckoutForm
+   💳 Validar datos de tarjeta
+   📧 Enviar confirmación por email
+   🧪 Escribir tests E2E
+```
+
+**Para ver el plan completo:**
+- Ejecutar `task:list` — Ver todas las tareas en CostoBot-TDL
+- Ejecutar `task:fetch` — Traer la de mayor prioridad
+- Ejecutar `task:execute [nombre]` — Ejecutar una tarea específica
+
+### Módulos TypeScript asociados
+
+Ver `.agente/task-management/`:
+- `task-types.ts` — Interfaces y tipos
+- `notion-tasks.ts` — Funciones de integración Notion
+- `task-executor.ts` — Orquestación del flujo
+
+Ver documentación completa: `.agente/task-execution/INTEGRATION.md`
 
 ### Protocolo `config:update`
 
