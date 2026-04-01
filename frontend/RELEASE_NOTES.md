@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.18.0
+# 🚀 Release Notes — CostoBot v0.18.1
 
 **Fecha:** 2026-04-01
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: Sistema de guardado inteligente con reintentos automáticos para importación de proyectos
+- 🐛 fix: Remover header X-Idempotency-Key que causa bloqueo CORS en importación
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
