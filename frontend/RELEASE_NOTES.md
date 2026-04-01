@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.19.1
+# 🚀 Release Notes — CostoBot v0.20.0
 
 **Fecha:** 2026-04-01
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: Agregar handles de entrada (target) a ingrediente, utensilio y máquina para permitir conexiones visuales
+- ✨ feat: Corregir arquitectura de nodos Capa 2 - IngredientNode solo salida, ExportNode/ResultadoNode entrada+salida, unidad automática desde Layer 1
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
