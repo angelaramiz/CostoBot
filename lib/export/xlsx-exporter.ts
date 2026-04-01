@@ -94,14 +94,14 @@ function buildPrecioSheet(project: BusinessProject): XLSX.WorkSheet {
   const { layer3 } = project.layers;
   const products = layer3.products;
 
-  const headers = ['Producto', 'Costo total ($)', 'Margen %', 'Precio de venta ($)', 'ROI %'];
+  const headers = ['Producto', 'Costo total ($)', 'Margen %', 'Precio de venta ($)', 'Ganancia ($)'];
 
   const rows = products.map((pricing) => [
     pricing.productName,
     toPesos(pricing.costBreakdown.totalCost),
     pricing.margenPorcentaje / 100,
     toPesos(pricing.precioVenta),
-    pricing.roi / 100,
+    toPesos(pricing.ganancia),
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);

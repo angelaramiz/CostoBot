@@ -65,7 +65,7 @@ const validProject = {
           },
           margenPorcentaje: 30,
           precioVenta: 390,
-          roi: 30,
+          ganancia: 30,
         },
       ],
     },

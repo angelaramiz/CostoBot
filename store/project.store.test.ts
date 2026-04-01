@@ -72,7 +72,7 @@ const mockProject: BusinessProject = {
           },
           margenPorcentaje: 50,
           precioVenta: 300,
-          roi: 50,
+          ganancia: 50,
         },
       ],
     },

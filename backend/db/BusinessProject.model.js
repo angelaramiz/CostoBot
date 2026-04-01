@@ -117,7 +117,7 @@ const ProductPricingSchema = new Schema(
     costBreakdown:    { type: CostBreakdownSchema, required: true },
     margenPorcentaje: { type: Number, required: true, min: 0 },
     precioVenta:      { type: Number, required: true, min: 0 }, // centavos, calculado
-    roi:              { type: Number, required: true },
+    ganancia:         { type: Number, required: true }, // ganancia en centavos
   },
   { _id: false }
 );
