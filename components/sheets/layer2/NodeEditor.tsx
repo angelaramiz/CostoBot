@@ -116,13 +116,22 @@ export default function NodeEditor({ graph, insumos, onSave }: Props) {
       return;
     }
 
-    // Regla: ingrediente/utensilio/máquina → resultado
-    // Regla: resultado → export (para marcar como reutilizable)
-    // Regla: import → resultado (usar producto reutilizable)
+    // Regla: Flujo en cascada hacia transformación
+    // - ingrediente/utensilio → máquina (entradas a concentrador)
+    // - máquina → resultado (transformación)
+    // - ingrediente/utensilio → resultado (directo si no necesita máquina)
+    // - resultado → export (para marcar como reutilizable)
+    // - import → resultado (usar producto reutilizable)
     const validConnections = [
-      ['ingredient', 'resultado'],
+      // Entradas a máquina (concentrador)
+      ['ingredient', 'machine'],
+      ['utensil', 'machine'],
+      // Salidas de máquina
       ['machine', 'resultado'],
+      // Directas al resultado (alternativa)
+      ['ingredient', 'resultado'],
       ['utensil', 'resultado'],
+      // Export/Import
       ['resultado', 'export'],
       ['import', 'resultado'],
     ];

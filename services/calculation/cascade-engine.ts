@@ -52,8 +52,18 @@ function calculateGraphCostBreakdown(
   let utensils = 0;
   let services = 0;
 
-  // Validación defensiva: asegurar que nodes es un array
+  // Validación defensiva: asegurar que nodes y edges son arrays
   const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
+  const edges = Array.isArray(graph.edges) ? graph.edges : [];
+
+  // Construir mapa de conexiones: target → [sources]
+  const connectionMap = new Map<string, string[]>();
+  for (const edge of edges) {
+    if (!connectionMap.has(edge.target)) {
+      connectionMap.set(edge.target, []);
+    }
+    connectionMap.get(edge.target)!.push(edge.source);
+  }
 
   for (const node of nodes) {
     if (isIngredientData(node)) {
