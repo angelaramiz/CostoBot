@@ -7,13 +7,14 @@ export interface Insumo {
   unit: string;
   /** Costo por unidad en centavos (entero, sin decimales) */
   costPerUnit: number;
-  /** Cantidad usada en el proceso */
-  quantity: number;
   category: InsumoCategory;
   isReusable: boolean;
+  /** Solo para máquina/utensilio: costo de adquisición */
   acquisitionCost?: number;
   usefulLifeMonths?: number;
   residualValue?: number;
+  /** Solo para material: proveedor */
   supplier?: string;
+  /** Solo para material: código SKU */
   sku?: string;
 }

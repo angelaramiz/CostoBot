@@ -10,7 +10,6 @@ export const InsumoSchema = z.object({
     .number()
     .int('El costo por unidad debe ser un entero en centavos')
     .nonnegative('El costo por unidad no puede ser negativo'),
-  quantity: z.number().positive('La cantidad debe ser mayor a 0'),
   category: InsumoCategorySchema,
   isReusable: z.boolean(),
   // Campos de depreciacion (opcionales, solo para maquina/utensilio)
@@ -29,7 +28,6 @@ export const InsumoSchema = z.object({
     .int('El valor residual debe ser entero en centavos')
     .nonnegative()
     .optional(),
-  // Campos de material (opcionales, solo para material)
   supplier: z.string().optional(),
   sku: z.string().optional(),
 });

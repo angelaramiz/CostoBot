@@ -16,7 +16,6 @@ const InsumoSchema = new Schema(
     name:             { type: String,  required: true },
     unit:             { type: String,  required: true },
     costPerUnit:      { type: Number,  required: true, min: 0 }, // centavos
-    quantity:         { type: Number,  required: true, min: 0 },
     category:         { type: String,  required: true, enum: ['ingrediente', 'maquina', 'utensilio', 'material'] },
     isReusable:       { type: Boolean, required: true, default: false },
     // Campos de depreciación (opcionales, para maquina/utensilio)

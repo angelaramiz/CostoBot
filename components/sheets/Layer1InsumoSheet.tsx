@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import EditableCell from '@/components/ui/EditableCell';
 import styles from '@/components/ui/Sheet.module.css';
-import l1styles from '@/components/sheets/layer1/Layer1.module.css';
 import { useProjectStore } from '@/store/project.store';
 import { useAuthStore } from '@/store/auth.store';
 import type { Insumo, InsumoCategory } from '@/types/layer1-insumos';
@@ -14,21 +13,6 @@ import InsumoAddForm from './layer1/InsumoAddForm';
 
 const UNITS = ['kg', 'g', 'L', 'ml', 'pza', 'm', 'cm', 'hr', 'otro'];
 const CATEGORIES: InsumoCategory[] = ['ingrediente', 'material', 'utensilio', 'maquina'];
-
-/** Calcula el subtotal de display para un insumo en la tabla de Layer 1 */
-function getSubtotal(insumo: Insumo): number {
-  if (insumo.category === 'ingrediente' || insumo.category === 'material') {
-    return insumo.costPerUnit * insumo.quantity;
-  }
-  if (insumo.category === 'utensilio' || insumo.category === 'maquina') {
-    const acq = insumo.acquisitionCost ?? 0;
-    const res = insumo.residualValue ?? 0;
-    const life = insumo.usefulLifeMonths ?? 1;
-    if (life <= 0) return 0;
-    return Math.round((acq - res) / life);
-  }
-  return 0;
-}
 
 export default function Layer1InsumoSheet() {
   const token = useAuthStore((s) => s.token) ?? '';
@@ -78,15 +62,13 @@ export default function Layer1InsumoSheet() {
               {showBadge && <th>Categoría</th>}
               <th>Unidad</th>
               <th>Costo / unidad</th>
-              <th>Cantidad</th>
-              <th>Subtotal / mes</th>
               <th style={{ width: 32 }}></th>
             </tr>
           </thead>
           <tbody>
             {visibleInsumos.length === 0 && (
               <tr>
-                <td colSpan={showBadge ? 7 : 6} className={styles.emptyState}>
+                <td colSpan={showBadge ? 5 : 4} className={styles.emptyState}>
                   Sin insumos en esta categoría. Agrega el primero ↓
                 </td>
               </tr>
@@ -120,16 +102,6 @@ export default function Layer1InsumoSheet() {
                     type="currency"
                     onSave={(v) => updateInsumo(insumo.id, { costPerUnit: v as number }, token)}
                   />
-                </td>
-                <td>
-                  <EditableCell
-                    value={insumo.quantity}
-                    type="number"
-                    onSave={(v) => updateInsumo(insumo.id, { quantity: v as number }, token)}
-                  />
-                </td>
-                <td className={l1styles.subtotalCell}>
-                  {formatCurrency(getSubtotal(insumo))}
                 </td>
                 <td>
                   <button
