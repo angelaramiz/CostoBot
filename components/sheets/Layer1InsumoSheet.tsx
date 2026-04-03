@@ -1,14 +1,34 @@
-'use client';
+﻿'use client';
 
+import { useState } from 'react';
 import EditableCell from '@/components/ui/EditableCell';
 import styles from '@/components/ui/Sheet.module.css';
+import l1styles from '@/components/sheets/layer1/Layer1.module.css';
 import { useProjectStore } from '@/store/project.store';
 import { useAuthStore } from '@/store/auth.store';
-import type { Insumo } from '@/types/layer1-insumos';
+import type { Insumo, InsumoCategory } from '@/types/layer1-insumos';
 import { formatCurrency } from '@/lib/format';
+import CategorySelector from './layer1/CategorySelector';
+import CategoryBadge from './layer1/CategoryBadge';
+import InsumoAddForm from './layer1/InsumoAddForm';
 
 const UNITS = ['kg', 'g', 'L', 'ml', 'pza', 'm', 'cm', 'hr', 'otro'];
-const CATEGORIES = ['ingrediente', 'maquina', 'utensilio'];
+const CATEGORIES: InsumoCategory[] = ['ingrediente', 'material', 'utensilio', 'maquina'];
+
+/** Calcula el subtotal de display para un insumo en la tabla de Layer 1 */
+function getSubtotal(insumo: Insumo): number {
+  if (insumo.category === 'ingrediente' || insumo.category === 'material') {
+    return insumo.costPerUnit * insumo.quantity;
+  }
+  if (insumo.category === 'utensilio' || insumo.category === 'maquina') {
+    const acq = insumo.acquisitionCost ?? 0;
+    const res = insumo.residualValue ?? 0;
+    const life = insumo.usefulLifeMonths ?? 1;
+    if (life <= 0) return 0;
+    return Math.round((acq - res) / life);
+  }
+  return 0;
+}
 
 export default function Layer1InsumoSheet() {
   const token = useAuthStore((s) => s.token) ?? '';
@@ -17,45 +37,61 @@ export default function Layer1InsumoSheet() {
   const addInsumo = useProjectStore((s) => s.addInsumo);
   const removeInsumo = useProjectStore((s) => s.removeInsumo);
 
+  const [activeCategory, setActiveCategory] = useState<InsumoCategory | 'all'>('all');
+
   if (!project) return null;
 
-  const insumos = project.layers.layer1;
+  const allInsumos = Array.isArray(project.layers.layer1) ? project.layers.layer1 : [];
 
-  function handleAdd() {
-    const newItem: Insumo = {
-      id: crypto.randomUUID(),
-      name: 'Nuevo insumo',
-      unit: 'pza',
-      costPerUnit: 0,
-      quantity: 1,
-      category: 'ingrediente',
-      isReusable: false,
-    };
-    addInsumo(newItem, token);
+  const counts = CATEGORIES.reduce(
+    (acc, cat) => {
+      acc[cat] = allInsumos.filter((i) => i.category === cat).length;
+      return acc;
+    },
+    {} as Record<InsumoCategory, number>
+  );
+
+  const visibleInsumos =
+    activeCategory === 'all'
+      ? allInsumos
+      : allInsumos.filter((i) => i.category === activeCategory);
+
+  const showBadge = activeCategory === 'all';
+
+  function handleAdd(newInsumo: Insumo) {
+    addInsumo(newInsumo, token);
   }
 
   return (
-    <div className={styles.sheetWrapper}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Tipo</th>
-            <th>Unidad</th>
-            <th>Costo / unidad</th>
-            <th style={{ width: 32 }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {insumos.length === 0 && (
+    <div>
+      <CategorySelector
+        counts={counts}
+        active={activeCategory}
+        onSelect={setActiveCategory}
+      />
+
+      <div className={styles.sheetWrapper}>
+        <table className={styles.table}>
+          <thead>
             <tr>
-              <td colSpan={5} className={styles.emptyState}>
-                Sin insumos. Agrega el primero ↓
-              </td>
+              <th>Nombre</th>
+              {showBadge && <th>Categoría</th>}
+              <th>Unidad</th>
+              <th>Costo / unidad</th>
+              <th>Cantidad</th>
+              <th>Subtotal / mes</th>
+              <th style={{ width: 32 }}></th>
             </tr>
-          )}
-          {insumos.map((insumo) => {
-            return (
+          </thead>
+          <tbody>
+            {visibleInsumos.length === 0 && (
+              <tr>
+                <td colSpan={showBadge ? 7 : 6} className={styles.emptyState}>
+                  Sin insumos en esta categoría. Agrega el primero ↓
+                </td>
+              </tr>
+            )}
+            {visibleInsumos.map((insumo) => (
               <tr key={insumo.id}>
                 <td>
                   <EditableCell
@@ -65,14 +101,11 @@ export default function Layer1InsumoSheet() {
                     onSave={(v) => updateInsumo(insumo.id, { name: String(v) }, token)}
                   />
                 </td>
-                <td>
-                  <EditableCell
-                    value={insumo.category}
-                    type="select"
-                    selectOptions={CATEGORIES}
-                    onSave={(v) => updateInsumo(insumo.id, { category: String(v) as any }, token)}
-                  />
-                </td>
+                {showBadge && (
+                  <td>
+                    <CategoryBadge category={insumo.category} />
+                  </td>
+                )}
                 <td>
                   <EditableCell
                     value={insumo.unit}
@@ -89,6 +122,16 @@ export default function Layer1InsumoSheet() {
                   />
                 </td>
                 <td>
+                  <EditableCell
+                    value={insumo.quantity}
+                    type="number"
+                    onSave={(v) => updateInsumo(insumo.id, { quantity: v as number }, token)}
+                  />
+                </td>
+                <td className={l1styles.subtotalCell}>
+                  {formatCurrency(getSubtotal(insumo))}
+                </td>
+                <td>
                   <button
                     className={styles.deleteBtn}
                     onClick={() => removeInsumo(insumo.id, token)}
@@ -99,39 +142,17 @@ export default function Layer1InsumoSheet() {
                   </button>
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <div className={styles.addRow}>
-        <button className={styles.addBtn} onClick={handleAdd}>
-          + Agregar insumo
-        </button>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* ── Depreciación para máquinas/utensilios ─────────────────── */}
-      <div style={{ padding: '16px 12px', background: '#0f172a', marginTop: 8, borderRadius: 8, borderLeft: '3px solid #3b82f6' }}>
-        <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: 12, fontWeight: 600 }}>
-          💡 Estimador de depreciación (máquinas/utensilios)
-        </div>
-        {insumos
-          .filter((i) => i.category === 'maquina' || i.category === 'utensilio')
-          .filter((i) => i.acquisitionCost != null && i.usefulLifeMonths != null)
-          .map((insumo) => {
-            const monthlyDep =
-              ((insumo.acquisitionCost ?? 0) - (insumo.residualValue ?? 0)) /
-              (insumo.usefulLifeMonths ?? 1);
-            const costPerUnit = insumo.quantity > 0 ? monthlyDep / insumo.quantity : 0;
-            return (
-              <div key={insumo.id} style={{ fontSize: '0.78rem', color: '#cbd5e1', marginBottom: 6 }}>
-                <strong>{insumo.name}</strong> ({insumo.category}):
-                <br />
-                <span style={{ color: '#94a3b8' }}>
-                  Depr. mensual: {formatCurrency(monthlyDep)} | Costo/unidad: {formatCurrency(costPerUnit)}
-                </span>
-              </div>
-            );
-          })}
+      <InsumoAddForm counts={counts} onAdd={handleAdd} />
+
+      <div className={l1styles.infoBox}>
+        <strong>Fórmulas de costo:</strong> Ingredientes y materiales: costo × cantidad.
+        Utensilios y máquinas: (valor adquisición − residual) ÷ vida útil en meses.
+        Los costos de uso (tiempo por receta) se definen en Capa 2 — Procesos.
       </div>
     </div>
   );

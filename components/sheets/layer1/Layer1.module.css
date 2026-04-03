@@ -1,0 +1,200 @@
+/* Layer 1 — Insumos: estilos específicos del componente */
+
+/* ── Category Selector ───────────────────────────────────────────────────── */
+
+.selectorWrapper {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.categoryCard {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg-panel);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  /* Touch target */
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.categoryCard:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.categoryCard.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle, rgba(59, 130, 246, 0.08));
+  color: var(--color-primary);
+}
+
+.categoryCard .cardCount {
+  font-size: 0.75rem;
+  background: var(--color-bg-hover);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  font-weight: 600;
+}
+
+/* ── Category Badge ──────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge--ingrediente {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge--material {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge--utensilio {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge--maquina {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+/* ── Subtotal cell ───────────────────────────────────────────────────────── */
+
+.subtotalCell {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* ── Add Form ────────────────────────────────────────────────────────────── */
+
+.addFormWrapper {
+  padding: 16px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.addFormTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formField label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.formField input,
+.formField select {
+  padding: 8px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 1rem; /* min 16px para prevenir zoom en iOS */
+  transition: border-color 0.15s;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.formField input:focus,
+.formField select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.formRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.formRow .formField {
+  flex: 1;
+  min-width: 140px;
+}
+
+.submitBtn {
+  padding: 8px 18px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  touch-action: manipulation;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.submitBtn:hover {
+  opacity: 0.88;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Info box ────────────────────────────────────────────────────────────── */
+
+.infoBox {
+  margin: 12px 16px;
+  padding: 12px 14px;
+  background: var(--color-bg-panel);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}

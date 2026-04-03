@@ -17,12 +17,15 @@ const InsumoSchema = new Schema(
     unit:             { type: String,  required: true },
     costPerUnit:      { type: Number,  required: true, min: 0 }, // centavos
     quantity:         { type: Number,  required: true, min: 0 },
-    category:         { type: String,  required: true, enum: ['ingrediente', 'maquina', 'utensilio'] },
+    category:         { type: String,  required: true, enum: ['ingrediente', 'maquina', 'utensilio', 'material'] },
     isReusable:       { type: Boolean, required: true, default: false },
     // Campos de depreciación (opcionales, para maquina/utensilio)
     acquisitionCost:  { type: Number, min: 0 },
     usefulLifeMonths: { type: Number, min: 1 },
     residualValue:    { type: Number, min: 0 },
+    // Campos de material (opcionales, para material)
+    supplier:         { type: String },
+    sku:              { type: String },
   },
   { _id: false }
 );

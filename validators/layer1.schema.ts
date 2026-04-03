@@ -1,6 +1,6 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
-export const InsumoCategorySchema = z.enum(['ingrediente', 'maquina', 'utensilio']);
+export const InsumoCategorySchema = z.enum(['ingrediente', 'maquina', 'utensilio', 'material']);
 
 export const InsumoSchema = z.object({
   id: z.string().min(1, 'El ID es requerido'),
@@ -13,22 +13,25 @@ export const InsumoSchema = z.object({
   quantity: z.number().positive('La cantidad debe ser mayor a 0'),
   category: InsumoCategorySchema,
   isReusable: z.boolean(),
-  // Campos de depreciación (opcionales, solo para maquina/utensilio)
+  // Campos de depreciacion (opcionales, solo para maquina/utensilio)
   acquisitionCost: z
     .number()
-    .int('El costo de adquisición debe ser entero en centavos')
+    .int('El costo de adquisicion debe ser entero en centavos')
     .nonnegative()
     .optional(),
   usefulLifeMonths: z
     .number()
     .int()
-    .positive('La vida útil debe ser mayor a 0')
+    .positive('La vida util debe ser mayor a 0')
     .optional(),
   residualValue: z
     .number()
     .int('El valor residual debe ser entero en centavos')
     .nonnegative()
     .optional(),
+  // Campos de material (opcionales, solo para material)
+  supplier: z.string().optional(),
+  sku: z.string().optional(),
 });
 
 export type InsumoInput = z.infer<typeof InsumoSchema>;

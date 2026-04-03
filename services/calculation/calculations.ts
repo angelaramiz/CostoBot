@@ -80,6 +80,22 @@ export function calculateInheritedCost(
 }
 
 /**
+ * Calcula el costo de un material (insumo tipo 'material').
+ * Fórmula: costPerUnit × quantity
+ *
+ * @param costPerUnit Costo por unidad en centavos
+ * @param quantity Cantidad usada
+ * @returns Costo total en centavos (redondeado)
+ */
+export function calculateMaterialCost(
+  costPerUnit: number,
+  quantity: number
+): number {
+  if (quantity <= 0) return 0;
+  return Math.round(costPerUnit * quantity);
+}
+
+/**
  * Calcula el precio de venta y ganancia a partir del costo unitario y margen.
  * precioVenta = costoUnitario * (1 + margenPorcentaje / 100)
  * ganancia = precioVenta - costoUnitario (en centavos)

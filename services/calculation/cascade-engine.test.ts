@@ -95,10 +95,10 @@ describe('propagateChange — cascada L1 → L2 → L3', () => {
     expect(pricing.precioVenta).toBe(600);
   });
 
-  it('calcula el ROI correctamente después de la cascada', () => {
+  it('calcula la ganancia correctamente después de la cascada', () => {
     const result = propagateChange(baseProject, 'layer1', 'ins-001', 'costPerUnit', 200);
     const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001')!;
-    expect(pricing.roi).toBe(50);
+    expect(pricing.ganancia).toBe(200);
   });
 });
 
@@ -120,5 +120,57 @@ describe('propagateChange — ID inexistente', () => {
   it('retorna el proyecto sin cambios si el itemId no existe', () => {
     const result = propagateChange(baseProject, 'layer1', 'no-existe', 'costPerUnit', 999);
     expect(result.layers.layer1[0].costPerUnit).toBe(100);
+  });
+});
+
+describe('propagateChange — insumo tipo material', () => {
+  const projectWithMaterial: BusinessProject = {
+    ...baseProject,
+    layers: {
+      ...baseProject.layers,
+      layer1: [
+        ...baseProject.layers.layer1,
+        {
+          id: 'mat-001',
+          name: 'Papel de empaque',
+          unit: 'pza',
+          costPerUnit: 50,
+          quantity: 10,
+          category: 'material',
+          isReusable: false,
+          supplier: 'Proveedor ABC',
+          sku: 'PAP-001',
+        },
+      ],
+      layer2: [
+        {
+          ...baseProject.layers.layer2[0],
+          nodes: [
+            ...baseProject.layers.layer2[0].nodes,
+            {
+              id: 'node-mat-001',
+              type: 'material',
+              position: { x: 200, y: 200 },
+              data: { insumoId: 'mat-001', insumoName: 'Papel de empaque', quantity: 5, unit: 'pza' },
+            },
+          ],
+          totalCost: 200 + 50 * 5, // 450
+        },
+      ],
+    },
+  };
+
+  it('propaga cambio de costPerUnit de material a Layer 2', () => {
+    // mat-001.costPerUnit: 50 → 100 | material en grafo qty=5 → 500
+    // grafo totalCost = 200 (ingrediente, ins-001) + 500 (material) = 700
+    const result = propagateChange(projectWithMaterial, 'layer1', 'mat-001', 'costPerUnit', 100);
+    const graph = result.layers.layer2.find((g) => g.productId === 'prod-001')!;
+    expect(graph.totalCost).toBe(700);
+  });
+
+  it('el insumo material incluye campos supplier y sku', () => {
+    const mat = projectWithMaterial.layers.layer1.find((i) => i.id === 'mat-001')!;
+    expect(mat.supplier).toBe('Proveedor ABC');
+    expect(mat.sku).toBe('PAP-001');
   });
 });
