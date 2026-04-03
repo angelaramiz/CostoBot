@@ -192,3 +192,31 @@ git commit -m "🐛 fix: cascade not updating layer 3 correctly"
 ---
 **Maintenance:** This file updates automatically after each user correction.  
 Do NOT edit the "NEVER do" / "ALWAYS do" sections manually — use: `npm run rules:add "description"`
+
+---
+
+## Reglas de UI/UX — uxui-specialist
+- Usar siempre variables CSS del design system (`--color-*`, `--space-*`, `--text-*`)
+- No usar colores ni espaciados hardcoded en componentes
+- Todo componente interactivo debe tener estado de foco visible (outline o ring)
+- Contraste mínimo: AA (4.5:1 texto normal, 3:1 texto grande)
+- Animaciones: respetar `prefers-reduced-motion` siempre
+- Dark mode: usar `var(--bg-*)` y `var(--text-*)` — nunca `#fff` / `#000` directos
+
+## Reglas Móvil — skill-movil
+- Touch targets mínimo 44×44 px en todos los elementos interactivos
+- No usar `100vh` directamente — usar `100dvh` con fallback `-webkit-fill-available`
+- Font-size en inputs nunca menor a 16px (previene zoom automático iOS)
+- Añadir `touch-action: manipulation` a botones y links (elimina delay 300ms)
+- Usar `env(safe-area-inset-*)` en contenedores fullscreen (notch / home bar)
+- Imágenes con `srcset` + `sizes` obligatorio en componentes de imagen
+- Probar en: iOS Safari, Chrome Android, Samsung Internet antes de merge
+
+## Reglas de Seguridad — cybersecurity-saas-specialist
+- Nunca hardcodear secrets, tokens ni passwords en el código fuente
+- Todo endpoint que recibe datos del usuario debe validar en el servidor (no solo cliente)
+- Queries a DB siempre parametrizadas — nunca template literals con input de usuario
+- Endpoints CRUD verifican propiedad del recurso (owner check + tenant_id si aplica)
+- Passwords hasheados con bcrypt (cost ≥ 12) o argon2id — nunca MD5/SHA1
+- Headers de seguridad activos en todas las rutas (Helmet o equivalente)
+- Datos sensibles en logs: usar user_id, nunca email/password/token en texto plano
