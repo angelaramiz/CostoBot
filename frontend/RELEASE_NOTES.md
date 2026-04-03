@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.24.1
+# 🚀 Release Notes — CostoBot v0.25.0
 
 **Fecha:** 2026-04-03
-**Tipo:** patch
+**Tipo:** minor
 
 ## Cambios en esta versión
 
-- 🐛 fix: remove invalid 'isMaterialData' type guard and fix style references
+- ✨ feat: Fase 1.3 — cálculo de máquinas por tipo de servicio (electricidad/gas/ambos)
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
