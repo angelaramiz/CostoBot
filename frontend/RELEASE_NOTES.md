@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.23.0
+# 🚀 Release Notes — CostoBot v0.24.1
 
 **Fecha:** 2026-04-03
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: L1 Layer 1 refactoring — agregar categoría 'material' con UI modular y cascade
+- 🐛 fix: remove invalid 'isMaterialData' type guard and fix style references
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
