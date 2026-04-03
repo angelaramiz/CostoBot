@@ -2,6 +2,7 @@ import {
     calculateMaterialCost,
     calculateUtensilDepreciation,
     calculateMachineCost,
+    calculateMachineServiceCost,
     calculateInheritedCost,
     calculatePricing
 } from "./calculations";
@@ -74,5 +75,49 @@ describe("calculatePricing", () => {
         const result = calculatePricing(500, 0);
         expect(result.precioVenta).toBe(500);
         expect(result.ganancia).toBe(0);
+    });
+});
+
+describe("calculateMachineServiceCost", () => {
+    it("calcula costo eléctrico correctamente (1.5 kW × 60 min × tarifa 200)", () => {
+        // 1.5 kW × (60/60) h × 200 cts/kWh = 300
+        expect(calculateMachineServiceCost('electricity', 60, 1.5, 0, 200, 0)).toBe(300);
+    });
+
+    it("calcula costo de gas correctamente (0.5 m³/h × 30 min × tarifa 400)", () => {
+        // 0.5 m³/h × (30/60) h × 400 cts/m³ = 100
+        expect(calculateMachineServiceCost('gas', 30, 0, 0.5, 0, 400)).toBe(100);
+    });
+
+    it("calcula costo combinado (both) sumando electricidad y gas", () => {
+        // Electricidad: 2 kW × (60/60) h × 200 = 400
+        // Gas: 1 m³/h × (60/60) h × 150 = 150
+        // Total: 550
+        expect(calculateMachineServiceCost('both', 60, 2, 1, 200, 150)).toBe(550);
+    });
+
+    it("retorna 0 si no hay potencia ni consumo configurados", () => {
+        expect(calculateMachineServiceCost('electricity', 60, 0, 0, 200, 0)).toBe(0);
+    });
+
+    it("retorna 0 si la tarifa es 0", () => {
+        expect(calculateMachineServiceCost('gas', 60, 0, 1, 0, 0)).toBe(0);
+    });
+
+    it("ignora gas cuando serviceType es 'electricity'", () => {
+        // Solo electricidad: 1 kW × 1 h × 100 = 100 (gas ignorado aunque tenga tarifa)
+        expect(calculateMachineServiceCost('electricity', 60, 1, 5, 100, 500)).toBe(100);
+    });
+
+    it("ignora electricidad cuando serviceType es 'gas'", () => {
+        // Solo gas: 2 m³/h × 1 h × 100 = 200 (electricidad ignorada aunque tenga tarifa)
+        expect(calculateMachineServiceCost('gas', 60, 5, 2, 500, 100)).toBe(200);
+    });
+
+    it("redondea el resultado al centavo entero", () => {
+        // 1 kW × (1/60) h × 10 = 0.1667 → Math.round = 0
+        expect(calculateMachineServiceCost('electricity', 1, 1, 0, 10, 0)).toBe(0);
+        // 1 kW × (30/60) h × 13 = 6.5 → Math.round = 7
+        expect(calculateMachineServiceCost('electricity', 30, 1, 0, 13, 0)).toBe(7);
     });
 });

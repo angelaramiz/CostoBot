@@ -108,3 +108,36 @@ export function calculatePricing(
   const ganancia = precioVenta - costoUnitario;
   return { precioVenta, ganancia };
 }
+
+/**
+ * Calcula el costo de operación de una máquina según el tipo de servicio consumido.
+ * - electricity: kW × (minutos/60) × tarifa_electricidad (centavos/kWh)
+ * - gas: m³/hora × (minutos/60) × tarifa_gas (centavos/m³)
+ * - both: suma de electricidad + gas
+ *
+ * @param serviceType Tipo de servicio: 'electricity', 'gas' o 'both'
+ * @param timeMinutes Tiempo de uso en minutos
+ * @param powerKw Potencia en kW (para máquinas eléctricas)
+ * @param gasM3PerHour Consumo de gas en m³/hora (para máquinas a gas)
+ * @param electricityRate Tarifa de electricidad en centavos/kWh
+ * @param gasRate Tarifa de gas en centavos/m³
+ * @returns Costo del servicio en centavos (redondeado)
+ */
+export function calculateMachineServiceCost(
+  serviceType: 'electricity' | 'gas' | 'both',
+  timeMinutes: number,
+  powerKw: number = 0,
+  gasM3PerHour: number = 0,
+  electricityRate: number = 0,
+  gasRate: number = 0
+): number {
+  const hours = timeMinutes / 60;
+  let cost = 0;
+  if (serviceType === 'electricity' || serviceType === 'both') {
+    cost += powerKw * hours * electricityRate;
+  }
+  if (serviceType === 'gas' || serviceType === 'both') {
+    cost += gasM3PerHour * hours * gasRate;
+  }
+  return Math.round(cost);
+}

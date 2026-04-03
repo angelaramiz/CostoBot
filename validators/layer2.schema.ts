@@ -41,6 +41,9 @@ const MachineNodeDataSchema = z.object({
   timeMinutes: z.number().positive(),
   temperature: z.number().optional(),
   temperatureUnit: z.enum(['C', 'F']).optional(),
+  serviceType: z.enum(['electricity', 'gas', 'both']).optional(),
+  powerKw: z.number().nonnegative().optional(),
+  gasM3PerHour: z.number().nonnegative().optional(),
 });
 
 const MainProductOutputSchema = z.object({

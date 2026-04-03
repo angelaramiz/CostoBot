@@ -36,6 +36,8 @@ export interface UtensilNodeData {
   unitsProducedThisMonth: number;
 }
 
+export type MachineServiceType = 'electricity' | 'gas' | 'both';
+
 export interface MachineNodeData {
   insumoId: string;
   insumoName: string;
@@ -43,6 +45,12 @@ export interface MachineNodeData {
   timeMinutes: number;
   temperature?: number;
   temperatureUnit?: 'C' | 'F';
+  /** Tipo de servicio que consume la máquina (electricidad, gas o ambos) */
+  serviceType?: MachineServiceType;
+  /** Potencia en kW — para máquinas eléctricas */
+  powerKw?: number;
+  /** Consumo de gas en m³/hora — para máquinas a gas */
+  gasM3PerHour?: number;
 }
 
 export interface MainProductOutput {

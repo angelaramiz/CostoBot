@@ -18,6 +18,15 @@ export default function MachineNode({ data, selected }: NodeProps) {
           {d.timeMinutes} min
           {d.temperature != null ? ` · ${d.temperature}°${d.temperatureUnit ?? 'C'}` : ''}
         </div>
+        {d.serviceType && (
+          <div className={styles.nodeMeta}>
+            {d.serviceType === 'electricity' && '⚡ Electricidad'}
+            {d.serviceType === 'gas' && '🔥 Gas'}
+            {d.serviceType === 'both' && '⚡🔥 Ambos'}
+            {d.serviceType === 'electricity' && d.powerKw != null ? ` · ${d.powerKw} kW` : ''}
+            {d.serviceType === 'gas' && d.gasM3PerHour != null ? ` · ${d.gasM3PerHour} m³/h` : ''}
+          </div>
+        )}
       </div>
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />

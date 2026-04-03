@@ -144,6 +144,47 @@ export default function NodePropsPanel({ node, allGraphs, insumos, onSave, onClo
               <option value="F">°F (Fahrenheit)</option>
             </select>
           </div>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Tipo de servicio</label>
+            <select
+              className={styles.formSelect}
+              value={String(form.serviceType ?? '')}
+              onChange={(e) => set('serviceType', e.target.value || undefined)}
+            >
+              <option value="">— No especificado —</option>
+              <option value="electricity">⚡ Electricidad</option>
+              <option value="gas">🔥 Gas</option>
+              <option value="both">⚡🔥 Ambos</option>
+            </select>
+          </div>
+          {(form.serviceType === 'electricity' || form.serviceType === 'both') && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Potencia (kW)</label>
+              <input
+                className={styles.formInput}
+                type="number"
+                min={0}
+                step={0.1}
+                value={String(form.powerKw ?? '')}
+                placeholder="ej: 1.5"
+                onChange={(e) => set('powerKw', e.target.value ? parseFloat(e.target.value) : undefined)}
+              />
+            </div>
+          )}
+          {(form.serviceType === 'gas' || form.serviceType === 'both') && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Consumo de gas (m³/hora)</label>
+              <input
+                className={styles.formInput}
+                type="number"
+                min={0}
+                step={0.01}
+                value={String(form.gasM3PerHour ?? '')}
+                placeholder="ej: 0.5"
+                onChange={(e) => set('gasM3PerHour', e.target.value ? parseFloat(e.target.value) : undefined)}
+              />
+            </div>
+          )}
         </>
       )}
 

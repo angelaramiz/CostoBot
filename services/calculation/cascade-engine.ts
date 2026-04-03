@@ -13,6 +13,7 @@ import type { ProductPricing, CostBreakdown, ServicesConfig } from '@/types/laye
 import {
   calculateUtensilDepreciation,
   calculateMachineCost,
+  calculateMachineServiceCost,
   calculateMaterialCost,
   calculateInheritedCost,
   calculatePricing,
@@ -101,10 +102,23 @@ function calculateGraphCostBreakdown(
     } else if (isMachineData(node)) {
       const insumo = insumoMap.get(node.data.insumoId);
       if (insumo) {
-        machines += calculateMachineCost(
-          insumo.costPerUnit,
-          node.data.timeMinutes
-        );
+        if (node.data.serviceType && servicesConfig) {
+          // Cálculo por tipo de servicio (electricidad/gas) usando tarifas de Layer 3
+          machines += calculateMachineServiceCost(
+            node.data.serviceType,
+            node.data.timeMinutes,
+            node.data.powerKw ?? 0,
+            node.data.gasM3PerHour ?? 0,
+            servicesConfig.electricity?.baseRate ?? 0,
+            servicesConfig.gas?.baseRate ?? 0
+          );
+        } else {
+          // Fallback: costo genérico usando insumo.costPerUnit como tarifa/hora
+          machines += calculateMachineCost(
+            insumo.costPerUnit,
+            node.data.timeMinutes
+          );
+        }
       }
     } else if (isImportData(node)) {
       // Buscar por productId primero, luego por exportedProductId
