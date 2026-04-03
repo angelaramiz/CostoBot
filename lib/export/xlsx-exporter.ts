@@ -37,20 +37,15 @@ function applyFormat(
 function buildInsumoSheet(project: BusinessProject): XLSX.WorkSheet {
   const { layer1 } = project.layers;
 
-  const headers = ['Nombre', 'Unidad', 'Cantidad', 'Costo/Unidad ($)', 'Subtotal ($)'];
+  // Layer 1 is now catalog only (no quantity)
+  const headers = ['Nombre', 'Categoría', 'Unidad', 'Costo/Unidad ($)'];
 
-  const rows = layer1.map((ins) => {
-    // subtotal = suma de (costPerUnit * quantity) de todos los procesos que lo usan
-    // En realidad el subtotal del insumo es costPerUnit * quantity (su aportación directa)
-    const subtotal = ins.costPerUnit * ins.quantity;
-    return [
-      ins.name,
-      ins.unit,
-      ins.quantity,
-      toPesos(ins.costPerUnit),
-      toPesos(subtotal),
-    ];
-  });
+  const rows = layer1.map((ins) => [
+    ins.name,
+    ins.category,
+    ins.unit,
+    toPesos(ins.costPerUnit),
+  ]);
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
   const range = XLSX.utils.decode_range(ws['!ref'] ?? 'A1');

@@ -121,7 +121,7 @@ export default function Layer1InsumoSheet() {
 
       <InsumoAddForm counts={counts} onAdd={handleAdd} />
 
-      <div className={l1styles.infoBox}>
+      <div className={styles.infoBox}>
         <strong>Fórmulas de costo:</strong> Ingredientes y materiales: costo × cantidad.
         Utensilios y máquinas: (valor adquisición − residual) ÷ vida útil en meses.
         Los costos de uso (tiempo por receta) se definen en Capa 2 — Procesos.

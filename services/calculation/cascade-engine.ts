@@ -35,9 +35,6 @@ function isMachineData(node: ProductNode): node is ProductNode & { data: Machine
 function isImportData(node: ProductNode): node is ProductNode & { data: ImportNodeData } {
   return node.type === 'import';
 }
-function isMaterialData(node: ProductNode): node is ProductNode & { data: IngredientNodeData } {
-  return node.type === 'material';
-}
 
 /**
  * Calcula el desglose de costos de un grafo de producto.
@@ -108,11 +105,6 @@ function calculateGraphCostBreakdown(
           insumo.costPerUnit,
           node.data.timeMinutes
         );
-      }
-    } else if (isMaterialData(node)) {
-      const insumo = insumoMap.get(node.data.insumoId);
-      if (insumo) {
-        ingredients += calculateMaterialCost(insumo.costPerUnit, node.data.quantity);
       }
     } else if (isImportData(node)) {
       // Buscar por productId primero, luego por exportedProductId
@@ -208,7 +200,7 @@ export function propagateInsumoChange(
     // Validación defensiva: asegurar que nodes es un array
     const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
     const usesInsumo = nodes.some((node) => {
-      if (isIngredientData(node) || isUtensilData(node) || isMachineData(node) || isMaterialData(node)) {
+      if (isIngredientData(node) || isUtensilData(node) || isMachineData(node)) {
         return node.data.insumoId === insumoId;
       }
       return false;
