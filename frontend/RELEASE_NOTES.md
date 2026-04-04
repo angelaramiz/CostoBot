@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.28.0
+# 🚀 Release Notes — CostoBot v0.29.0
 
 **Fecha:** 2026-04-04
 **Tipo:** minor
 
 ## Cambios en esta versión
 
-- ✨ feat: fases 3.1-3.4 — servicios, impuestos, auto-sync L2→L3 y ROI
+- ✨ feat: fase 4.1 — plantillas de prompt por industria para IA
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
