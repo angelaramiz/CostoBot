@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.25.0
+# 🚀 Release Notes — CostoBot v0.26.0
 
-**Fecha:** 2026-04-03
+**Fecha:** 2026-04-04
 **Tipo:** minor
 
 ## Cambios en esta versión
 
-- ✨ feat: Fase 1.3 — cálculo de máquinas por tipo de servicio (electricidad/gas/ambos)
+- ✨ feat: Lotes C+D — yield tests, edge data UI, yield cascade, node panels
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
