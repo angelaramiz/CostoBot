@@ -167,6 +167,9 @@ const PROJECT_SUGGESTIONS = [
   '¿Cuáles son mis insumos más caros?',
   '¿Es rentable mi margen actual?',
   '¿Cómo puedo reducir costos?',
+  '¿Cuál es mi punto de equilibrio?',
+  'Analiza mi ROI y dime si es suficiente',
+  '¿Cómo afectan los impuestos a mis precios?',
 ];
 
 const DASHBOARD_SUGGESTIONS = [

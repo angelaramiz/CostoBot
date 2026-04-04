@@ -17,6 +17,7 @@ const router = express.Router();
 const verifyFirebaseToken = require('../middleware/verifyFirebaseToken.middleware');
 const BusinessProject = require('../db/BusinessProject.model');
 const { getIAAdapter } = require('../lib/ia/ia.factory');
+const { detectIndustry, getIndustryLabel } = require('../lib/ia/prompt-templates');
 const logger = require('../lib/logger');
 
 // ── Rate limiting por usuario (uid) — 20 req/hora ──────────────────────────
@@ -183,30 +184,62 @@ function buildProjectContext(project) {
       ? products.reduce((acc, p) => acc + (p.margenPorcentaje ?? 0), 0) / products.length
       : 0;
 
-  const resumen = generateResumen(project, topInsumos, avgProductCost, margenPromedio);
+  // ROI promedio (v0.28.0+)
+  const productsWithRoi = products.filter((p) => p.roi != null);
+  const avgRoi =
+    productsWithRoi.length > 0
+      ? productsWithRoi.reduce((acc, p) => acc + p.roi, 0) / productsWithRoi.length
+      : 0;
+
+  // Industria detectada
+  const industry = detectIndustry(layer1, layer2);
+
+  const resumen = generateResumen(project, topInsumos, avgProductCost, margenPromedio, industry);
 
   return {
     projectName: project.name,
     avgProductCost,
     topInsumosByValue: topInsumos,
     margenPromedio,
+    avgRoi,
+    industry,
     resumen,
   };
 }
 
-function generateResumen(project, topInsumos, avgCost, margenPromedio) {
+function generateResumen(project, topInsumos, avgCost, margenPromedio, industry = 'default') {
   const layers = project.layers ?? {};
   const l1 = layers.layer1?.length ?? 0;
   const l2 = layers.layer2?.length ?? 0;
   const products = layers.layer3?.products ?? [];
   const l3 = products.length;
+  const services = layers.layer3?.services ?? {};
+  const taxes = layers.layer3?.taxes ?? {};
 
   const lines = [
+    `- Industria detectada: ${getIndustryLabel(industry)}`,
     `- Insumos registrados: ${l1}`,
     `- Grafos de producto: ${l2}`,
     `- Productos con precio: ${l3} (costo promedio: $${(avgCost / 100).toFixed(2)} MXN)`,
     `- Margen promedio: ${margenPromedio.toFixed(1)}%`,
   ];
+
+  // Servicios activos (Capa 3)
+  const activeServices = Object.entries(services).filter(([, s]) => s?.enabled !== false);
+  if (activeServices.length > 0) {
+    lines.push('- Servicios configurados en Capa 3:');
+    activeServices.forEach(([key, s]) => {
+      const unitCost = s.unitCost != null ? `$${(s.unitCost / 100).toFixed(2)}/unidad` : 'sin costo';
+      lines.push(`  • ${s.name ?? key}: ${unitCost}`);
+    });
+  }
+
+  // Impuestos activos (Capa 3)
+  const activeTaxes = Object.entries(taxes).filter(([, t]) => t?.enabled);
+  if (activeTaxes.length > 0) {
+    const totalRate = activeTaxes.reduce((sum, [, t]) => sum + (t.rate ?? 0), 0);
+    lines.push(`- Impuestos activos: ${activeTaxes.map(([, t]) => `${t.name ?? ''} ${((t.rate ?? 0) * 100).toFixed(0)}%`).join(', ')} (total: ${(totalRate * 100).toFixed(0)}%)`);
+  }
 
   if (topInsumos.length > 0) {
     lines.push('- Top 5 insumos por valor:');

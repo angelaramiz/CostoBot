@@ -16,6 +16,8 @@
  * @property {number} avgProductCost — costo promedio de productos en centavos
  * @property {Array} topInsumosByValue — top 5 insumos más caros
  * @property {number} margenPromedio
+ * @property {number} avgRoi — ROI promedio de productos con precio configurado
+ * @property {string} industry — industria detectada (e.g. 'panaderia', 'cosmeticos', 'default')
  * @property {string} resumen
  */
 

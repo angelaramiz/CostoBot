@@ -5,6 +5,7 @@
 'use strict';
 
 const { IIAAdapter } = require('./ia.adapter');
+const { getIndustryGuidance } = require('./prompt-templates');
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -148,12 +149,18 @@ Responde siempre en español. Sé conciso y práctico. Usa ejemplos del mundo re
   }
 
   // mode === 'project' (default)
-  return `Eres CostoBot, un asistente especializado en análisis de costos para pequeñas y medianas empresas.
-Tienes acceso al proyecto "${context?.projectName ?? 'sin nombre'}" con los siguientes datos:
-${context?.resumen ?? 'Sin datos de proyecto aún.'}
+  const industryGuidance = getIndustryGuidance(context?.industry ?? 'default');
+  const roiLine = context?.avgRoi != null && context.avgRoi > 0
+    ? `\n- ROI promedio de productos: ${context.avgRoi.toFixed(1)}%`
+    : '';
 
-Responde siempre en español. Sé conciso y práctico.
-Si el usuario pregunta por optimizaciones, sugiere cambios específicos con números.
+  return `Eres CostoBot, un asistente especializado en análisis de costos para pequeñas y medianas empresas latinoamericanas.
+Tienes acceso al proyecto "${context?.projectName ?? 'sin nombre'}" con los siguientes datos:
+${context?.resumen ?? 'Sin datos de proyecto aún.'}${roiLine}
+
+${industryGuidance ? industryGuidance + '\n\n' : ''}Responde siempre en español. Sé conciso y práctico.
+Si el usuario pregunta por optimizaciones, sugiere cambios específicos con números y porcentajes.
+Si el usuario pregunta por el ROI o margen, distingue entre margen de contribución y ROI neto.
 NO inventes datos que no estén en el contexto proporcionado.`;
 }
 
