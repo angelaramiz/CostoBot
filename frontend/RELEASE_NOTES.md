@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.32.1
+# 🚀 Release Notes — CostoBot v0.32.2
 
 **Fecha:** 2026-04-04
 **Tipo:** patch
 
 ## Cambios en esta versión
 
-- 🐛 fix: añadir protocolo de migración de Notion y validaciones pre-commit en CLAUDE.md
+- 🐛 fix: consolidate Notion migration protocol references, update memory index
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
