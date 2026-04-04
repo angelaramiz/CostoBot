@@ -77,6 +77,35 @@ describe("calculatePricing", () => {
         expect(result.precioVenta).toBe(500);
         expect(result.ganancia).toBe(0);
     });
+
+    it("retorna precioVentaConImpuestos igual a precioVenta cuando taxRate=0 (default)", () => {
+        const result = calculatePricing(200, 50);
+        expect(result.precioVentaConImpuestos).toBe(300);
+        expect(result.totalTaxRate).toBe(0);
+    });
+
+    it("aplica IVA 16% correctamente: precioVentaConImpuestos = round(300 * 1.16) = 348", () => {
+        const result = calculatePricing(200, 50, 0.16);
+        expect(result.precioVenta).toBe(300);
+        expect(result.precioVentaConImpuestos).toBe(348);
+        expect(result.totalTaxRate).toBe(0.16);
+    });
+
+    it("calcula ROI como porcentaje de ganancia sobre precio final (sin impuestos): 100/300 = 33%", () => {
+        const result = calculatePricing(200, 50);
+        // ganancia=100, precioVenta=300 → roi = round(100/300*100) = 33
+        expect(result.roi).toBe(33);
+    });
+
+    it("calcula ROI con impuestos: ganancia=100, precioConIVA=348 → roi = round(100/348*100) = 29", () => {
+        const result = calculatePricing(200, 50, 0.16);
+        expect(result.roi).toBe(29);
+    });
+
+    it("roi es 0 cuando margen es 0", () => {
+        const result = calculatePricing(500, 0);
+        expect(result.roi).toBe(0);
+    });
 });
 
 describe("calculateMachineServiceCost", () => {

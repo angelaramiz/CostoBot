@@ -1,4 +1,4 @@
-import { propagateChange } from './cascade-engine';
+import { propagateChange, recalculateAllLayers } from './cascade-engine';
 import type { BusinessProject } from '@/types/business-project';
 
 /**
@@ -175,5 +175,117 @@ describe('propagateChange — insumo tipo material', () => {
     const mat = projectWithMaterial.layers.layer1.find((i) => i.id === 'mat-001')!;
     expect(mat.supplier).toBe('Proveedor ABC');
     expect(mat.sku).toBe('PAP-001');
+  });
+});
+
+// ─── ROI e impuestos en Layer 3 ─────────────────────────────────────────────
+
+describe('propagateChange — ROI y campos de impuestos en L3', () => {
+  /**
+   * ins-001.costPerUnit: 100 → 200  |  quantity=2, yield=0.8
+   * totalCost = Math.round(200*2 / 0.8) = 500
+   * margen 50% → precioVenta = 500 * 1.5 = 750, ganancia = 250
+   */
+
+  it('popula roi después de propagación (sin impuestos): ganancia=250, precioVenta=750 → roi=33', () => {
+    const result = propagateChange(baseProject, 'layer1', 'ins-001', 'costPerUnit', 200);
+    const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001')!;
+    expect(pricing.roi).toBe(33);
+  });
+
+  it('precioVentaConImpuestos igual a precioVenta cuando no hay impuestos', () => {
+    const result = propagateChange(baseProject, 'layer1', 'ins-001', 'costPerUnit', 200);
+    const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001')!;
+    expect(pricing.precioVentaConImpuestos).toBe(750);
+  });
+
+  it('calcula precioVentaConImpuestos con IVA 16%: round(750 * 1.16) = 870', () => {
+    const projectWithIVA: BusinessProject = {
+      ...baseProject,
+      layers: {
+        ...baseProject.layers,
+        layer3: {
+          ...baseProject.layers.layer3,
+          taxes: { iva: { name: 'IVA', rate: 0.16, enabled: true } },
+        },
+      },
+    };
+    const result = propagateChange(projectWithIVA, 'layer1', 'ins-001', 'costPerUnit', 200);
+    const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001')!;
+    expect(pricing.precioVentaConImpuestos).toBe(870);
+    expect(pricing.totalTaxRate).toBe(0.16);
+  });
+
+  it('roi con IVA 16%: ganancia=250, precioConIVA=870 → roi=round(250/870*100)=29', () => {
+    const projectWithIVA: BusinessProject = {
+      ...baseProject,
+      layers: {
+        ...baseProject.layers,
+        layer3: {
+          ...baseProject.layers.layer3,
+          taxes: { iva: { name: 'IVA', rate: 0.16, enabled: true } },
+        },
+      },
+    };
+    const result = propagateChange(projectWithIVA, 'layer1', 'ins-001', 'costPerUnit', 200);
+    const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001')!;
+    expect(pricing.roi).toBe(29);
+  });
+
+  it('impuesto deshabilitado (enabled=false) no afecta precioVentaConImpuestos', () => {
+    const projectWithDisabledTax: BusinessProject = {
+      ...baseProject,
+      layers: {
+        ...baseProject.layers,
+        layer3: {
+          ...baseProject.layers.layer3,
+          taxes: { iva: { name: 'IVA', rate: 0.16, enabled: false } },
+        },
+      },
+    };
+    const result = propagateChange(projectWithDisabledTax, 'layer1', 'ins-001', 'costPerUnit', 200);
+    const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001')!;
+    expect(pricing.precioVentaConImpuestos).toBe(750);
+    expect(pricing.totalTaxRate).toBe(0);
+  });
+});
+
+// ─── syncL2ToL3 / recalculateAllLayers ──────────────────────────────────────
+
+describe('recalculateAllLayers — syncL2ToL3 auto-sincronización', () => {
+  it('crea entrada de pricing para grafo L2 que no tiene precio en L3', () => {
+    const projectSinPricing: BusinessProject = {
+      ...baseProject,
+      layers: {
+        ...baseProject.layers,
+        layer3: {
+          ...baseProject.layers.layer3,
+          products: [],
+        },
+      },
+    };
+    const result = recalculateAllLayers(projectSinPricing);
+    const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001');
+    expect(pricing).toBeDefined();
+    expect(pricing?.productName).toBe('Pan');
+  });
+
+  it('no duplica entradas existentes en L3 al recalcular', () => {
+    const result = recalculateAllLayers(baseProject);
+    const count = result.layers.layer3.products.filter((p) => p.productId === 'prod-001').length;
+    expect(count).toBe(1);
+  });
+
+  it('no muta el proyecto original al recalcular', () => {
+    const originalCount = baseProject.layers.layer3.products.length;
+    recalculateAllLayers(baseProject);
+    expect(baseProject.layers.layer3.products.length).toBe(originalCount);
+  });
+
+  it('recalcula correctamente totalCost del grafo existente', () => {
+    // ins-001.costPerUnit=100, quantity=2, yield=0.8 → totalCost = round(200/0.8) = 250
+    const result = recalculateAllLayers(baseProject);
+    const graph = result.layers.layer2.find((g) => g.productId === 'prod-001')!;
+    expect(graph.totalCost).toBe(250);
   });
 });
