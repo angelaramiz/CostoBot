@@ -45,6 +45,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, onSave, onClo
   const ingredientInsumos = insumos.filter((i) => i.category === 'ingrediente');
   const machineInsumos = insumos.filter((i) => i.category === 'maquina');
   const utensilInsumos = insumos.filter((i) => i.category === 'utensilio');
+  const materialInsumos = insumos.filter((i) => i.category === 'material');
 
   return (
     <div className={styles.propPanel}>
@@ -394,6 +395,89 @@ export default function NodePropsPanel({ node, allGraphs, insumos, onSave, onClo
               />
               <span className={styles.formHint}>Ej: 0.80 = 80% de rendimiento</span>
             </div>
+
+            {/* Empaque */}
+            <div className={styles.sectionTitle}>🫙 Empaque (Envase)</div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Material de empaque (Layer 1)</label>
+              <select
+                className={styles.formSelect}
+                value={String(resultadoData.packagingMaterialId ?? '')}
+                onChange={(e) => {
+                  const mat = materialInsumos.find((m) => m.id === e.target.value);
+                  set('packagingMaterialId', e.target.value || undefined);
+                  set('packagingMaterialName', mat?.name ?? undefined);
+                  if (!e.target.value) {
+                    set('packagingCapacity', undefined);
+                  }
+                }}
+              >
+                <option value="">— Sin empaque —</option>
+                {materialInsumos.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.unit})
+                  </option>
+                ))}
+              </select>
+              {materialInsumos.length === 0 && (
+                <span className={styles.formHint}>
+                  No hay materiales en Layer 1. Agrega frascos, botellas o cajas primero.
+                </span>
+              )}
+            </div>
+
+            {resultadoData.packagingMaterialId && (
+              <>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    Capacidad del envase ({mainProd.unit})
+                  </label>
+                  <input
+                    className={styles.formInput}
+                    type="number"
+                    min={0.001}
+                    step={0.001}
+                    value={String(resultadoData.packagingCapacity ?? '')}
+                    placeholder={`ej: 0.5 (${mainProd.unit})`}
+                    onChange={(e) =>
+                      set('packagingCapacity', parseFloat(e.target.value) || undefined)
+                    }
+                  />
+                  <span className={styles.formHint}>
+                    Cuánto producto cabe en cada envase (en {mainProd.unit})
+                  </span>
+                </div>
+
+                {(resultadoData.packagingCapacity ?? 0) > 0 &&
+                  mainProd.expectedQuantity > 0 && (() => {
+                    const units = Math.floor(
+                      mainProd.expectedQuantity / (resultadoData.packagingCapacity!)
+                    );
+                    return (
+                      <div className={styles.formGroup}>
+                        <div
+                          style={{
+                            background: 'var(--color-primary, #22c55e)',
+                            color: '#fff',
+                            borderRadius: 8,
+                            padding: '8px 12px',
+                            fontSize: 13,
+                            fontWeight: 600,
+                          }}
+                        >
+                          📦 {units} {units === 1 ? 'unidad' : 'unidades'} de{' '}
+                          {resultadoData.packagingCapacity} {mainProd.unit} cada una
+                        </div>
+                        <span className={styles.formHint}>
+                          Lote: {mainProd.expectedQuantity} {mainProd.unit} ÷{' '}
+                          {resultadoData.packagingCapacity} {mainProd.unit}/envase ={' '}
+                          {units} {resultadoData.packagingMaterialName ?? 'envases'}
+                        </span>
+                      </div>
+                    );
+                  })()}
+              </>
+            )}
           </>
         );
       })()}

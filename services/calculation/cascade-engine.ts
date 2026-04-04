@@ -46,7 +46,7 @@ function calculateGraphCostBreakdown(
   insumos: Insumo[],
   allGraphs: ProductGraph[],
   servicesConfig?: ServicesConfig
-): CostBreakdown {
+): CostBreakdown & { unitsPerBatch?: number } {
   const insumoMap = new Map(insumos.map((i) => [i.id, i]));
   const graphMap = new Map(allGraphs.map((g) => [g.productId, g]));
   
@@ -133,11 +133,20 @@ function calculateGraphCostBreakdown(
           (n) => n.type === 'resultado'
         ) as ProductNode & { data: ResultadoNodeData } | undefined;
         if (resultNode) {
-          ingredients += calculateInheritedCost(
-            parentGraph.totalCost,
-            resultNode.data.mainProduct.expectedQuantity,
-            node.data.quantity
-          );
+          if (parentGraph.unitsPerBatch && parentGraph.unitsPerBatch > 0) {
+            // Producto empacado: el import se mide en unidades (piezas/envases)
+            // Costo por unidad = totalCost / unitsPerBatch
+            ingredients += Math.round(
+              (parentGraph.totalCost / parentGraph.unitsPerBatch) * node.data.quantity
+            );
+          } else {
+            // Sin empaque: el import se mide en las mismas unidades que expectedQuantity
+            ingredients += calculateInheritedCost(
+              parentGraph.totalCost,
+              resultNode.data.mainProduct.expectedQuantity,
+              node.data.quantity
+            );
+          }
         }
       }
     }
@@ -161,15 +170,34 @@ function calculateGraphCostBreakdown(
   // Si yield=0.8 → se pierde 20% de insumos, por lo que cada unidad cuesta más.
   // Fórmula: costoPorUnidad = rawCost / yield
   const resultadoNode = nodes.find((n) => n.type === 'resultado');
-  const yieldValue = resultadoNode
-    ? (resultadoNode as ProductNode & { data: ResultadoNodeData }).data.yield ?? 1
-    : 1;
+  const resultadoTyped = resultadoNode
+    ? (resultadoNode as ProductNode & { data: ResultadoNodeData })
+    : undefined;
+  const yieldValue = resultadoTyped?.data.yield ?? 1;
   const effectiveYield = yieldValue > 0 ? yieldValue : 1;
-  const totalCost = effectiveYield < 1
+  const costWithYield = effectiveYield < 1
     ? Math.round(rawCost / effectiveYield)
     : rawCost;
 
-  return { ingredients, machines, utensils, services, labor: graph.laborCost, totalCost };
+  // Calcular costo de empaque (packaging) si el nodo Resultado tiene material vinculado.
+  // El empaque se suma DESPUÉS del ajuste de yield: los envases no se pierden con el rendimiento.
+  let packaging = 0;
+  let unitsPerBatch: number | undefined;
+  if (resultadoTyped?.data.packagingMaterialId && resultadoTyped.data.packagingCapacity) {
+    const packInsumo = insumoMap.get(resultadoTyped.data.packagingMaterialId);
+    const capacity = resultadoTyped.data.packagingCapacity;
+    const batchQty = resultadoTyped.data.mainProduct.expectedQuantity;
+    if (packInsumo && capacity > 0 && batchQty > 0) {
+      unitsPerBatch = Math.floor(batchQty / capacity);
+      if (unitsPerBatch > 0) {
+        packaging = Math.round(unitsPerBatch * packInsumo.costPerUnit);
+      }
+    }
+  }
+
+  const totalCost = costWithYield + packaging;
+
+  return { ingredients, machines, utensils, services, labor: graph.laborCost, packaging, totalCost, unitsPerBatch };
 }
 
 /**
@@ -182,7 +210,12 @@ function recalculateProductGraph(
   servicesConfig?: ServicesConfig
 ): ProductGraph {
   const breakdown = calculateGraphCostBreakdown(graph, insumos, allGraphs, servicesConfig);
-  return { ...graph, totalCost: breakdown.totalCost };
+  return {
+    ...graph,
+    totalCost: breakdown.totalCost,
+    unitsPerBatch: breakdown.unitsPerBatch,
+    packagingCost: breakdown.packaging,
+  };
 }
 
 /**
@@ -228,6 +261,11 @@ export function propagateInsumoChange(
     const usesInsumo = nodes.some((node) => {
       if (isIngredientData(node) || isUtensilData(node) || isMachineData(node)) {
         return node.data.insumoId === insumoId;
+      }
+      // Detectar cambio en material de empaque (nodo resultado)
+      if (node.type === 'resultado') {
+        const resData = node.data as unknown as ResultadoNodeData;
+        return resData.packagingMaterialId === insumoId;
       }
       return false;
     });

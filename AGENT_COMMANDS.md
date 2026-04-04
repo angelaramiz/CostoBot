@@ -432,6 +432,128 @@ Ver documentación completa: `.agente/task-execution/INTEGRATION.md`
 
 ---
 
+## 🧰 Skills Disponibles para el Agente
+
+> Los skills son herramientas especializadas que el agente activa según el contexto de la tarea.
+> Ubicadas en: `c:\Users\angel\.copilot\skills\[skill-name]\SKILL.md`
+
+### skill-learning-loop 🧠
+
+**Propósito:** Bucle autónomo de aprendizaje — el agente se optimiza a sí mismo en cada sesión
+
+**Activación:** "modo aprendizaje", "actualiza tu memoria", "aprende de esta sesión"
+
+**Trigger automático:**
+- Cada 3+ tareas completadas
+- Error repetido detectado (ya documentado en /memories/)
+- Ineficiencia: >5 turnos para completar 1 tarea
+
+**Protocolo:**
+1. **ANÁLISIS** — Lee sesión y memoria
+2. **MEMORIA** — Actualiza /memories/ con patrones aprendidos
+3. **MCP OPTIMIZATION** — Detecta queries ineficientes
+4. **PATRONES PROYECTO** — Aprende convenciones del proyecto
+5. **CONSOLIDACIÓN** — Limpia duplicados, funde archivos si es necesario
+
+**Output:** Reporte de aprendizaje + memoria actualizada
+
+**Archivos:**
+- Skill: `c:\Users\angel\.copilot\skills\skill-learning-loop\SKILL.md`
+- Índice: `/memories/learning-loop-index.md`
+- Error Log: `/memories/agent-self-errors.md`
+- Counter: `/memories/session/iteration-tracker.md`
+
+**Comandos relacionados:**
+```
+"actualiza tu memoria"
+"¿En qué iteración vamos?"
+"consolida tu memoria"
+"muéstrame el último reporte de aprendizaje"
+```
+
+---
+
+### skill-web-testing 🧪
+
+**Propósito:** QA automation — simula usuario real, captura bugs, genera reportes de testing
+
+**Activación:** "testea la aplicación", "haz QA", "web testing", "revisa errores", "busca bugs"
+
+**MCP usado:** `io.github.ChromeDevTools/chrome-devtools-mcp@0.21.0`
+
+**Protocolo:**
+1. **PREPARACIÓN** — Solicitar credenciales (usa protocolo seguro)
+2. **MAPEO** — Navega todas las rutas, descubre componentes
+3. **CAPTURA** — Recolecta errores de consola, network requests, performance
+4. **ANÁLISIS** — Clasifica por severidad (CRÍTICO → BAJO)
+5. **REPORTE** — Genera QA Report estructurado
+6. **SOLUCIÓN** — Crea plan de fixes con estimaciones
+7. **VALIDACIÓN** — Re-test post-fixes, loop hasta aprobación
+
+**Severidades:**
+- 🔴 **CRÍTICO:** Usuario no puede usar la app (blocker)
+- 🟠 **ALTO:** Feature importante rota
+- 🟡 **MEDIO:** Feature secundaria no funciona
+- 🟢 **BAJO:** Cosmetics, typos, styling
+
+**Output:**
+- `/memories/session/qa-report-[YYYY-MM-DD].md` — Reporte de errores
+- `/memories/session/solution-plan-[YYYY-MM-DD].md` — Plan de solución
+- `/memories/session/qa-test-map-[YYYY-MM-DD].md` — Mapa de rutas testeadas
+
+**Archivos:**
+- Skill: `c:\Users\angel\.copilot\skills\skill-web-testing\SKILL.md`
+- Referencia: `/memories/web-testing-reference.md`
+
+**Comandos relacionados:**
+```
+"testea la aplicación"
+"testea solo el login"
+"revisa performance"
+"responsive check"
+"re-testea los fixes"
+"muéstrame el última QA report"
+```
+
+**Patrón: Testing → Learning Loop**
+```
+1. User: "testea la app"
+   → Agente ejecuta FASE 1-7 de skill-web-testing
+   → Genera QA_REPORT_v1
+
+2. User: "actualiza tu memoria"
+   → Agente ejecuta skill-learning-loop
+   → Lee QA_REPORT_v1 y extrae patrones
+   → Documenta en /memories/session/qa-learnings-[fecha].md
+   → Si patrón se repite 2+ veces → escala a CLAUDE.md
+
+3. Developer implementa fixes
+
+4. User: "re-testea"
+   → Agente ejecuta FASE 2-7 de skill-web-testing
+   → Compara QA_REPORT_v1 vs v2
+   
+5. Loop hasta QA_REPORT solo tiene errors BAJO/cosmetic
+```
+
+---
+
+### skill-movil 📱
+
+**Propósito:** Testing responsivo y UX móvil
+
+**Ubicación:** `c:\Users\angel\.copilot\skills\skill-movil\SKILL.md`
+
+---
+
+### Catálogo de Skills
+
+Para ver todos los skills instalados y sus referencias:
+- Archivo: `/memories/skills-catalog.md`
+- Contiene: listado completo, patrones de integración, quick-start
+
+---
+
 ## ➕ Agentes Especializados Disponibles
 
 > Instalar con: `agent:add-specialist [nombre]`

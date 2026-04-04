@@ -33,6 +33,7 @@ export const CostBreakdownSchema = z.object({
   utensils: z.number().int().nonnegative(),
   services: z.number().int().nonnegative(),
   labor: z.number().int().nonnegative(),
+  packaging: z.number().int().nonnegative().optional().default(0),
   totalCost: z.number().int().nonnegative(),
 });
 

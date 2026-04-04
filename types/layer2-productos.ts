@@ -76,6 +76,12 @@ export interface ResultadoNodeData {
   inputTotal: number;
   /** Rendimiento: expectedOutput / inputTotal (ej: 0.80 = 80%) */
   yield: number;
+  /** ID del insumo de empaque en Layer 1 (category='material') */
+  packagingMaterialId?: string;
+  /** Nombre del material de empaque (desnormalizado para UI) */
+  packagingMaterialName?: string;
+  /** Capacidad del envase en las mismas unidades que mainProduct.unit (ej: 0.5 kg) */
+  packagingCapacity?: number;
 }
 
 export interface ExportNodeData {
@@ -136,6 +142,14 @@ export interface ProductGraph {
    * Ejemplo: { "electricity": 2.5 } → 2.5 kWh por unidad
    */
   servicesUsage?: Record<string, number>;
+  /**
+   * Unidades de producto resultantes tras envasar (calculado por cascade-engine).
+   * Ej: 1 kg lote / 0.5 kg envase = 2 unidades.
+   * Si no hay empaque, este campo no está definido.
+   */
+  unitsPerBatch?: number;
+  /** Costo total de los materiales de empaque por lote en centavos (calculado) */
+  packagingCost?: number;
 }
 
 /**

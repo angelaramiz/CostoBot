@@ -65,6 +65,9 @@ const ResultadoNodeDataSchema = z.object({
   byProduct: ByProductOutputSchema.optional(),
   inputTotal: z.number().positive(),
   yield: z.number().min(0).max(1),
+  packagingMaterialId: z.string().optional(),
+  packagingMaterialName: z.string().optional(),
+  packagingCapacity: z.number().positive().optional(),
 });
 
 const ExportNodeDataSchema = z.object({
@@ -126,6 +129,10 @@ export const ProductGraphSchema = z.object({
   laborCost: z.number().int().nonnegative(),
   /** Consumo de servicios por unidad (ej: { electricity: 2.5 } → 2.5 kWh/unidad) */
   servicesUsage: z.record(z.string(), z.number().nonnegative()).optional(),
+  /** Unidades de producto por lote tras envasar (calculado) */
+  unitsPerBatch: z.number().int().positive().optional(),
+  /** Costo de packaging total por lote en centavos (calculado) */
+  packagingCost: z.number().int().nonnegative().optional(),
 });
 
 export type ProductGraphInput = z.infer<typeof ProductGraphSchema>;

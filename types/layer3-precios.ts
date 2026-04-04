@@ -44,6 +44,8 @@ export interface CostBreakdown {
   utensils: number;
   services: number;
   labor: number;
+  /** Costo de materiales de empaque por lote en centavos */
+  packaging?: number;
   totalCost: number;
 }
 
