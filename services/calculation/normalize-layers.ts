@@ -63,6 +63,11 @@ function normalizeLayer3(layer3: unknown): any {
         ? l3.services
         : {},
     taxes: l3.taxes && typeof l3.taxes === 'object' ? l3.taxes : {},
+    // Preservar extraCosts (gastos extra: laborCost, packagingShipping, other)
+    extraCosts:
+      l3.extraCosts && typeof l3.extraCosts === 'object'
+        ? l3.extraCosts
+        : {},
     // ⚠️ CRITICAL: Garantizar que products sea siempre un array
     products: Array.isArray(l3.products) ? l3.products : [],
   };
