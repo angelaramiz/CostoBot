@@ -28,6 +28,7 @@ import NodePropsPanel from './NodePropsPanel';
 import EdgePropsPanel from './EdgePropsPanel';
 import type { ProductGraph, ProductNode, ProductEdge, EdgeData } from '@/types/layer2-productos';
 import type { Insumo } from '@/types/layer1-insumos';
+import type { ServicesConfig } from '@/types/layer3-precios';
 import styles from './NodeEditor.module.css';
 
 const NODE_TYPES = {
@@ -73,10 +74,11 @@ interface Props {
   graph: ProductGraph;
   allGraphs: ProductGraph[];
   insumos: Insumo[];
+  services?: ServicesConfig;
   onSave: (graph: ProductGraph) => void;
 }
 
-export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props) {
+export default function NodeEditor({ graph, allGraphs, insumos, services, onSave }: Props) {
   const [nodes, setNodes] = useState<Node[]>(() => toFlowNodes(graph.nodes));
   const [edges, setEdges] = useState<Edge[]>(() => toFlowEdges(graph.edges));
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -238,10 +240,18 @@ export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props)
       target: e.target,
       data: e.data as ProductEdge['data'],
     }));
+
+    // Extraer servicesUsage del nodo resultado (si lo tiene) para actualizarlo al nivel del grafo
+    const resultadoNode = productNodes.find((n) => n.type === 'resultado');
+    const nodeServicesUsage = resultadoNode
+      ? (resultadoNode.data as unknown as { servicesUsage?: Record<string, number> }).servicesUsage
+      : undefined;
+
     return {
       ...graph,
       nodes: productNodes,
       edges: productEdges,
+      servicesUsage: nodeServicesUsage ?? graph.servicesUsage,
     };
   }
 
@@ -410,6 +420,7 @@ export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props)
               insumos={insumos}
               onSave={handleNodePropsSave}
               onClose={() => setSelectedNode(null)}
+              services={services}
             />
           )}
 

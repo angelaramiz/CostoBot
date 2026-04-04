@@ -51,6 +51,9 @@ export const ProductPricingSchema = z.object({
     .int('El precio de venta debe ser un entero en centavos')
     .nonnegative('El precio de venta no puede ser negativo'),
   ganancia: z.number({ required_error: 'La ganancia es requerida' }),
+  totalTaxRate: z.number().min(0).optional(),
+  precioVentaConImpuestos: z.number().int().nonnegative().optional(),
+  roi: z.number().optional(),
 });
 
 // ── Layer 3 completa ────────────────────────────────────────────────────────

@@ -536,6 +536,8 @@ export default function Layer3ProductoSheet() {
                   <th>Costo/unidad</th>
                   <th>Margen %</th>
                   <th>Precio de venta</th>
+                  <th>c/Impuestos</th>
+                  <th>ROI %</th>
                   <th>Ganancia</th>
                   <th style={{ width: 32 }}></th>
                 </tr>
@@ -543,7 +545,7 @@ export default function Layer3ProductoSheet() {
               <tbody>
                 {products.length === 0 && (
                   <tr>
-                    <td colSpan={6} className={styles.emptyState}>
+                    <td colSpan={8} className={styles.emptyState}>
                       {graphs.length === 0 ? 'Agrega grafos de producto en Capa 2 primero' : 'Sin precios. Agrega el primero ↓'}
                     </td>
                   </tr>
@@ -565,6 +567,18 @@ export default function Layer3ProductoSheet() {
                     </td>
                     <td>
                       <span className={styles.calcCell}>{formatCurrency(pricing.precioVenta)}</span>
+                    </td>
+                    <td>
+                      <span className={styles.calcCell}>
+                        {pricing.precioVentaConImpuestos != null
+                          ? formatCurrency(pricing.precioVentaConImpuestos)
+                          : '—'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={styles.calcCell} style={{ color: '#38bdf8' }}>
+                        {pricing.roi != null ? `${pricing.roi.toFixed(1)}%` : '—'}
+                      </span>
                     </td>
                     <td>
                       <span

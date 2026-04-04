@@ -13,18 +13,20 @@ import type {
   ImportNodeData,
 } from '@/types/layer2-productos';
 import type { Insumo } from '@/types/layer1-insumos';
+import type { ServicesConfig } from '@/types/layer3-precios';
 import styles from './NodeEditor.module.css';
 
 interface Props {
   node: Node;
   allGraphs: ProductGraph[];
   insumos: Insumo[];
+  services?: ServicesConfig;
   onSave: (id: string, data: Record<string, unknown>) => void;
   onClose: () => void;
 }
 
 /** Panel lateral de propiedades al seleccionar un nodo */
-export default function NodePropsPanel({ node, allGraphs, insumos, onSave, onClose }: Props) {
+export default function NodePropsPanel({ node, allGraphs, insumos, services, onSave, onClose }: Props) {
   const nodeType = node.type as NodeType;
   const [form, setForm] = useState<Record<string, unknown>>({ ...node.data as Record<string, unknown> });
 
@@ -476,6 +478,43 @@ export default function NodePropsPanel({ node, allGraphs, insumos, onSave, onClo
                       </div>
                     );
                   })()}
+              </>
+            )}
+
+            {/* Consumo de Servicios */}
+            {services && Object.keys(services).length > 0 && (
+              <>
+                <div className={styles.sectionTitle}>⚡ Consumo de Servicios</div>
+                {Object.entries(services).map(([key, rate]) => {
+                  if (!rate) return null;
+                  const currentUsage = resultadoData.servicesUsage?.[key] ?? 0;
+                  return (
+                    <div key={key} className={styles.formGroup}>
+                      <label className={styles.formLabel}>
+                        {key.charAt(0).toUpperCase() + key.slice(1)} ({rate.unit})
+                      </label>
+                      <input
+                        className={styles.formInput}
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={String(currentUsage)}
+                        placeholder={`ej: 2.5 ${rate.unit}`}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          const current = (form.servicesUsage as Record<string, number>) ?? {};
+                          set('servicesUsage', { ...current, [key]: val });
+                        }}
+                      />
+                      <span className={styles.formHint}>
+                        Tarifa: {(rate.baseRate / 100).toFixed(2)} {rate.currency}/{rate.unit}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div className={styles.formHint} style={{ marginBottom: 8, fontStyle: 'italic' }}>
+                  💡 Consumo total por lote (no por unidad)
+                </div>
               </>
             )}
           </>

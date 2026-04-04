@@ -9,7 +9,7 @@ import type {
   ResultadoNodeData,
   ImportNodeData,
 } from '@/types/layer2-productos';
-import type { ProductPricing, CostBreakdown, ServicesConfig } from '@/types/layer3-precios';
+import type { ProductPricing, CostBreakdown, ServicesConfig, TaxesConfig, TaxConfig } from '@/types/layer3-precios';
 import {
   calculateUtensilDepreciation,
   calculateMachineCost,
@@ -225,15 +225,50 @@ function recalculateProductPricing(
   pricing: ProductPricing,
   graphs: ProductGraph[],
   insumos: Insumo[],
-  servicesConfig?: ServicesConfig
+  servicesConfig?: ServicesConfig,
+  taxesConfig?: TaxesConfig
 ): ProductPricing {
   const graph = graphs.find((g) => g.productId === pricing.productId);
   if (!graph) return pricing;
 
   const breakdown = calculateGraphCostBreakdown(graph, insumos, graphs, servicesConfig);
-  const { precioVenta, ganancia } = calculatePricing(breakdown.totalCost, pricing.margenPorcentaje);
 
-  return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia };
+  // Calcular tasa total de impuestos habilitados
+  const taxRate = taxesConfig
+    ? Object.values(taxesConfig)
+        .filter((t): t is TaxConfig => !!t && t.enabled)
+        .reduce((sum, t) => sum + t.rate, 0)
+    : 0;
+
+  const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
+    breakdown.totalCost,
+    pricing.margenPorcentaje,
+    taxRate
+  );
+
+  return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi };
+}
+
+/**
+ * Sincroniza productos de Layer 2 hacia Layer 3.
+ * Si un grafo L2 no tiene entry en L3.products, crea una con margen 30% por defecto.
+ * Muta el objeto updated (que ya es un structuredClone seguro).
+ */
+function syncL2ToL3(updated: BusinessProject): void {
+  const existingIds = new Set(updated.layers.layer3.products.map((p) => p.productId));
+  const newPricings: ProductPricing[] = updated.layers.layer2
+    .filter((g) => !existingIds.has(g.productId))
+    .map((g) => ({
+      productId: g.productId,
+      productName: g.productName,
+      costBreakdown: { ingredients: 0, machines: 0, utensils: 0, services: 0, labor: 0, packaging: 0, totalCost: 0 },
+      margenPorcentaje: 30,
+      precioVenta: 0,
+      ganancia: 0,
+    }));
+  if (newPricings.length > 0) {
+    updated.layers.layer3.products.push(...newPricings);
+  }
 }
 
 // ── API pública ─────────────────────────────────────────────────────────────
@@ -278,7 +313,7 @@ export function propagateInsumoChange(
     );
   });
 
-  // Recalcular Layer 3 pricing (incluyendo desglose completo con servicios)
+  // Recalcular Layer 3 pricing (incluyendo desglose completo con servicios e impuestos)
   updated.layers.layer3 = {
     ...updated.layers.layer3,
     updatedAt: new Date().toISOString(),
@@ -287,7 +322,8 @@ export function propagateInsumoChange(
         pricing,
         updated.layers.layer2,
         updated.layers.layer1,
-        updated.layers.layer3.services
+        updated.layers.layer3.services,
+        updated.layers.layer3.taxes
       )
     ),
   };
@@ -342,6 +378,10 @@ export function propagateGraphChange(
 
   // Recalcular Layer 3 para todos los productos afectados (originalId + dependientes)
   const affectedProductIds = new Set([productId, ...dependentGraphIds]);
+  const taxRate = Object.values(updated.layers.layer3.taxes)
+    .filter((t): t is TaxConfig => !!t && t.enabled)
+    .reduce((sum, t) => sum + t.rate, 0);
+
   updated.layers.layer3 = {
     ...updated.layers.layer3,
     updatedAt: new Date().toISOString(),
@@ -358,11 +398,12 @@ export function propagateGraphChange(
         updated.layers.layer2,
         updated.layers.layer3.services
       );
-      const { precioVenta, ganancia } = calculatePricing(
+      const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
         breakdown.totalCost,
-        pricing.margenPorcentaje
+        pricing.margenPorcentaje,
+        taxRate
       );
-      return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia };
+      return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi };
     }),
   };
 
@@ -388,13 +429,17 @@ export function propagatePricingChange(
 
   (updated.layers.layer3.products[pIdx] as unknown as Record<string, unknown>)[field] = newValue;
 
-  // Recalcular precioVenta y ganancia
+  // Recalcular precioVenta, ganancia, precio con impuestos y ROI
   const pricing = updated.layers.layer3.products[pIdx];
-  const { precioVenta, ganancia } = calculatePricing(
+  const taxRate = Object.values(updated.layers.layer3.taxes)
+    .filter((t): t is TaxConfig => !!t && t.enabled)
+    .reduce((sum, t) => sum + t.rate, 0);
+  const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
     pricing.costBreakdown.totalCost,
-    pricing.margenPorcentaje
+    pricing.margenPorcentaje,
+    taxRate
   );
-  updated.layers.layer3.products[pIdx] = { ...pricing, precioVenta, ganancia };
+  updated.layers.layer3.products[pIdx] = { ...pricing, precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi };
   updated.layers.layer3.updatedAt = new Date().toISOString();
 
   updated.updatedAt = new Date();
@@ -425,9 +470,13 @@ export function propagateChange(
 /**
  * Recalcula todas las capas del proyecto desde cero.
  * Usar tras cambios estructurales (agregar / eliminar ítems).
+ * También sincroniza L2→L3: agrega ProductPricing para grafos sin precio asignado.
  */
 export function recalculateAllLayers(project: BusinessProject): BusinessProject {
   const updated = structuredClone(project) as BusinessProject;
+
+  // Sincronizar L2 → L3: crear entries de pricing para grafos nuevos
+  syncL2ToL3(updated);
 
   // Recalcular todos los grafos de Layer 2
   updated.layers.layer2 = updated.layers.layer2.map((graph) =>
@@ -438,6 +487,11 @@ export function recalculateAllLayers(project: BusinessProject): BusinessProject 
       updated.layers.layer3.services
     )
   );
+
+  // Calcular tasa total de impuestos para L3
+  const taxRate = Object.values(updated.layers.layer3.taxes)
+    .filter((t): t is TaxConfig => !!t && t.enabled)
+    .reduce((sum, t) => sum + t.rate, 0);
 
   // Recalcular todos los pricings de Layer 3
   updated.layers.layer3 = {
@@ -455,11 +509,12 @@ export function recalculateAllLayers(project: BusinessProject): BusinessProject 
         updated.layers.layer2,
         updated.layers.layer3.services
       );
-      const { precioVenta, ganancia } = calculatePricing(
+      const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
         breakdown.totalCost,
-        pricing.margenPorcentaje
+        pricing.margenPorcentaje,
+        taxRate
       );
-      return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia };
+      return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi };
     }),
   };
 

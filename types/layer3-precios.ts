@@ -59,6 +59,12 @@ export interface ProductPricing {
   precioVenta: number;
   /** Ganancia en dinero (centavos) — diferencia entre precioVenta y costoTotal */
   ganancia: number;
+  /** Tasa total de impuestos aplicada (suma de impuestos habilitados, ej: 0.16 = 16%) */
+  totalTaxRate?: number;
+  /** Precio de venta con impuestos incluidos en centavos — calculado */
+  precioVentaConImpuestos?: number;
+  /** Margen bruto (gross margin): ganancia / precioVentaFinal * 100 */
+  roi?: number;
 }
 
 // ── Layer 3 completa ────────────────────────────────────────────────────────

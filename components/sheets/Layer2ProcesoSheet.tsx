@@ -146,6 +146,7 @@ export default function Layer2ProcesoSheet() {
             allGraphs={graphs}
             insumos={insumos}
             onSave={handleSaveGraph}
+            services={project.layers.layer3?.services}
           />
         </div>
       ) : null}

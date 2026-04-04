@@ -82,6 +82,12 @@ export interface ResultadoNodeData {
   packagingMaterialName?: string;
   /** Capacidad del envase en las mismas unidades que mainProduct.unit (ej: 0.5 kg) */
   packagingCapacity?: number;
+  /**
+   * Consumo de servicios para este grafo (kWh, m³, etc.).
+   * Claves: nombre del servicio (igual que en Layer3.services), valor: unidades consumidas.
+   * Ejemplo: { "electricity": 2.5 } → 2.5 kWh por lote
+   */
+  servicesUsage?: Record<string, number>;
 }
 
 export interface ExportNodeData {

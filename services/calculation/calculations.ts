@@ -99,14 +99,22 @@ export function calculateMaterialCost(
  * Calcula el precio de venta y ganancia a partir del costo unitario y margen.
  * precioVenta = costoUnitario * (1 + margenPorcentaje / 100)
  * ganancia = precioVenta - costoUnitario (en centavos)
+ * precioVentaConImpuestos = precioVenta * (1 + taxRate) si taxRate > 0
+ * roi = ganancia / precioVentaFinal * 100 (margen bruto sobre precio de venta)
  */
 export function calculatePricing(
   costoUnitario: number,
-  margenPorcentaje: number
-): { precioVenta: number; ganancia: number } {
+  margenPorcentaje: number,
+  taxRate: number = 0
+): { precioVenta: number; ganancia: number; precioVentaConImpuestos: number; totalTaxRate: number; roi: number } {
   const precioVenta = Math.round(costoUnitario * (1 + margenPorcentaje / 100));
   const ganancia = precioVenta - costoUnitario;
-  return { precioVenta, ganancia };
+  const precioVentaConImpuestos = taxRate > 0
+    ? Math.round(precioVenta * (1 + taxRate))
+    : precioVenta;
+  const finalPrice = precioVentaConImpuestos > 0 ? precioVentaConImpuestos : precioVenta;
+  const roi = finalPrice > 0 ? Math.round((ganancia / finalPrice) * 100) : 0;
+  return { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate: taxRate, roi };
 }
 
 /**
