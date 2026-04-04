@@ -162,11 +162,12 @@ describe('useProjectStore — updateInsumo (cascada 3 capas)', () => {
   });
 
   it('propaga el cambio en cascada al grafo del producto', () => {
-    // costPerUnit 100 → 200, quantity en nodo=2 → totalCost = 200*2 = 400
+    // costPerUnit 100 → 200, quantity en nodo=2 → rawCost = 400
+    // Resultado tiene yield=0.8 → effectiveCost = Math.round(400 / 0.8) = 500
     useProjectStore.getState().updateInsumo('ins-001', { costPerUnit: 200 }, 'token');
     const state = useProjectStore.getState();
     const graph = state.currentProject!.layers.layer2.find((g) => g.productId === 'prod-001')!;
-    expect(graph.totalCost).toBe(400);
+    expect(graph.totalCost).toBe(500);
   });
 
   it('propaga el cambio hasta el pricing (cascada completa)', () => {
@@ -175,8 +176,8 @@ describe('useProjectStore — updateInsumo (cascada 3 capas)', () => {
     const pricing = state.currentProject!.layers.layer3.products.find(
       (p) => p.productId === 'prod-001'
     )!;
-    // totalCost=400, margen=50% → precioVenta = 400 * 1.5 = 600
-    expect(pricing.precioVenta).toBe(600);
+    // totalCost=500 (con yield aplicado), margen=50% → precioVenta = 500 * 1.5 = 750
+    expect(pricing.precioVenta).toBe(750);
   });
 
   it('no muta el proyecto original (inmutabilidad)', () => {

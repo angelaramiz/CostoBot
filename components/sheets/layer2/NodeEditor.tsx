@@ -25,7 +25,8 @@ import ResultadoNode from './nodes/ResultadoNode';
 import ExportNode from './nodes/ExportNode';
 import ImportNode from './nodes/ImportNode';
 import NodePropsPanel from './NodePropsPanel';
-import type { ProductGraph, ProductNode, ProductEdge } from '@/types/layer2-productos';
+import EdgePropsPanel from './EdgePropsPanel';
+import type { ProductGraph, ProductNode, ProductEdge, EdgeData } from '@/types/layer2-productos';
 import type { Insumo } from '@/types/layer1-insumos';
 import styles from './NodeEditor.module.css';
 
@@ -79,6 +80,7 @@ export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props)
   const [nodes, setNodes] = useState<Node[]>(() => toFlowNodes(graph.nodes));
   const [edges, setEdges] = useState<Edge[]>(() => toFlowEdges(graph.edges));
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
   // Sync when graph changes (different product selected)
@@ -87,6 +89,7 @@ export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props)
     setNodes(toFlowNodes(graph.nodes));
     setEdges(toFlowEdges(graph.edges));
     setSelectedNode(null);
+    setSelectedEdge(null);
     setIsDirty(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph.productId]);
@@ -212,6 +215,16 @@ export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props)
     setIsDirty(true);
   }
 
+  function handleEdgePropsSave(edgeId: string, data: EdgeData) {
+    setEdges((prev) =>
+      prev.map((e) => (e.id === edgeId ? { ...e, data: data as Record<string, unknown> } : e))
+    );
+    setSelectedEdge((prev) =>
+      prev?.id === edgeId ? { ...prev, data: data as Record<string, unknown> } : prev
+    );
+    setIsDirty(true);
+  }
+
   function buildSavePayload(): ProductGraph {
     const productNodes = nodes.map((n) => ({
       id: n.id,
@@ -294,8 +307,9 @@ export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props)
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onNodeClick={(_, node) => setSelectedNode(node)}
-            onPaneClick={() => setSelectedNode(null)}
+            onNodeClick={(_, node) => { setSelectedNode(node); setSelectedEdge(null); }}
+            onEdgeClick={(_, edge) => { setSelectedEdge(edge); setSelectedNode(null); }}
+            onPaneClick={() => { setSelectedNode(null); setSelectedEdge(null); }}
             fitView
             fitViewOptions={{ padding: 0.2 }}
             deleteKeyCode={null}
@@ -388,7 +402,7 @@ export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props)
             </div>
           )}
 
-          {/* Panel de propiedades */}
+          {/* Panel de propiedades de nodo */}
           {selectedNode && (
             <NodePropsPanel
               node={selectedNode}
@@ -396,6 +410,15 @@ export default function NodeEditor({ graph, allGraphs, insumos, onSave }: Props)
               insumos={insumos}
               onSave={handleNodePropsSave}
               onClose={() => setSelectedNode(null)}
+            />
+          )}
+
+          {/* Panel de propiedades de conexión */}
+          {selectedEdge && !selectedNode && (
+            <EdgePropsPanel
+              edge={selectedEdge}
+              onSave={handleEdgePropsSave}
+              onClose={() => setSelectedEdge(null)}
             />
           )}
         </div>

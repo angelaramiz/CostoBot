@@ -155,7 +155,19 @@ function calculateGraphCostBreakdown(
     }
   }
 
-  const totalCost = ingredients + machines + utensils + services + graph.laborCost;
+  const rawCost = ingredients + machines + utensils + services + graph.laborCost;
+
+  // Aplicar rendimiento (yield) del nodo Resultado para ajustar el costo efectivo.
+  // Si yield=0.8 → se pierde 20% de insumos, por lo que cada unidad cuesta más.
+  // Fórmula: costoPorUnidad = rawCost / yield
+  const resultadoNode = nodes.find((n) => n.type === 'resultado');
+  const yieldValue = resultadoNode
+    ? (resultadoNode as ProductNode & { data: ResultadoNodeData }).data.yield ?? 1
+    : 1;
+  const effectiveYield = yieldValue > 0 ? yieldValue : 1;
+  const totalCost = effectiveYield < 1
+    ? Math.round(rawCost / effectiveYield)
+    : rawCost;
 
   return { ingredients, machines, utensils, services, labor: graph.laborCost, totalCost };
 }

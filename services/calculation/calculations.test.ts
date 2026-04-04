@@ -4,7 +4,8 @@ import {
     calculateMachineCost,
     calculateMachineServiceCost,
     calculateInheritedCost,
-    calculatePricing
+    calculatePricing,
+    calculateYield
 } from "./calculations";
 
 describe("calculateMaterialCost", () => {
@@ -119,5 +120,31 @@ describe("calculateMachineServiceCost", () => {
         expect(calculateMachineServiceCost('electricity', 1, 1, 0, 10, 0)).toBe(0);
         // 1 kW × (30/60) h × 13 = 6.5 → Math.round = 7
         expect(calculateMachineServiceCost('electricity', 30, 1, 0, 13, 0)).toBe(7);
+    });
+});
+
+describe("calculateYield", () => {
+    it("calcula rendimiento 80% correctamente", () => {
+        expect(calculateYield(100, 80)).toBeCloseTo(0.8);
+    });
+
+    it("calcula rendimiento 100% cuando input === output", () => {
+        expect(calculateYield(50, 50)).toBeCloseTo(1.0);
+    });
+
+    it("calcula rendimiento mayor a 1 si output supera el input", () => {
+        expect(calculateYield(10, 15)).toBeCloseTo(1.5);
+    });
+
+    it("retorna 0 si inputTotal es 0 (división por cero)", () => {
+        expect(calculateYield(0, 80)).toBe(0);
+    });
+
+    it("retorna 0 si inputTotal es negativo", () => {
+        expect(calculateYield(-5, 80)).toBe(0);
+    });
+
+    it("retorna 0 si expectedOutput es 0", () => {
+        expect(calculateYield(100, 0)).toBeCloseTo(0);
     });
 });

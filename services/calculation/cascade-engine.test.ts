@@ -82,23 +82,25 @@ const baseProject: BusinessProject = {
 
 describe('propagateChange — cascada L1 → L2 → L3', () => {
   it('recalcula grafo totalCost cuando cambia insumo.costPerUnit', () => {
-    // costPerUnit: 100 → 200 | grafo cost = 200*2 = 400
+    // costPerUnit: 100 → 200 | rawCost = 200*2 = 400
+    // Resultado tiene yield=0.8 → effectiveCost = Math.round(400 / 0.8) = 500
     const result = propagateChange(baseProject, 'layer1', 'ins-001', 'costPerUnit', 200);
     const graph = result.layers.layer2.find((g) => g.productId === 'prod-001')!;
-    expect(graph.totalCost).toBe(400);
+    expect(graph.totalCost).toBe(500);
   });
 
   it('recalcula pricing precioVenta en cascada completa', () => {
-    // totalCost=400, margen=50% → precioVenta = 400 * 1.5 = 600
+    // totalCost=500 (con yield aplicado), margen=50% → precioVenta = 500 * 1.5 = 750
     const result = propagateChange(baseProject, 'layer1', 'ins-001', 'costPerUnit', 200);
     const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001')!;
-    expect(pricing.precioVenta).toBe(600);
+    expect(pricing.precioVenta).toBe(750);
   });
 
   it('calcula la ganancia correctamente después de la cascada', () => {
+    // precioVenta=750, totalCost=500 → ganancia = 250
     const result = propagateChange(baseProject, 'layer1', 'ins-001', 'costPerUnit', 200);
     const pricing = result.layers.layer3.products.find((p) => p.productId === 'prod-001')!;
-    expect(pricing.ganancia).toBe(200);
+    expect(pricing.ganancia).toBe(250);
   });
 });
 
@@ -149,7 +151,7 @@ describe('propagateChange — insumo tipo material', () => {
             ...baseProject.layers.layer2[0].nodes,
             {
               id: 'node-mat-001',
-              type: 'material',
+              type: 'ingredient',
               position: { x: 200, y: 200 },
               data: { insumoId: 'mat-001', insumoName: 'Papel de empaque', quantity: 5, unit: 'pza' },
             },
@@ -161,11 +163,12 @@ describe('propagateChange — insumo tipo material', () => {
   };
 
   it('propaga cambio de costPerUnit de material a Layer 2', () => {
-    // mat-001.costPerUnit: 50 → 100 | material en grafo qty=5 → 500
-    // grafo totalCost = 200 (ingrediente, ins-001) + 500 (material) = 700
+    // mat-001.costPerUnit: 50 → 100 | material qty=5 → 500
+    // rawCost = 200 (ins-001) + 500 (mat-001) = 700
+    // Resultado tiene yield=0.8 → effectiveCost = Math.round(700 / 0.8) = 875
     const result = propagateChange(projectWithMaterial, 'layer1', 'mat-001', 'costPerUnit', 100);
     const graph = result.layers.layer2.find((g) => g.productId === 'prod-001')!;
-    expect(graph.totalCost).toBe(700);
+    expect(graph.totalCost).toBe(875);
   });
 
   it('el insumo material incluye campos supplier y sku', () => {
