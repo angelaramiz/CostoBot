@@ -24,14 +24,29 @@ function isValidObjectId(id) {
 router.use(verifyFirebaseToken);
 
 // ── GET /api/projects ───────────────────────────────────────────────────────
-// Lista todos los proyectos del usuario autenticado (solo id, name, updatedAt)
+// Lista todos los proyectos del usuario autenticado (con contadores de capas)
 router.get('/', async (req, res) => {
   try {
-    const projects = await BusinessProject
+    const rawProjects = await BusinessProject
       .find({ ownerId: req.uid })
-      .select('_id name updatedAt createdAt')
+      .select('_id name updatedAt createdAt layers')
       .sort({ updatedAt: -1 })
       .lean();
+
+    // Retorna solo los contadores por capa para el dashboard (evita enviar el payload completo)
+    const projects = rawProjects.map((p) => ({
+      _id: p._id,
+      name: p.name,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+      layers: {
+        layer1: p.layers?.layer1 ?? [],
+        layer2: p.layers?.layer2 ?? [],
+        layer3: {
+          products: p.layers?.layer3?.products ?? [],
+        },
+      },
+    }));
     
     logger.info('projects_listed', {
       userId: req.uid,

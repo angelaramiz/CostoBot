@@ -1,0 +1,249 @@
+{
+  "id": "69d0943499ab9bb1e2b76da4",
+  "name": "Panadería artesanal",
+  "ownerId": "QOOafyKhjFNStvzd46oCKBstbA42",
+  "createdAt": "2026-04-04T00:00:00.000Z",
+  "updatedAt": "2026-04-04T00:00:00.000Z",
+  "layers": {
+    "layer1": [
+      {
+        "id": "4daea966-c0b3-4af8-a535-d5000152c4bd",
+        "name": "Harina de trigo",
+        "unit": "kg",
+        "costPerUnit": 1500,
+        "category": "ingrediente",
+        "isReusable": false
+      },
+      {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "name": "Agua",
+        "unit": "L",
+        "costPerUnit": 50,
+        "category": "ingrediente",
+        "isReusable": false
+      },
+      {
+        "id": "b2c3d4e5-f6a7-8901-bcde-f012345678ab",
+        "name": "Levadura seca",
+        "unit": "g",
+        "costPerUnit": 3,
+        "category": "ingrediente",
+        "isReusable": false
+      },
+      {
+        "id": "c3d4e5f6-a7b8-9012-cdef-0123456789bc",
+        "name": "Sal",
+        "unit": "kg",
+        "costPerUnit": 1500,
+        "category": "ingrediente",
+        "isReusable": false
+      },
+      {
+        "id": "d4e5f6a7-b8c9-0123-def0-123456789abc",
+        "name": "Aceite de oliva",
+        "unit": "ml",
+        "costPerUnit": 8,
+        "category": "ingrediente",
+        "isReusable": false
+      },
+      {
+        "id": "empaque-individual-001",
+        "name": "Bolsa individual para pan",
+        "unit": "pza",
+        "costPerUnit": 200,
+        "category": "material",
+        "isReusable": false,
+        "supplier": "Empaques MX",
+        "sku": "BOL-PAN-01"
+      },
+      {
+        "id": "horno-industrial-001",
+        "name": "Horno industrial",
+        "unit": "hr",
+        "costPerUnit": 11250,
+        "category": "maquina",
+        "isReusable": true,
+        "acquisitionCost": 1500000,
+        "usefulLifeMonths": 120,
+        "residualValue": 150000,
+        "supplier": "Equipos Panaderos SA"
+      },
+      {
+        "id": "batidora-industrial-001",
+        "name": "Batidora industrial",
+        "unit": "hr",
+        "costPerUnit": 6000,
+        "category": "maquina",
+        "isReusable": true,
+        "acquisitionCost": 400000,
+        "usefulLifeMonths": 60,
+        "residualValue": 40000,
+        "supplier": "Equipos Panaderos SA"
+      }
+    ],
+    "layer2": [
+      {
+        "productId": "prod-pan-artesanal-001",
+        "productName": "Pan artesanal (10 piezas)",
+        "version": "1.0",
+        "nodes": [
+          {
+            "id": "node-harina",
+            "type": "ingredient",
+            "position": { "x": 80, "y": 60 },
+            "data": {
+              "insumoId": "4daea966-c0b3-4af8-a535-d5000152c4bd",
+              "insumoName": "Harina de trigo",
+              "quantity": 0.5,
+              "unit": "kg"
+            }
+          },
+          {
+            "id": "node-agua",
+            "type": "ingredient",
+            "position": { "x": 80, "y": 160 },
+            "data": {
+              "insumoId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+              "insumoName": "Agua",
+              "quantity": 0.3,
+              "unit": "L"
+            }
+          },
+          {
+            "id": "node-levadura",
+            "type": "ingredient",
+            "position": { "x": 80, "y": 260 },
+            "data": {
+              "insumoId": "b2c3d4e5-f6a7-8901-bcde-f012345678ab",
+              "insumoName": "Levadura seca",
+              "quantity": 7,
+              "unit": "g"
+            }
+          },
+          {
+            "id": "node-sal",
+            "type": "ingredient",
+            "position": { "x": 80, "y": 360 },
+            "data": {
+              "insumoId": "c3d4e5f6-a7b8-9012-cdef-0123456789bc",
+              "insumoName": "Sal",
+              "quantity": 0.01,
+              "unit": "kg"
+            }
+          },
+          {
+            "id": "node-aceite",
+            "type": "ingredient",
+            "position": { "x": 80, "y": 460 },
+            "data": {
+              "insumoId": "d4e5f6a7-b8c9-0123-def0-123456789abc",
+              "insumoName": "Aceite de oliva",
+              "quantity": 30,
+              "unit": "ml"
+            }
+          },
+          {
+            "id": "node-batidora",
+            "type": "machine",
+            "position": { "x": 370, "y": 160 },
+            "data": {
+              "insumoId": "batidora-industrial-001",
+              "insumoName": "Batidora industrial",
+              "timeMinutes": 10,
+              "serviceType": "electricity",
+              "powerKw": 0.75
+            }
+          },
+          {
+            "id": "node-horno",
+            "type": "machine",
+            "position": { "x": 370, "y": 340 },
+            "data": {
+              "insumoId": "horno-industrial-001",
+              "insumoName": "Horno industrial",
+              "timeMinutes": 30,
+              "temperature": 200,
+              "temperatureUnit": "C",
+              "serviceType": "gas",
+              "gasM3PerHour": 0.5
+            }
+          },
+          {
+            "id": "node-resultado",
+            "type": "resultado",
+            "position": { "x": 640, "y": 270 },
+            "data": {
+              "mainProduct": {
+                "name": "Pan artesanal",
+                "expectedQuantity": 10,
+                "unit": "piezas"
+              },
+              "inputTotal": 0.85,
+              "yield": 0.95,
+              "packagingMaterialId": "empaque-individual-001",
+              "packagingMaterialName": "Bolsa individual para pan",
+              "packagingCapacity": 1
+            }
+          }
+        ],
+        "edges": [
+          { "id": "edge-harina-resultado",    "source": "node-harina",    "target": "node-resultado" },
+          { "id": "edge-agua-resultado",      "source": "node-agua",      "target": "node-resultado" },
+          { "id": "edge-levadura-resultado",  "source": "node-levadura",  "target": "node-resultado" },
+          { "id": "edge-sal-resultado",       "source": "node-sal",       "target": "node-resultado" },
+          { "id": "edge-aceite-resultado",    "source": "node-aceite",    "target": "node-resultado" },
+          { "id": "edge-batidora-resultado",  "source": "node-batidora",  "target": "node-resultado" },
+          { "id": "edge-horno-resultado",     "source": "node-horno",     "target": "node-resultado" }
+        ],
+        "totalCost": 6148,
+        "laborCost": 2500,
+        "unitsPerBatch": 10,
+        "packagingCost": 2000
+      }
+    ],
+    "layer3": {
+      "version": "1.0",
+      "updatedAt": "2026-04-04T00:00:00.000Z",
+      "services": {
+        "electricity": {
+          "baseRate": 200,
+          "unit": "kWh",
+          "currency": "MXN"
+        },
+        "gas": {
+          "baseRate": 1500,
+          "unit": "m³",
+          "currency": "MXN"
+        }
+      },
+      "taxes": {
+        "iva": {
+          "rate": 0.16,
+          "enabled": true,
+          "country": "MX"
+        }
+      },
+      "products": [
+        {
+          "productId": "prod-pan-artesanal-001",
+          "productName": "Pan artesanal (10 piezas)",
+          "costBreakdown": {
+            "ingredients": 1041,
+            "machines": 400,
+            "utensils": 0,
+            "services": 0,
+            "labor": 2500,
+            "packaging": 2000,
+            "totalCost": 6148
+          },
+          "margenPorcentaje": 40,
+          "precioVenta": 8607,
+          "ganancia": 2459,
+          "totalTaxRate": 0.16,
+          "precioVentaConImpuestos": 9984,
+          "roi": 24.6
+        }
+      ]
+    }
+  }
+}

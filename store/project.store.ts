@@ -113,6 +113,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         updatedAt: layer3Raw?.updatedAt ?? new Date().toISOString(),
         services: layer3Raw?.services ?? {},
         taxes: layer3Raw?.taxes ?? {},
+        extraCosts: layer3Raw?.extraCosts ?? {},
         // Garantizar que products siempre es un array
         products: Array.isArray(layer3Raw?.products) ? layer3Raw.products : [],
       };
@@ -145,12 +146,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         },
       };
 
+      const recalculated = recalculateAllLayers(project);
       set({
-        currentProject: project,
+        currentProject: recalculated,
         isDirty: false,
         lastSyncedAt: new Date(),
         syncError: null,
-        _dependencyGraph: buildDependencyGraph(project),
+        _dependencyGraph: buildDependencyGraph(recalculated),
       });
     } catch (err) {
       set({ syncError: err instanceof Error ? err.message : 'Error al cargar proyecto' });

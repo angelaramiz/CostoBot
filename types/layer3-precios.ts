@@ -67,6 +67,17 @@ export interface ProductPricing {
   roi?: number;
 }
 
+// ── Gastos Extra ────────────────────────────────────────────────────────────
+
+export interface ExtraCosts {
+  /** Costo de mano de obra por lote en centavos */
+  laborCost?: number;
+  /** Costo de empaque/envío extra en centavos */
+  packagingShipping?: number;
+  /** Otros gastos adicionales en centavos */
+  other?: number;
+}
+
 // ── Layer 3 completa ────────────────────────────────────────────────────────
 
 export interface Layer3Precios {
@@ -74,6 +85,7 @@ export interface Layer3Precios {
   updatedAt: string;
   services: ServicesConfig;
   taxes: TaxesConfig;
+  extraCosts?: ExtraCosts;
   products: ProductPricing[];
 }
 

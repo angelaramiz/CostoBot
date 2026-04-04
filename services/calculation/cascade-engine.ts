@@ -9,7 +9,7 @@ import type {
   ResultadoNodeData,
   ImportNodeData,
 } from '@/types/layer2-productos';
-import type { ProductPricing, CostBreakdown, ServicesConfig, TaxesConfig, TaxConfig } from '@/types/layer3-precios';
+import type { ProductPricing, CostBreakdown, ServicesConfig, TaxesConfig, TaxConfig, ExtraCosts } from '@/types/layer3-precios';
 import {
   calculateUtensilDepreciation,
   calculateMachineCost,
@@ -201,6 +201,31 @@ function calculateGraphCostBreakdown(
 }
 
 /**
+ * Distribuye extraCosts (mano de obra, empaque/envío, otros) proporcionalmente entre productos
+ * según el peso del costo de cada uno respecto al total de todos los grafos.
+ * Muta el breakdown en lugar.
+ */
+function applyExtraCostsToBreakdown(
+  breakdown: CostBreakdown,
+  productTotalCost: number,
+  allGraphs: ProductGraph[],
+  extraCosts?: ExtraCosts
+): void {
+  if (!extraCosts) return;
+  if (!(extraCosts.laborCost || extraCosts.packagingShipping || extraCosts.other)) return;
+  const totalAllCosts = allGraphs.reduce((sum, g) => sum + (g.totalCost ?? 0), 0);
+  const share = totalAllCosts > 0
+    ? productTotalCost / totalAllCosts
+    : allGraphs.length > 0 ? 1 / allGraphs.length : 1;
+  const laborShare = Math.round((extraCosts.laborCost ?? 0) * share);
+  const packagingShare = Math.round((extraCosts.packagingShipping ?? 0) * share);
+  const otherShare = Math.round((extraCosts.other ?? 0) * share);
+  breakdown.labor += laborShare;
+  breakdown.packaging = (breakdown.packaging ?? 0) + packagingShare;
+  breakdown.totalCost += laborShare + packagingShare + otherShare;
+}
+
+/**
  * Recalcula el totalCost de un grafo de producto en base a sus nodos, insumos y servicios.
  */
 function recalculateProductGraph(
@@ -226,12 +251,14 @@ function recalculateProductPricing(
   graphs: ProductGraph[],
   insumos: Insumo[],
   servicesConfig?: ServicesConfig,
-  taxesConfig?: TaxesConfig
+  taxesConfig?: TaxesConfig,
+  extraCosts?: ExtraCosts
 ): ProductPricing {
   const graph = graphs.find((g) => g.productId === pricing.productId);
   if (!graph) return pricing;
 
   const breakdown = calculateGraphCostBreakdown(graph, insumos, graphs, servicesConfig);
+  applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, graphs, extraCosts);
 
   // Calcular tasa total de impuestos habilitados
   const taxRate = taxesConfig
@@ -323,7 +350,8 @@ export function propagateInsumoChange(
         updated.layers.layer2,
         updated.layers.layer1,
         updated.layers.layer3.services,
-        updated.layers.layer3.taxes
+        updated.layers.layer3.taxes,
+        updated.layers.layer3.extraCosts
       )
     ),
   };
@@ -398,6 +426,7 @@ export function propagateGraphChange(
         updated.layers.layer2,
         updated.layers.layer3.services
       );
+      applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.extraCosts);
       const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
         breakdown.totalCost,
         pricing.margenPorcentaje,
@@ -509,6 +538,7 @@ export function recalculateAllLayers(project: BusinessProject): BusinessProject 
         updated.layers.layer2,
         updated.layers.layer3.services
       );
+      applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.extraCosts);
       const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
         breakdown.totalCost,
         pricing.margenPorcentaje,
