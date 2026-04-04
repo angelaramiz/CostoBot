@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.32.0
+# 🚀 Release Notes — CostoBot v0.32.1
 
 **Fecha:** 2026-04-04
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat(fase-4): IA industry templates, E2E tests complete suite, technical documentation + Notion migration Fase 4
+- 🐛 fix: añadir protocolo de migración de Notion y validaciones pre-commit en CLAUDE.md
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
