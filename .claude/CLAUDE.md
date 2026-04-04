@@ -272,8 +272,8 @@ node scripts/clean-tdl-notion.js
 - **Verificación:** Notion API query confirmó `results: []`
 
 **Referencias:**
-- `/memories/repo/costobot-notion-workflow-protocol.md` — Protocolo completo
-- `/memories/repo/costobot-notion-api-config.md` — IDs y configuración (actualizado 04/04)
+- `/memories/repo/COSTOBOT-NOTION-MASTER.md` — Single source of truth (consolidado 04/04)
+- `/memories/repo/INDEX.md` — Navegación de memoria
 
 **Nota para futuros agentes:**
 Usar `mcp_notion_API-query-data-source` + `mcp_notion_API-patch-page` para automatizar archivado.
