@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.30.0
+# 🚀 Release Notes — CostoBot v0.30.1
 
 **Fecha:** 2026-04-04
-**Tipo:** minor
+**Tipo:** patch
 
 ## Cambios en esta versión
 
-- ✨ feat: fases 4.2-4.3 — tests E2E cascada/ROI/IVA y docs arquitectura
+- 🐛 fix: incluir extraCosts en normalizeLayer3 para persistencia en DB
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
