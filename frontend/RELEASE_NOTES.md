@@ -1,11 +1,11 @@
-# 🚀 Release Notes — CostoBot v0.27.0
+# 🚀 Release Notes — CostoBot v0.28.0
 
 **Fecha:** 2026-04-04
 **Tipo:** minor
 
 ## Cambios en esta versión
 
-- ✨ feat: packaging vinculado al nodo resultado — seleccionar material/envase, calcular unidades por lote y costo de empaque en cascada
+- ✨ feat: fases 3.1-3.4 — servicios, impuestos, auto-sync L2→L3 y ROI
 
 ---
 *Generado automáticamente por AUTONOMOUS versioning hook*
