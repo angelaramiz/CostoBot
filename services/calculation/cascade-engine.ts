@@ -9,7 +9,7 @@ import type {
   ResultadoNodeData,
   ImportNodeData,
 } from '@/types/layer2-productos';
-import type { ProductPricing, CostBreakdown, ServicesConfig, TaxesConfig, TaxConfig, ExtraCosts } from '@/types/layer3-precios';
+import type { ProductPricing, CostBreakdown, ServicesConfig, TaxesConfig, TaxConfig, ExtraCosts, FixedCosts } from '@/types/layer3-precios';
 import {
   calculateUtensilDepreciation,
   calculateMachineCost,
@@ -228,6 +228,42 @@ function applyExtraCostsToBreakdown(
 }
 
 /**
+ * Distribuye gastos fijos mensuales (renta, servicios, sueldos) como costo por lote.
+ * Si hay unidadesMes, prorratea por unidad; si no, por share proporcional.
+ * Muta el breakdown en lugar y guarda en breakdown.fixed.
+ */
+function applyFixedCostsToBreakdown(
+  breakdown: CostBreakdown,
+  productTotalCost: number,
+  allGraphs: ProductGraph[],
+  fixedCosts?: FixedCosts
+): void {
+  if (!fixedCosts) return;
+  const totalFixed = (fixedCosts.renta ?? 0) + (fixedCosts.serviciosFijos ?? 0) + (fixedCosts.sueldosFijos ?? 0) + (fixedCosts.otrosFijos ?? 0);
+  if (totalFixed <= 0) return;
+
+  let fixedShare: number;
+  if (fixedCosts.unidadesMes && fixedCosts.unidadesMes > 0) {
+    // Prorrateo por unidad: costo fijo por unidad * unidades del lote
+    const fixedPerUnit = totalFixed / fixedCosts.unidadesMes;
+    // Estimar unidades del lote: usar totalCost como proxy de peso, o 1 si no hay datos
+    // Para mayor precisión, usar share proporcional como fallback ponderado por costo
+    const totalAllCosts = allGraphs.reduce((sum, g) => sum + (g.totalCost ?? 0), 0);
+    const share = totalAllCosts > 0 ? productTotalCost / totalAllCosts : 1 / allGraphs.length;
+    const estimatedUnits = Math.max(1, Math.round((fixedCosts.unidadesMes ?? 0) * share));
+    fixedShare = Math.round(fixedPerUnit * estimatedUnits);
+  } else {
+    const totalAllCosts = allGraphs.reduce((sum, g) => sum + (g.totalCost ?? 0), 0);
+    const share = totalAllCosts > 0
+      ? productTotalCost / totalAllCosts
+      : allGraphs.length > 0 ? 1 / allGraphs.length : 1;
+    fixedShare = Math.round(totalFixed * share);
+  }
+  breakdown.fixed = (breakdown.fixed ?? 0) + fixedShare;
+  breakdown.totalCost += fixedShare;
+}
+
+/**
  * Recalcula el totalCost de un grafo de producto en base a sus nodos, insumos y servicios.
  */
 function recalculateProductGraph(
@@ -254,12 +290,14 @@ function recalculateProductPricing(
   insumos: Insumo[],
   servicesConfig?: ServicesConfig,
   taxesConfig?: TaxesConfig,
-  extraCosts?: ExtraCosts
+  extraCosts?: ExtraCosts,
+  fixedCosts?: FixedCosts
 ): ProductPricing {
   const graph = graphs.find((g) => g.productId === pricing.productId);
   if (!graph) return pricing;
 
   const breakdown = calculateGraphCostBreakdown(graph, insumos, graphs, servicesConfig);
+  applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, graphs, fixedCosts);
   applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, graphs, extraCosts);
 
   // Calcular tasa total de impuestos habilitados
@@ -290,7 +328,7 @@ function syncL2ToL3(updated: BusinessProject): void {
     .map((g) => ({
       productId: g.productId,
       productName: g.productName,
-      costBreakdown: { ingredients: 0, machines: 0, utensils: 0, services: 0, labor: 0, packaging: 0, totalCost: 0 },
+      costBreakdown: { ingredients: 0, machines: 0, utensils: 0, services: 0, labor: 0, packaging: 0, fixed: 0, totalCost: 0 },
       margenPorcentaje: 30,
       precioVenta: 0,
       ganancia: 0,
@@ -353,7 +391,8 @@ export function propagateInsumoChange(
         updated.layers.layer1,
         updated.layers.layer3.services,
         updated.layers.layer3.taxes,
-        updated.layers.layer3.extraCosts
+        updated.layers.layer3.extraCosts,
+        updated.layers.layer3.fixedCosts
       )
     ),
   };
@@ -428,6 +467,7 @@ export function propagateGraphChange(
         updated.layers.layer2,
         updated.layers.layer3.services
       );
+      applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.fixedCosts);
       applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.extraCosts);
       const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
         breakdown.totalCost,
@@ -540,6 +580,7 @@ export function recalculateAllLayers(project: BusinessProject): BusinessProject 
         updated.layers.layer2,
         updated.layers.layer3.services
       );
+      applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.fixedCosts);
       applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.extraCosts);
       const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
         breakdown.totalCost,

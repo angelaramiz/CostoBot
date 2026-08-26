@@ -16,7 +16,7 @@ export default function Layer3ProductoSheet() {
   const addProductPricing = useProjectStore((s) => s.addProductPricing);
   const removeProductPricing = useProjectStore((s) => s.removeProductPricing);
 
-  const [expandedSection, setExpandedSection] = useState<'services' | 'taxes' | 'extra' | 'products'>('products');
+  const [expandedSection, setExpandedSection] = useState<'services' | 'fixed' | 'extra' | 'taxes' | 'products'>('products');
   const [newServiceName, setNewServiceName] = useState('');
   const [newServiceRate, setNewServiceRate] = useState('');
   const [newServiceUnit, setNewServiceUnit] = useState('');
@@ -30,8 +30,26 @@ export default function Layer3ProductoSheet() {
   const products = project.layers.layer3.products;
   const services = project.layers.layer3.services ?? {};
   const taxes = project.layers.layer3.taxes ?? {};
+  const fixedCosts = project.layers.layer3.fixedCosts ?? {};
   const extraCosts = project.layers.layer3.extraCosts ?? {};
   const graphs = project.layers.layer2;
+
+  function updateFixedCosts(field: 'renta' | 'serviciosFijos' | 'sueldosFijos' | 'otrosFijos' | 'unidadesMes', rawValue: string) {
+    if (!project) return;
+    const parsed = parseFloat(rawValue);
+    const value = field === 'unidadesMes' ? (isNaN(parsed) ? 0 : Math.round(parsed)) : isNaN(parsed) ? 0 : Math.round(parsed * 100);
+    const updatedProject = {
+      ...project,
+      layers: {
+        ...project.layers,
+        layer3: {
+          ...project.layers.layer3,
+          fixedCosts: { ...fixedCosts, [field]: value },
+        },
+      },
+    };
+    updateProjectData(updatedProject as typeof project, token);
+  }
 
   function updateExtraCosts(field: 'laborCost' | 'packagingShipping' | 'other', rawValue: string) {
     if (!project) return;
@@ -64,6 +82,8 @@ export default function Layer3ProductoSheet() {
           utensils: 0,
           services: 0,
           labor: 0,
+          packaging: 0,
+          fixed: 0,
           totalCost: 0,
         },
         margenPorcentaje: 30,
@@ -225,85 +245,63 @@ export default function Layer3ProductoSheet() {
         )}
       </div>
 
-      {/* SECCION 2: IMPUESTOS */}
+      {/* SECCION 2: GASTOS FIJOS (mensuales) */}
       <div style={{ borderBottom: '1px solid #334155' }}>
         <button
-          onClick={() => setExpandedSection(expandedSection === 'taxes' ? 'products' : 'taxes')}
+          onClick={() => setExpandedSection(expandedSection === 'fixed' ? 'products' : 'fixed')}
           style={sectionHeaderStyle}
           onMouseEnter={(e) => (e.currentTarget.style.background = '#0f172a')}
           onMouseLeave={(e) => (e.currentTarget.style.background = '#1e293b')}
         >
-          <span>{expandedSection === 'taxes' ? 'v' : '>'}</span>
-          Impuestos (IVA, Retenciones)
+          <span>{expandedSection === 'fixed' ? 'v' : '>'}</span>
+          Gastos Fijos (mensuales)
         </button>
-        {expandedSection === 'taxes' && (
-          <div style={{ padding: '12px 16px', background: '#0f172a' }}>
-            <table className={styles.table} style={{ marginBottom: 8 }}>
-              <thead>
-                <tr>
-                  <th>Tipo impuesto</th>
-                  <th>Tasa %</th>
-                  <th>Pais</th>
-                  <th>Estado</th>
-                  <th style={{ width: 32 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(taxes).length === 0 && (
-                  <tr><td colSpan={5} className={styles.emptyState}>Sin impuestos configurados</td></tr>
+        {expandedSection === 'fixed' && (
+          <div style={{ padding: '16px', background: '#0f172a' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div style={{ background: '#1e293b', borderRadius: 8, padding: '12px 14px', border: '1px solid #334155' }}>
+                <label style={{ ...labelStyle, margin: 0 }}>Renta / Alquiler</label>
+                <input type="number" min={0} step={1} defaultValue={fixedCosts.renta != null ? (fixedCosts.renta / 100).toFixed(2) : ''} placeholder="0.00" onBlur={(e) => updateFixedCosts('renta', e.target.value)} style={{ ...inputStyle, fontSize: '1rem', fontWeight: 600, color: '#f1f5f9', marginTop: 8 }} />
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 6 }}>Alquiler del local por mes</div>
+              </div>
+              <div style={{ background: '#1e293b', borderRadius: 8, padding: '12px 14px', border: '1px solid #334155' }}>
+                <label style={{ ...labelStyle, margin: 0 }}>Servicios fijos</label>
+                <input type="number" min={0} step={1} defaultValue={fixedCosts.serviciosFijos != null ? (fixedCosts.serviciosFijos / 100).toFixed(2) : ''} placeholder="0.00" onBlur={(e) => updateFixedCosts('serviciosFijos', e.target.value)} style={{ ...inputStyle, fontSize: '1rem', fontWeight: 600, color: '#f1f5f9', marginTop: 8 }} />
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 6 }}>Luz base, agua, internet, telefono</div>
+              </div>
+              <div style={{ background: '#1e293b', borderRadius: 8, padding: '12px 14px', border: '1px solid #334155' }}>
+                <label style={{ ...labelStyle, margin: 0 }}>Sueldos fijos</label>
+                <input type="number" min={0} step={1} defaultValue={fixedCosts.sueldosFijos != null ? (fixedCosts.sueldosFijos / 100).toFixed(2) : ''} placeholder="0.00" onBlur={(e) => updateFixedCosts('sueldosFijos', e.target.value)} style={{ ...inputStyle, fontSize: '1rem', fontWeight: 600, color: '#f1f5f9', marginTop: 8 }} />
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 6 }}>Salarios que pagas aunque no vendas</div>
+              </div>
+              <div style={{ background: '#1e293b', borderRadius: 8, padding: '12px 14px', border: '1px solid #334155' }}>
+                <label style={{ ...labelStyle, margin: 0 }}>Otros fijos</label>
+                <input type="number" min={0} step={1} defaultValue={fixedCosts.otrosFijos != null ? (fixedCosts.otrosFijos / 100).toFixed(2) : ''} placeholder="0.00" onBlur={(e) => updateFixedCosts('otrosFijos', e.target.value)} style={{ ...inputStyle, fontSize: '1rem', fontWeight: 600, color: '#f1f5f9', marginTop: 8 }} />
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 6 }}>Seguros, contador, etc.</div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div style={{ background: '#1e293b', borderRadius: 8, padding: '12px 14px', border: '1px solid #334155' }}>
+                <label style={{ ...labelStyle, margin: 0 }}>Unidades al mes</label>
+                <input type="number" min={0} step={1} defaultValue={fixedCosts.unidadesMes != null ? String(fixedCosts.unidadesMes) : ''} placeholder="ej: 1000" onBlur={(e) => updateFixedCosts('unidadesMes', e.target.value)} style={{ ...inputStyle, fontSize: '1rem', fontWeight: 600, color: '#f1f5f9', marginTop: 8 }} />
+                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 6 }}>Cuantás unidades produces al mes (para prorrateo)</div>
+              </div>
+              <div style={{ background: '#0f172a', borderRadius: 8, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>Total fijos</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f59e0b', marginTop: 4 }}>{formatCurrency((fixedCosts.renta ?? 0) + (fixedCosts.serviciosFijos ?? 0) + (fixedCosts.sueldosFijos ?? 0) + (fixedCosts.otrosFijos ?? 0))} / mes</div>
+                {(fixedCosts.unidadesMes ?? 0) > 0 && ((fixedCosts.renta ?? 0)+(fixedCosts.serviciosFijos ?? 0)+(fixedCosts.sueldosFijos ?? 0)+(fixedCosts.otrosFijos ?? 0)) > 0 && (
+                  <div style={{ fontSize: '0.78rem', color: '#38bdf8', marginTop: 4 }}>{formatCurrency(Math.round(((fixedCosts.renta ?? 0)+(fixedCosts.serviciosFijos ?? 0)+(fixedCosts.sueldosFijos ?? 0)+(fixedCosts.otrosFijos ?? 0)) / (fixedCosts.unidadesMes ?? 1)))} por unidad</div>
                 )}
-                {Object.entries(taxes).map(([key, tax]) => (
-                  <tr key={key}>
-                    <td style={{ textTransform: 'capitalize', fontWeight: 500 }}>{key}</td>
-                    <td><span className={styles.calcCell}>{formatPercent(tax?.rate ?? 0)}</span></td>
-                    <td style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{tax?.country ?? 'MX'}</td>
-                    <td><span style={{ fontSize: '0.78rem', color: tax?.enabled ? '#16a34a' : '#ef4444' }}>{tax?.enabled ? 'Activo' : 'Inactivo'}</span></td>
-                    <td>
-                      <button
-                        onClick={() => {
-                          if (!project) return;
-                          const updatedTaxes = { ...taxes };
-                          delete updatedTaxes[key];
-                          const updatedProject: typeof project = {
-                            ...project,
-                            layers: { ...project.layers, layer3: { ...project.layers.layer3, taxes: updatedTaxes } },
-                          };
-                          updateProjectData(updatedProject, token);
-                        }}
-                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem', padding: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        title="Eliminar impuesto"
-                      >x</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 8, marginBottom: 12 }}>
-              <input type="text" placeholder="Tipo de impuesto (IVA, Retencion, etc)" value={newTaxName} onChange={(e) => setNewTaxName(e.target.value)} style={inputStyle} />
-              <input type="text" inputMode="decimal" placeholder="Tasa % (ej: 16 o 0.16)" value={newTaxRate} onChange={(e) => setNewTaxRate(e.target.value)} style={inputStyle} />
-              <select value={newTaxCountry} onChange={(e) => setNewTaxCountry(e.target.value)} style={inputStyle}>
-                <option value="MX">Mexico</option>
-                <option value="CO">Colombia</option>
-                <option value="AR">Argentina</option>
-                <option value="CL">Chile</option>
-                <option value="PE">Peru</option>
-                <option value="ES">Espana</option>
-                <option value="US">USA</option>
-                <option value="OTHER">Otro</option>
-              </select>
-              <button onClick={handleAddTax} style={{ padding: '6px 12px', background: '#2563eb', border: 'none', borderRadius: 5, color: '#fff', fontSize: '0.82rem', fontWeight: 500, cursor: 'pointer' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')} onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}>
-                + Agregar
-              </button>
+              </div>
             </div>
             <div style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic' }}>
-              Configura impuestos segun tu pais y tipo de empresa
+              Los gastos fijos se distribuyen proporcionalmente entre productos. Si pones unidades/mes, se prorratea por unidad exacta.
             </div>
           </div>
         )}
       </div>
 
-      {/* SECCION 3: GASTOS EXTRA */}
+      {/* SECCION 3: GASTOS AGREGADOS (por lote) */}
       <div style={{ borderBottom: '1px solid #334155' }}>
         <button
           onClick={() => setExpandedSection(expandedSection === 'extra' ? 'products' : 'extra')}
@@ -312,7 +310,7 @@ export default function Layer3ProductoSheet() {
           onMouseLeave={(e) => (e.currentTarget.style.background = '#1e293b')}
         >
           <span>{expandedSection === 'extra' ? 'v' : '>'}</span>
-          Gastos Extra
+          Gastos Agregados (por lote)
         </button>
         {expandedSection === 'extra' && (
           <div style={{ padding: '16px', background: '#0f172a' }}>
@@ -391,7 +389,7 @@ export default function Layer3ProductoSheet() {
               </div>
             </div>
 
-            {/* Total Gastos Extra */}
+            {/* Total Gastos Agregados (por lote) */}
             {((extraCosts.laborCost ?? 0) + (extraCosts.packagingShipping ?? 0) + (extraCosts.other ?? 0)) > 0 && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #334155', paddingTop: 10, marginTop: 4 }}>
                 <span style={{ fontSize: '0.82rem', color: '#94a3b8', marginRight: 8 }}>Total gastos extra:</span>
@@ -408,7 +406,85 @@ export default function Layer3ProductoSheet() {
         )}
       </div>
 
-      {/* SECCION 4: PRODUCTOS */}
+      {/* SECCION 4: IMPUESTOS */}
+      <div style={{ borderBottom: '1px solid #334155' }}>
+        <button
+          onClick={() => setExpandedSection(expandedSection === 'taxes' ? 'products' : 'taxes')}
+          style={sectionHeaderStyle}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#0f172a')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#1e293b')}
+        >
+          <span>{expandedSection === 'taxes' ? 'v' : '>'}</span>
+          Impuestos (IVA, Retenciones)
+        </button>
+        {expandedSection === 'taxes' && (
+          <div style={{ padding: '12px 16px', background: '#0f172a' }}>
+            <table className={styles.table} style={{ marginBottom: 8 }}>
+              <thead>
+                <tr>
+                  <th>Tipo impuesto</th>
+                  <th>Tasa %</th>
+                  <th>Pais</th>
+                  <th>Estado</th>
+                  <th style={{ width: 32 }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(taxes).length === 0 && (
+                  <tr><td colSpan={5} className={styles.emptyState}>Sin impuestos configurados</td></tr>
+                )}
+                {Object.entries(taxes).map(([key, tax]) => (
+                  <tr key={key}>
+                    <td style={{ textTransform: 'capitalize', fontWeight: 500 }}>{key}</td>
+                    <td><span className={styles.calcCell}>{formatPercent(tax?.rate ?? 0)}</span></td>
+                    <td style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{tax?.country ?? 'MX'}</td>
+                    <td><span style={{ fontSize: '0.78rem', color: tax?.enabled ? '#16a34a' : '#ef4444' }}>{tax?.enabled ? 'Activo' : 'Inactivo'}</span></td>
+                    <td>
+                      <button
+                        onClick={() => {
+                          if (!project) return;
+                          const updatedTaxes = { ...taxes };
+                          delete updatedTaxes[key];
+                          const updatedProject: typeof project = {
+                            ...project,
+                            layers: { ...project.layers, layer3: { ...project.layers.layer3, taxes: updatedTaxes } },
+                          };
+                          updateProjectData(updatedProject, token);
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem', padding: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="Eliminar impuesto"
+                      >x</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 8, marginBottom: 12 }}>
+              <input type="text" placeholder="Tipo de impuesto (IVA, Retencion, etc)" value={newTaxName} onChange={(e) => setNewTaxName(e.target.value)} style={inputStyle} />
+              <input type="text" inputMode="decimal" placeholder="Tasa % (ej: 16 o 0.16)" value={newTaxRate} onChange={(e) => setNewTaxRate(e.target.value)} style={inputStyle} />
+              <select value={newTaxCountry} onChange={(e) => setNewTaxCountry(e.target.value)} style={inputStyle}>
+                <option value="MX">Mexico</option>
+                <option value="CO">Colombia</option>
+                <option value="AR">Argentina</option>
+                <option value="CL">Chile</option>
+                <option value="PE">Peru</option>
+                <option value="ES">Espana</option>
+                <option value="US">USA</option>
+                <option value="OTHER">Otro</option>
+              </select>
+              <button onClick={handleAddTax} style={{ padding: '6px 12px', background: '#2563eb', border: 'none', borderRadius: 5, color: '#fff', fontSize: '0.82rem', fontWeight: 500, cursor: 'pointer' }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')} onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}>
+                + Agregar
+              </button>
+            </div>
+            <div style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic' }}>
+              Configura impuestos segun tu pais y tipo de empresa
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* SECCION 5: PRODUCTOS (Costos y Precios) */}
       <div style={{ borderBottom: '1px solid #334155' }}>
         <button
           onClick={() => setExpandedSection(expandedSection === 'products' ? 'services' : 'products')}
@@ -525,14 +601,15 @@ export default function Layer3ProductoSheet() {
                           <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontWeight: 600 }}>
                             Desglose del costo
                           </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                             {[
                               { label: 'Ingredientes', value: pricing.costBreakdown.ingredients },
-                              { label: 'Maquinas', value: pricing.costBreakdown.machines },
+                              { label: 'Máquinas', value: pricing.costBreakdown.machines },
                               { label: 'Utensilios', value: pricing.costBreakdown.utensils },
-                              { label: 'Servicios', value: pricing.costBreakdown.services },
-                              { label: 'Mano de obra', value: pricing.costBreakdown.labor },
+                              { label: 'Servicios (variables)', value: pricing.costBreakdown.services },
                               { label: 'Empaque', value: pricing.costBreakdown.packaging ?? 0 },
+                              { label: 'Mano de obra', value: pricing.costBreakdown.labor },
+                              { label: 'Gastos fijos', value: pricing.costBreakdown.fixed ?? 0 },
                             ]
                               .filter(item => item.value > 0)
                               .map((item, i) => (

@@ -34,8 +34,25 @@ export const CostBreakdownSchema = z.object({
   services: z.number().int().nonnegative(),
   labor: z.number().int().nonnegative(),
   packaging: z.number().int().nonnegative().optional().default(0),
+  fixed: z.number().int().nonnegative().optional().default(0),
   totalCost: z.number().int().nonnegative(),
 });
+
+// ── Gastos fijos y agregados ──────────────────────────────────────────────
+
+export const FixedCostsSchema = z.object({
+  renta: z.number().int().nonnegative().optional(),
+  serviciosFijos: z.number().int().nonnegative().optional(),
+  sueldosFijos: z.number().int().nonnegative().optional(),
+  otrosFijos: z.number().int().nonnegative().optional(),
+  unidadesMes: z.number().int().nonnegative().optional(),
+}).optional();
+
+export const ExtraCostsSchema = z.object({
+  laborCost: z.number().int().nonnegative().optional(),
+  packagingShipping: z.number().int().nonnegative().optional(),
+  other: z.number().int().nonnegative().optional(),
+}).optional();
 
 // ── Pricing por producto ────────────────────────────────────────────────────
 
@@ -63,6 +80,8 @@ export const Layer3PreciosSchema = z.object({
   updatedAt: z.string(),
   services: ServicesConfigSchema,
   taxes: TaxesConfigSchema,
+  fixedCosts: FixedCostsSchema,
+  extraCosts: ExtraCostsSchema,
   products: z.array(ProductPricingSchema),
 });
 

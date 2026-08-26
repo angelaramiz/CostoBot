@@ -46,6 +46,8 @@ export interface CostBreakdown {
   labor: number;
   /** Costo de materiales de empaque por lote en centavos */
   packaging?: number;
+  /** Parte proporcional de gastos fijos mensuales */
+  fixed?: number;
   totalCost: number;
 }
 
@@ -67,7 +69,22 @@ export interface ProductPricing {
   roi?: number;
 }
 
-// ── Gastos Extra ────────────────────────────────────────────────────────────
+// ── Gastos Fijos (mensuales) ────────────────────────────────────────────────
+
+export interface FixedCosts {
+  /** Renta/alquiler mensual en centavos */
+  renta?: number;
+  /** Servicios fijos (luz base, agua, internet) en centavos/mes */
+  serviciosFijos?: number;
+  /** Sueldos fijos mensuales en centavos */
+  sueldosFijos?: number;
+  /** Otros gastos fijos en centavos/mes */
+  otrosFijos?: number;
+  /** Unidades totales producidas al mes (para prorrateo por unidad) */
+  unidadesMes?: number;
+}
+
+// ── Gastos Agregados (por lote) ───────────────────────────────────────────
 
 export interface ExtraCosts {
   /** Costo de mano de obra por lote en centavos */
@@ -85,6 +102,7 @@ export interface Layer3Precios {
   updatedAt: string;
   services: ServicesConfig;
   taxes: TaxesConfig;
+  fixedCosts?: FixedCosts;
   extraCosts?: ExtraCosts;
   products: ProductPricing[];
 }

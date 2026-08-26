@@ -110,6 +110,8 @@ const CostBreakdownSchema = new Schema(
     utensils:    { type: Number, required: true, min: 0, default: 0 },
     services:    { type: Number, required: true, min: 0, default: 0 },
     labor:       { type: Number, required: true, min: 0, default: 0 },
+    packaging:   { type: Number, min: 0, default: 0 },
+    fixed:       { type: Number, min: 0, default: 0 },
     totalCost:   { type: Number, required: true, min: 0, default: 0 },
   },
   { _id: false }
@@ -133,6 +135,8 @@ const Layer3PreciosSchema = new Schema(
     updatedAt: { type: String },
     services:  { type: Map, of: ServiceRateSchema, default: new Map() },
     taxes:     { type: Map, of: TaxConfigSchema, default: new Map() },
+    fixedCosts:{ type: Schema.Types.Mixed, default: {} },
+    extraCosts:{ type: Schema.Types.Mixed, default: {} },
     products:  { type: [ProductPricingSchema], default: [] },
   },
   { _id: false }
