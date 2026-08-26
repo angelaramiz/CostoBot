@@ -18,6 +18,7 @@ import {
   calculateInheritedCost,
   calculatePricing,
 } from './calculations';
+import { calculateIngredientCost } from '@/lib/units';
 import { buildDependencyGraph, getTopologicalOrder } from './dependency-graph';
 
 type LayerId = 'layer1' | 'layer2' | 'layer3';
@@ -87,7 +88,8 @@ function calculateGraphCostBreakdown(
     if (isIngredientData(node)) {
       const insumo = insumoMap.get(node.data.insumoId);
       if (insumo) {
-        ingredients += Math.round(insumo.costPerUnit * node.data.quantity);
+        const qtyUnit = (node.data as IngredientNodeData).unit || insumo.unit;
+        ingredients += calculateIngredientCost(insumo.costPerUnit, insumo.unit, node.data.quantity, qtyUnit);
       }
     } else if (isUtensilData(node)) {
       const insumo = insumoMap.get(node.data.insumoId);

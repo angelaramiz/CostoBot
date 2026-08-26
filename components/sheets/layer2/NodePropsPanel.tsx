@@ -14,6 +14,7 @@ import type {
 } from '@/types/layer2-productos';
 import type { Insumo } from '@/types/layer1-insumos';
 import type { ServicesConfig } from '@/types/layer3-precios';
+import { getUnitGroup } from '@/lib/units';
 import styles from './NodeEditor.module.css';
 
 interface Props {
@@ -60,40 +61,75 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
       </div>
 
       {/* ── Ingredient ─────────────────────────────────────────────── */}
-      {nodeType === 'ingredient' && (
-        <>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Insumo (Layer 1)</label>
-            <select
-              className={styles.formSelect}
-              value={String(form.insumoId ?? '')}
-              onChange={(e) => {
-                const insumo = insumos.find((i) => i.id === e.target.value);
-                set('insumoId', e.target.value);
-                set('insumoName', insumo?.name ?? '');
-                set('unit', insumo?.unit ?? 'pza'); // Siempre desde Layer 1
-              }}
-            >
-              <option value="">— Selecciona —</option>
-              {ingredientInsumos.map((i) => (
-                <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Cantidad</label>
-            <input
-              className={styles.formInput}
-              type="number"
-              min={0}
-              step={0.01}
-              value={form.quantity ? String(form.quantity) : ''}
-              placeholder="0"
-              onChange={(e) => set('quantity', parseFloat(e.target.value) || 0)}
-            />
-          </div>
-        </>
-      )}
+      {nodeType === 'ingredient' && (() => {
+        const selectedInsumo = insumos.find((i) => i.id === (form.insumoId as string));
+        const insumoUnit = selectedInsumo?.unit ?? 'pza';
+        const group = getUnitGroup(insumoUnit);
+        // Unidades compatibles dentro del mismo grupo físico
+        const UNIT_OPTIONS: Record<string, string[]> = {
+          weight: ['mg', 'g', 'kg'],
+          volume: ['ml', 'L'],
+          count: ['pza'],
+          length: ['mm', 'cm', 'm'],
+          time: ['min', 'hr'],
+        };
+        const compatibleUnits = group ? UNIT_OPTIONS[group] ?? [insumoUnit] : [insumoUnit];
+        const currentUnit = (form.unit as string) || insumoUnit;
+
+        return (
+          <>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Insumo (Layer 1)</label>
+              <select
+                className={styles.formSelect}
+                value={String(form.insumoId ?? '')}
+                onChange={(e) => {
+                  const insumo = insumos.find((i) => i.id === e.target.value);
+                  set('insumoId', e.target.value);
+                  set('insumoName', insumo?.name ?? '');
+                  set('unit', insumo?.unit ?? 'pza');
+                }}
+              >
+                <option value="">— Selecciona —</option>
+                {ingredientInsumos.map((i) => (
+                  <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Cantidad</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  className={styles.formInput}
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={form.quantity ? String(form.quantity) : ''}
+                  placeholder="0"
+                  onChange={(e) => set('quantity', parseFloat(e.target.value) || 0)}
+                  style={{ flex: 1 }}
+                />
+                <select
+                  className={styles.formSelect}
+                  value={currentUnit}
+                  onChange={(e) => set('unit', e.target.value)}
+                  style={{ width: 90, flexShrink: 0 }}
+                  title={selectedInsumo ? `Insumo en ${insumoUnit} — conversión automática` : undefined}
+                >
+                  {compatibleUnits.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+              {selectedInsumo && currentUnit !== insumoUnit && (
+                <span className={styles.formHint}>
+                  Conversión automática: {String(form.quantity || 0)} {currentUnit} → {insumoUnit} para cálculo preciso
+                </span>
+              )}
+            </div>
+          </>
+        );
+      })()}
 
       {/* ── Machine ────────────────────────────────────────────────── */}
       {nodeType === 'machine' && (

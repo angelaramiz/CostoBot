@@ -7,9 +7,8 @@ import IngredienteFields from './dynamic-fields/IngredienteFields';
 import MaterialFields from './dynamic-fields/MaterialFields';
 import UtensilioFields from './dynamic-fields/UtensilioFields';
 import MaquinaFields from './dynamic-fields/MaquinaFields';
+import { getUnitsForCategory, getGroupedUnitsForCategory } from '@/lib/units';
 import styles from './Layer1.module.css';
-
-const UNITS = ['kg', 'g', 'L', 'ml', 'pza', 'm', 'cm', 'hr', 'otro'];
 
 type FormState = {
     name: string;
@@ -51,8 +50,11 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
 
     function handleCategorySelect(cat: InsumoCategory | 'all') {
         if (cat === 'all') return;
+        const allowed = getUnitsForCategory(cat);
+        const nextUnit = allowed.includes(form.unit) ? form.unit : allowed[0];
         patch({
             category: cat,
+            unit: nextUnit,
             isReusable: cat === 'maquina' || cat === 'utensilio',
             ...(cat === 'utensilio' ? { costPerUnit: 0 } : {}),
         });
@@ -124,10 +126,14 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
                             value={form.unit}
                             onChange={(e) => patch({ unit: e.target.value })}
                         >
-                            {UNITS.map((u) => (
-                                <option key={u} value={u}>
-                                    {u}
-                                </option>
+                            {getGroupedUnitsForCategory(form.category).map(({ group, units }) => (
+                                <optgroup key={group} label={group === 'weight' ? 'Peso' : group === 'volume' ? 'Volumen' : group === 'count' ? 'Cantidad' : group === 'length' ? 'Longitud' : 'Tiempo'}>
+                                    {units.map((u) => (
+                                        <option key={u} value={u}>
+                                            {u}
+                                        </option>
+                                    ))}
+                                </optgroup>
                             ))}
                         </select>
                     </div>
