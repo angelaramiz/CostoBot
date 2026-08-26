@@ -56,4 +56,10 @@ async function verifyFirebaseToken(req, res, next) {
   }
 }
 
-module.exports = verifyFirebaseToken;
+// Express 4 no captura promesas rechazadas en middleware async.
+// Este wrapper asegura que errores no capturados lleguen al error handler.
+function verifyFirebaseTokenSafe(req, res, next) {
+  return verifyFirebaseToken(req, res, next).catch(next);
+}
+
+module.exports = verifyFirebaseTokenSafe;

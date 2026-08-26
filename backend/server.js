@@ -54,8 +54,19 @@ app.use(express.json({ limit: '10kb' }));
 // ---------------------------------------------------------------------------
 // Health check — used by Render to verify the service is up
 // ---------------------------------------------------------------------------
+const { getConnectionState, getLastError } = require('./db/connection');
+
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', project: 'CostoBot', ts: new Date().toISOString() });
+  const dbConnected = getConnectionState();
+  const dbError = getLastError();
+
+  res.json({
+    status: 'ok',
+    project: 'CostoBot',
+    db: dbConnected ? 'connected' : 'disconnected',
+    dbError: dbConnected ? undefined : dbError,
+    ts: new Date().toISOString(),
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -77,17 +88,38 @@ app.use((_req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Global error handler
+// Global error handler — must have 4 params for Express to recognize it
 // ---------------------------------------------------------------------------
 app.use((err, _req, res, _next) => {
   const status = err.status || 500;
-  res.status(status).json({ error: err.message || 'Internal Server Error' });
+  const code = err.code || 'INTERNAL_ERROR';
+
+  logger.error('unhandled_error', {
+    status,
+    code,
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+  });
+
+  res.status(status).json({
+    error: err.message || 'Internal Server Error',
+    code,
+  });
 });
 
 // ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------
+function logStartupDiagnostics() {
+  const requiredVars = ['DATABASE_URL', 'FIREBASE_ADMIN_PROJECT_ID', 'FIREBASE_ADMIN_CLIENT_EMAIL', 'FIREBASE_ADMIN_PRIVATE_KEY'];
+  const missing = requiredVars.filter((v) => !process.env[v]);
+  if (missing.length > 0) {
+    logger.warn('startup_missing_env', { vars: missing, msg: 'Some required env vars are not set' });
+  }
+}
+
 connectDB().then(() => {
+  logStartupDiagnostics();
   app.listen(PORT, () => {
     logger.info('server_started', { port: PORT, env: process.env.NODE_ENV || 'development' });
   });

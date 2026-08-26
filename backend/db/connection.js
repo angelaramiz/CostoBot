@@ -10,13 +10,15 @@ const mongoose = require('mongoose');
 const logger = require('../lib/logger');
 
 let isConnected = false;
+let lastError = null;
 
 async function connectDB() {
   if (isConnected) return;
 
   const uri = process.env.DATABASE_URL;
   if (!uri) {
-    logger.warn('db_no_uri', { msg: 'DATABASE_URL not set — skipping MongoDB connection (in-memory mode)' });
+    lastError = 'DATABASE_URL not set';
+    logger.warn('db_no_uri', { msg: lastError + ' — skipping MongoDB connection (in-memory mode)' });
     return;
   }
 
@@ -25,9 +27,11 @@ async function connectDB() {
       serverSelectionTimeoutMS: 5000,
     });
     isConnected = true;
+    lastError = null;
     logger.info('db_connected', { provider: 'MongoDB Atlas' });
   } catch (err) {
-    logger.error('db_connection_failed', { error: err.message });
+    lastError = err.message;
+    logger.error('db_connection_failed', { error: err.message, code: err.code });
     // Non-fatal: server continues with in-memory fallback
   }
 }
@@ -36,4 +40,18 @@ function getConnectionState() {
   return isConnected;
 }
 
-module.exports = { connectDB, getConnectionState };
+function getLastError() {
+  return lastError;
+}
+
+function requireDB() {
+  if (!isConnected) {
+    const reason = lastError || 'unknown';
+    const err = new Error(`Database not available: ${reason}`);
+    err.status = 503;
+    err.code = 'DB_UNAVAILABLE';
+    throw err;
+  }
+}
+
+module.exports = { connectDB, getConnectionState, getLastError, requireDB };

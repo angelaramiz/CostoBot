@@ -18,6 +18,7 @@ const verifyFirebaseToken = require('../middleware/verifyFirebaseToken.middlewar
 const BusinessProject = require('../db/BusinessProject.model');
 const { getIAAdapter } = require('../lib/ia/ia.factory');
 const { detectIndustry, getIndustryLabel } = require('../lib/ia/prompt-templates');
+const { requireDB } = require('../db/connection');
 const logger = require('../lib/logger');
 
 // ── Rate limiting por usuario (uid) — 20 req/hora ──────────────────────────
@@ -88,6 +89,8 @@ router.post('/chat', async (req, res) => {
   }
 
   try {
+    requireDB();
+
     let context = null;
 
     if (chatMode === 'project' && projectId) {
@@ -134,16 +137,19 @@ router.post('/chat', async (req, res) => {
       reply: replyText.trim(),
     });
   } catch (err) {
+    const status = err.status || 502;
+    const code = err.code || 'IA_ERROR';
     logger.error('ia_chat_failed', {
       userId: req.uid,
       projectId: projectId || null,
       mode: chatMode,
+      errorType: code,
       error: err.message,
       ip: req.ip,
     });
-    return res.status(502).json({
-      error: 'Error al contactar la IA',
-      message: err.message,
+    return res.status(status).json({
+      error: err.message,
+      code,
     });
   }
 });

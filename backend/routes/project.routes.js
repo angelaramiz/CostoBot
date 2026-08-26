@@ -13,11 +13,32 @@ const mongoose = require('mongoose');
 
 const BusinessProject = require('../db/BusinessProject.model');
 const verifyFirebaseToken = require('../middleware/verifyFirebaseToken.middleware');
+const { requireDB } = require('../db/connection');
 const logger = require('../lib/logger');
 
 /** Valida que el id sea un ObjectId de MongoDB válido (previene CastError + prototype pollution) */
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id) && String(new mongoose.Types.ObjectId(id)) === id;
+}
+
+/** Clasifica errores de Mongoose en categorías legibles */
+function classifyDBError(err) {
+  if (err.name === 'MongoServerError' && err.code === 11000) {
+    return { type: 'DUPLICATE_KEY', message: 'Duplicate key error', status: 409 };
+  }
+  if (err.name === 'ValidationError') {
+    return { type: 'VALIDATION_ERROR', message: err.message, status: 400 };
+  }
+  if (err.name === 'CastError') {
+    return { type: 'INVALID_ID', message: `Invalid ID format: ${err.value}`, status: 400 };
+  }
+  if (err.name === 'MongoNetworkError' || err.name === 'MongooseServerSelectionError') {
+    return { type: 'DB_CONNECTION', message: 'Database connection lost', status: 503 };
+  }
+  if (err.status) {
+    return { type: err.code || 'APP_ERROR', message: err.message, status: err.status };
+  }
+  return { type: 'UNKNOWN', message: err.message, status: 500 };
 }
 
 // Todos los endpoints de proyectos requieren autenticación
@@ -27,6 +48,8 @@ router.use(verifyFirebaseToken);
 // Lista todos los proyectos del usuario autenticado (con contadores de capas)
 router.get('/', async (req, res) => {
   try {
+    requireDB();
+
     const rawProjects = await BusinessProject
       .find({ ownerId: req.uid })
       .select('_id name updatedAt createdAt layers')
@@ -56,12 +79,17 @@ router.get('/', async (req, res) => {
 
     res.json({ data: projects });
   } catch (err) {
+    const classified = classifyDBError(err);
     logger.error('projects_list_failed', {
       userId: req.uid,
+      errorType: classified.type,
       error: err.message,
       ip: req.ip,
     });
-    res.status(500).json({ error: 'Error al listar proyectos' });
+    res.status(classified.status).json({
+      error: classified.message,
+      code: classified.type,
+    });
   }
 });
 
@@ -69,6 +97,8 @@ router.get('/', async (req, res) => {
 // Crea un proyecto nuevo para el usuario autenticado
 router.post('/', async (req, res) => {
   try {
+    requireDB();
+
     const { name } = req.body;
 
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -105,12 +135,17 @@ router.post('/', async (req, res) => {
 
     res.status(201).json({ data: project });
   } catch (err) {
+    const classified = classifyDBError(err);
     logger.error('project_creation_failed', {
       userId: req.uid,
+      errorType: classified.type,
       error: err.message,
       ip: req.ip,
     });
-    res.status(500).json({ error: 'Error al crear proyecto' });
+    res.status(classified.status).json({
+      error: classified.message,
+      code: classified.type,
+    });
   }
 });
 
@@ -118,6 +153,8 @@ router.post('/', async (req, res) => {
 // Obtiene un proyecto completo (verifica ownership)
 router.get('/:id', async (req, res) => {
   try {
+    requireDB();
+
     if (!isValidObjectId(req.params.id)) {
       logger.warn('project_fetch_invalid_id', {
         userId: req.uid,
@@ -156,13 +193,18 @@ router.get('/:id', async (req, res) => {
 
     res.json({ data: project });
   } catch (err) {
+    const classified = classifyDBError(err);
     logger.error('project_fetch_failed', {
       userId: req.uid,
       projectId: req.params.id,
+      errorType: classified.type,
       error: err.message,
       ip: req.ip,
     });
-    res.status(500).json({ error: 'Error al obtener proyecto' });
+    res.status(classified.status).json({
+      error: classified.message,
+      code: classified.type,
+    });
   }
 });
 
@@ -170,6 +212,8 @@ router.get('/:id', async (req, res) => {
 // Actualiza capas del proyecto (solo las que se envíen en el body)
 router.patch('/:id', async (req, res) => {
   try {
+    requireDB();
+
     if (!isValidObjectId(req.params.id)) {
       logger.warn('project_update_invalid_id', {
         userId: req.uid,
@@ -243,13 +287,18 @@ router.patch('/:id', async (req, res) => {
 
     res.json({ data: project });
   } catch (err) {
+    const classified = classifyDBError(err);
     logger.error('project_update_failed', {
       userId: req.uid,
       projectId: req.params.id,
+      errorType: classified.type,
       error: err.message,
       ip: req.ip,
     });
-    res.status(500).json({ error: 'Error al actualizar proyecto' });
+    res.status(classified.status).json({
+      error: classified.message,
+      code: classified.type,
+    });
   }
 });
 
@@ -257,6 +306,8 @@ router.patch('/:id', async (req, res) => {
 // Elimina un proyecto (verifica ownership)
 router.delete('/:id', async (req, res) => {
   try {
+    requireDB();
+
     if (!isValidObjectId(req.params.id)) {
       logger.warn('project_delete_invalid_id', {
         userId: req.uid,
@@ -299,13 +350,18 @@ router.delete('/:id', async (req, res) => {
 
     res.json({ data: { message: 'Proyecto eliminado correctamente.' } });
   } catch (err) {
+    const classified = classifyDBError(err);
     logger.error('project_delete_failed', {
       userId: req.uid,
       projectId: req.params.id,
+      errorType: classified.type,
       error: err.message,
       ip: req.ip,
     });
-    res.status(500).json({ error: 'Error al eliminar proyecto' });
+    res.status(classified.status).json({
+      error: classified.message,
+      code: classified.type,
+    });
   }
 });
 
