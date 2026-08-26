@@ -6,12 +6,11 @@ import styles from '@/components/ui/Sheet.module.css';
 import { useProjectStore } from '@/store/project.store';
 import { useAuthStore } from '@/store/auth.store';
 import type { Insumo, InsumoCategory } from '@/types/layer1-insumos';
-import { formatCurrency } from '@/lib/format';
+import { getUnitsForCategory } from '@/lib/units';
 import CategorySelector from './layer1/CategorySelector';
 import CategoryBadge from './layer1/CategoryBadge';
 import InsumoAddForm from './layer1/InsumoAddForm';
 
-const UNITS = ['kg', 'g', 'L', 'ml', 'pza', 'm', 'cm', 'hr', 'otro'];
 const CATEGORIES: InsumoCategory[] = ['ingrediente', 'material', 'utensilio', 'maquina'];
 
 export default function Layer1InsumoSheet() {
@@ -90,18 +89,32 @@ export default function Layer1InsumoSheet() {
                 )}
                 <td>
                   <EditableCell
-                    value={insumo.unit}
+                    value={insumo.unit === 'fl_oz' ? 'oz liq' : insumo.unit}
                     type="select"
-                    selectOptions={UNITS}
-                    onSave={(v) => updateInsumo(insumo.id, { unit: String(v) }, token)}
+                    selectOptions={getUnitsForCategory(insumo.category).map(u => u === 'fl_oz' ? 'oz liq' : u)}
+                    onSave={(v) => {
+                      const raw = String(v) === 'oz liq' ? 'fl_oz' : String(v);
+                      updateInsumo(insumo.id, { unit: raw }, token);
+                    }}
                   />
                 </td>
                 <td>
-                  <EditableCell
-                    value={insumo.costPerUnit}
-                    type="currency"
-                    onSave={(v) => updateInsumo(insumo.id, { costPerUnit: v as number }, token)}
-                  />
+                  {insumo.category === 'utensilio' ? (
+                    <span style={{ fontSize: '0.82rem', color: '#64748b', fontStyle: 'italic' }} title="Costo por depreciación (adquisición/vida)">— depreciación</span>
+                  ) : insumo.unit === 'paquete' ? (
+                    <EditableCell
+                      value={insumo.costPerUnit}
+                      type="currency"
+                      placeholder="por paquete"
+                      onSave={(v) => updateInsumo(insumo.id, { costPerUnit: v as number }, token)}
+                    />
+                  ) : (
+                    <EditableCell
+                      value={insumo.costPerUnit}
+                      type="currency"
+                      onSave={(v) => updateInsumo(insumo.id, { costPerUnit: v as number }, token)}
+                    />
+                  )}
                 </td>
                 <td>
                   <button
@@ -122,9 +135,7 @@ export default function Layer1InsumoSheet() {
       <InsumoAddForm counts={counts} onAdd={handleAdd} />
 
       <div className={styles.infoBox}>
-        <strong>Fórmulas de costo:</strong> Ingredientes y materiales: costo × cantidad.
-        Utensilios y máquinas: (valor adquisición − residual) ÷ vida útil en meses.
-        Los costos de uso (tiempo por receta) se definen en Capa 2 — Productos.
+        <strong>Fórmulas coherentes:</strong> Ingredientes: costo/unidad × cantidad con conversión automática (500 g de insumo $12/kg = $6). Paquete: costo/paquete ÷ contenido (pack 4 L $120 → $30/L). Utensilios: (adquisición−residual) ÷ vida ÷ unidades/mes. Máquinas: tarifa/hora o servicio kW/m³. Gastos fijos (renta/sueldos) y agregados se prorratean en Capa 3.
       </div>
     </div>
   );

@@ -23,6 +23,8 @@ const DEFAULT_LAYER3: Layer3Precios = {
   updatedAt: new Date().toISOString(),
   services: {},
   taxes: {},
+  fixedCosts: {},
+  extraCosts: {},
   products: [],
 };
 
@@ -113,6 +115,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         updatedAt: layer3Raw?.updatedAt ?? new Date().toISOString(),
         services: layer3Raw?.services ?? {},
         taxes: layer3Raw?.taxes ?? {},
+        fixedCosts: layer3Raw?.fixedCosts ?? {},
         extraCosts: layer3Raw?.extraCosts ?? {},
         // Garantizar que products siempre es un array
         products: Array.isArray(layer3Raw?.products) ? layer3Raw.products : [],

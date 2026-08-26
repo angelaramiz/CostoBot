@@ -121,6 +121,8 @@ router.post('/', async (req, res) => {
           updatedAt: new Date().toISOString(),
           services: {},
           taxes: {},
+          fixedCosts: {},
+          extraCosts: {},
           products: [],
         },
       },
