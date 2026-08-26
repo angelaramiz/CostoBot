@@ -96,25 +96,27 @@ export function calculateMaterialCost(
 }
 
 /**
- * Calcula el precio de venta y ganancia a partir del costo unitario y margen.
- * precioVenta = costoUnitario * (1 + margenPorcentaje / 100)
- * ganancia = precioVenta - costoUnitario (en centavos)
- * precioVentaConImpuestos = precioVenta * (1 + taxRate) si taxRate > 0
- * roi = ganancia / precioVentaFinal * 100 (margen bruto sobre precio de venta)
+ * Calcula el precio de venta y ganancia a partir del costo (por lote) y margen.
+ * Lógica coherente para producto final:
+ *  - precioVenta = costoTotal * (1 + margen/100)  [margen sobre costo, redondeado]
+ *  - ganancia = precioVenta - costoTotal
+ *  - impuestoMonto = precioVenta * taxRate
+ *  - precioVentaConImpuestos = precioVenta + impuestoMonto
+ *  - roi = ganancia / precioVentaConImpuestos * 100 (si hay impuestos, sobre precio final)
  */
 export function calculatePricing(
-  costoUnitario: number,
+  costoTotal: number,
   margenPorcentaje: number,
   taxRate: number = 0
-): { precioVenta: number; ganancia: number; precioVentaConImpuestos: number; totalTaxRate: number; roi: number } {
-  const precioVenta = Math.round(costoUnitario * (1 + margenPorcentaje / 100));
-  const ganancia = precioVenta - costoUnitario;
-  const precioVentaConImpuestos = taxRate > 0
-    ? Math.round(precioVenta * (1 + taxRate))
-    : precioVenta;
+): { precioVenta: number; ganancia: number; precioVentaConImpuestos: number; impuestoMonto: number; totalTaxRate: number; roi: number } {
+  const clampedMargen = Math.max(0, margenPorcentaje);
+  const precioVenta = Math.round(costoTotal * (1 + clampedMargen / 100));
+  const ganancia = precioVenta - costoTotal;
+  const impuestoMonto = taxRate > 0 ? Math.round(precioVenta * taxRate) : 0;
+  const precioVentaConImpuestos = precioVenta + impuestoMonto;
   const finalPrice = precioVentaConImpuestos > 0 ? precioVentaConImpuestos : precioVenta;
   const roi = finalPrice > 0 ? Math.round((ganancia / finalPrice) * 100) : 0;
-  return { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate: taxRate, roi };
+  return { precioVenta, ganancia, precioVentaConImpuestos, impuestoMonto, totalTaxRate: taxRate, roi };
 }
 
 /**

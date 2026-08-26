@@ -123,8 +123,18 @@ const ProductPricingSchema = new Schema(
     productName:      { type: String, required: true },
     costBreakdown:    { type: CostBreakdownSchema, required: true },
     margenPorcentaje: { type: Number, required: true, min: 0 },
-    precioVenta:      { type: Number, required: true, min: 0 }, // centavos, calculado
-    ganancia:         { type: Number, required: true }, // ganancia en centavos
+    precioVenta:      { type: Number, required: true, min: 0 }, // centavos por lote
+    ganancia:         { type: Number, required: true },
+    totalTaxRate:     { type: Number, min: 0 },
+    precioVentaConImpuestos: { type: Number, min: 0 },
+    roi:              { type: Number },
+    unidadesLote:     { type: Number, min: 0 },
+    unidadProducto:   { type: String },
+    costoUnitario:    { type: Number, min: 0 },
+    precioUnitario:   { type: Number, min: 0 },
+    precioUnitarioConImpuestos: { type: Number, min: 0 },
+    gananciaUnitaria: { type: Number },
+    impuestoMonto:    { type: Number, min: 0 },
   },
   { _id: false }
 );

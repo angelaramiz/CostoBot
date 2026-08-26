@@ -596,10 +596,32 @@ export default function Layer3ProductoSheet() {
                           ))}
                         </div>
 
+                        {/* Fila 1b: Por unidad (coherencia) */}
+                        {pricing.unidadesLote != null && pricing.unidadesLote > 1 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12, background: '#0f172a', borderRadius: 8, padding: 10, border: '1px dashed #334155' }}>
+                            <div><div style={{ fontSize: '0.68rem', color: '#64748b' }}>Unidades lote</div><div style={{ fontWeight: 700, color: '#e2e8f0' }}>{pricing.unidadesLote} {pricing.unidadProducto}</div></div>
+                            <div><div style={{ fontSize: '0.68rem', color: '#64748b' }}>Costo / unidad</div><div style={{ fontWeight: 700, color: '#f59e0b' }}>{formatCurrency(pricing.costoUnitario ?? 0)}</div></div>
+                            <div><div style={{ fontSize: '0.68rem', color: '#64748b' }}>Precio / unidad</div><div style={{ fontWeight: 700, color: '#818cf8' }}>{formatCurrency(pricing.precioUnitario ?? 0)}</div></div>
+                            <div><div style={{ fontSize: '0.68rem', color: '#64748b' }}>Precio c/IVA / unidad</div><div style={{ fontWeight: 700, color: '#38bdf8' }}>{formatCurrency(pricing.precioUnitarioConImpuestos ?? 0)}</div></div>
+                          </div>
+                        )}
+
+                        {/* Impuestos monto si hay */}
+                        {pricing.impuestoMonto != null && pricing.impuestoMonto > 0 && (
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8, gap: 8, fontSize: '0.78rem' }}>
+                            <span style={{ color: '#64748b' }}>Impuestos ({((pricing.totalTaxRate ?? 0)*100).toFixed(1)}%):</span>
+                            <span style={{ fontWeight: 600, color: '#f59e0b' }}>{formatCurrency(pricing.impuestoMonto)}</span>
+                            <span style={{ color: '#64748b' }}>por lote</span>
+                            {pricing.unidadesLote != null && pricing.unidadesLote > 1 && (
+                              <span style={{ color: '#64748b' }}>· {formatCurrency(Math.round((pricing.impuestoMonto ?? 0) / (pricing.unidadesLote ?? 1)))} por unidad</span>
+                            )}
+                          </div>
+                        )}
+
                         {/* Fila 2: Desglose de costos */}
                         <div style={{ marginBottom: 12 }}>
                           <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, fontWeight: 600 }}>
-                            Desglose del costo
+                            Desglose del costo (por lote)
                           </div>
                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                             {[
@@ -622,8 +644,8 @@ export default function Layer3ProductoSheet() {
                           </div>
                         </div>
 
-                        {/* Fila 3: ROI + Ganancia */}
-                        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid #334155', paddingTop: 12 }}>
+                        {/* Fila 3: ROI + Ganancia (lote y por unidad) */}
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid #334155', paddingTop: 12, flexWrap: 'wrap' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0f172a', padding: '8px 14px', borderRadius: 8 }}>
                             <span style={{ fontSize: '0.78rem', color: '#64748b' }}>ROI</span>
                             <span style={{ fontSize: '1rem', fontWeight: 700, color: '#38bdf8' }}>
@@ -636,11 +658,22 @@ export default function Layer3ProductoSheet() {
                             padding: '8px 14px', borderRadius: 8,
                             border: `1px solid ${gananciaPositiva ? 'rgba(22,163,74,0.25)' : 'rgba(220,38,38,0.25)'}`,
                           }}>
-                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Ganancia</span>
+                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Ganancia lote</span>
                             <span style={{ fontSize: '1rem', fontWeight: 700, color: gananciaPositiva ? '#16a34a' : '#dc2626' }}>
                               {formatCurrency(pricing.ganancia)}
                             </span>
                           </div>
+                          {pricing.unidadesLote != null && pricing.unidadesLote > 1 && pricing.gananciaUnitaria != null && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0f172a', padding: '8px 14px', borderRadius: 8, border: '1px dashed #334155' }}>
+                              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Ganancia / {pricing.unidadProducto}</span>
+                              <span style={{ fontSize: '1rem', fontWeight: 700, color: gananciaPositiva ? '#16a34a' : '#dc2626' }}>
+                                {formatCurrency(pricing.gananciaUnitaria)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#475569', marginTop: 8, fontStyle: 'italic', textAlign: 'right' }}>
+                          Cálculo coherente: costo por lote → costo por unidad → precio con margen → + impuestos. Fijos prorrateados por {fixedCosts.unidadesMes ? 'unidad' : 'peso del costo'}.
                         </div>
                       </div>
                     )}

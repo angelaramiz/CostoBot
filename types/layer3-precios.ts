@@ -57,16 +57,30 @@ export interface ProductPricing {
   costBreakdown: CostBreakdown;
   /** Margen de ganancia en porcentaje (ej: 30 = 30%) */
   margenPorcentaje: number;
-  /** Precio de venta en centavos — calculado */
+  /** Precio de venta por LOTE en centavos — calculado */
   precioVenta: number;
-  /** Ganancia en dinero (centavos) — diferencia entre precioVenta y costoTotal */
+  /** Ganancia por LOTE (precioVenta - costoTotal) */
   ganancia: number;
   /** Tasa total de impuestos aplicada (suma de impuestos habilitados, ej: 0.16 = 16%) */
   totalTaxRate?: number;
-  /** Precio de venta con impuestos incluidos en centavos — calculado */
+  /** Precio de venta con impuestos por LOTE en centavos — calculado */
   precioVentaConImpuestos?: number;
   /** Margen bruto (gross margin): ganancia / precioVentaFinal * 100 */
   roi?: number;
+  /** Unidades en el lote (para coherencia por unidad) */
+  unidadesLote?: number;
+  /** Unidad del producto (ej: pza, kg, L) */
+  unidadProducto?: string;
+  /** Costo por UNIDAD en centavos */
+  costoUnitario?: number;
+  /** Precio por UNIDAD sin impuestos */
+  precioUnitario?: number;
+  /** Precio por UNIDAD con impuestos */
+  precioUnitarioConImpuestos?: number;
+  /** Ganancia por UNIDAD */
+  gananciaUnitaria?: number;
+  /** Monto de impuestos por lote */
+  impuestoMonto?: number;
 }
 
 // ── Gastos Fijos (mensuales) ────────────────────────────────────────────────

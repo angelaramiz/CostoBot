@@ -71,6 +71,13 @@ export const ProductPricingSchema = z.object({
   totalTaxRate: z.number().min(0).optional(),
   precioVentaConImpuestos: z.number().int().nonnegative().optional(),
   roi: z.number().optional(),
+  unidadesLote: z.number().int().nonnegative().optional(),
+  unidadProducto: z.string().optional(),
+  costoUnitario: z.number().int().nonnegative().optional(),
+  precioUnitario: z.number().int().nonnegative().optional(),
+  precioUnitarioConImpuestos: z.number().int().nonnegative().optional(),
+  gananciaUnitaria: z.number().optional(),
+  impuestoMonto: z.number().int().nonnegative().optional(),
 });
 
 // ── Layer 3 completa ────────────────────────────────────────────────────────

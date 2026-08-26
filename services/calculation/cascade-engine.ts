@@ -229,29 +229,25 @@ function applyExtraCostsToBreakdown(
 
 /**
  * Distribuye gastos fijos mensuales (renta, servicios, sueldos) como costo por lote.
- * Si hay unidadesMes, prorratea por unidad; si no, por share proporcional.
+ * Si hay unidadesMes y unitsInBatch, prorratea por unidad exacta: fixedPerUnit * unitsInBatch.
+ * Si no, por share proporcional por costo.
  * Muta el breakdown en lugar y guarda en breakdown.fixed.
  */
 function applyFixedCostsToBreakdown(
   breakdown: CostBreakdown,
   productTotalCost: number,
   allGraphs: ProductGraph[],
-  fixedCosts?: FixedCosts
+  fixedCosts?: FixedCosts,
+  unitsInBatch?: number
 ): void {
   if (!fixedCosts) return;
   const totalFixed = (fixedCosts.renta ?? 0) + (fixedCosts.serviciosFijos ?? 0) + (fixedCosts.sueldosFijos ?? 0) + (fixedCosts.otrosFijos ?? 0);
   if (totalFixed <= 0) return;
 
   let fixedShare: number;
-  if (fixedCosts.unidadesMes && fixedCosts.unidadesMes > 0) {
-    // Prorrateo por unidad: costo fijo por unidad * unidades del lote
+  if (fixedCosts.unidadesMes && fixedCosts.unidadesMes > 0 && unitsInBatch && unitsInBatch > 0) {
     const fixedPerUnit = totalFixed / fixedCosts.unidadesMes;
-    // Estimar unidades del lote: usar totalCost como proxy de peso, o 1 si no hay datos
-    // Para mayor precisión, usar share proporcional como fallback ponderado por costo
-    const totalAllCosts = allGraphs.reduce((sum, g) => sum + (g.totalCost ?? 0), 0);
-    const share = totalAllCosts > 0 ? productTotalCost / totalAllCosts : 1 / allGraphs.length;
-    const estimatedUnits = Math.max(1, Math.round((fixedCosts.unidadesMes ?? 0) * share));
-    fixedShare = Math.round(fixedPerUnit * estimatedUnits);
+    fixedShare = Math.round(fixedPerUnit * unitsInBatch);
   } else {
     const totalAllCosts = allGraphs.reduce((sum, g) => sum + (g.totalCost ?? 0), 0);
     const share = totalAllCosts > 0
@@ -297,7 +293,12 @@ function recalculateProductPricing(
   if (!graph) return pricing;
 
   const breakdown = calculateGraphCostBreakdown(graph, insumos, graphs, servicesConfig);
-  applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, graphs, fixedCosts);
+  // unidades del lote para prorrateo fijo y cálculo por unidad
+  const resultadoNode = (Array.isArray(graph.nodes) ? graph.nodes : []).find((n) => n.type === 'resultado') as ProductNode & { data: ResultadoNodeData } | undefined;
+  const unidadesLote = graph.unitsPerBatch ?? resultadoNode?.data.mainProduct.expectedQuantity ?? 1;
+  const unidadProducto = resultadoNode?.data.mainProduct.unit ?? 'pza';
+
+  applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, graphs, fixedCosts, unidadesLote);
   applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, graphs, extraCosts);
 
   // Calcular tasa total de impuestos habilitados
@@ -307,13 +308,34 @@ function recalculateProductPricing(
         .reduce((sum, t) => sum + t.rate, 0)
     : 0;
 
-  const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
+  const { precioVenta, ganancia, precioVentaConImpuestos, impuestoMonto, totalTaxRate, roi } = calculatePricing(
     breakdown.totalCost,
     pricing.margenPorcentaje,
     taxRate
   );
 
-  return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi };
+  const safeUnits = unidadesLote > 0 ? unidadesLote : 1;
+  const costoUnitario = Math.round(breakdown.totalCost / safeUnits);
+  const precioUnitario = Math.round(precioVenta / safeUnits);
+  const precioUnitarioConImpuestos = Math.round(precioVentaConImpuestos / safeUnits);
+  const gananciaUnitaria = precioUnitario - costoUnitario;
+
+  return {
+    ...pricing,
+    costBreakdown: breakdown,
+    precioVenta,
+    ganancia,
+    precioVentaConImpuestos,
+    impuestoMonto,
+    totalTaxRate,
+    roi,
+    unidadesLote,
+    unidadProducto,
+    costoUnitario,
+    precioUnitario,
+    precioUnitarioConImpuestos,
+    gananciaUnitaria,
+  };
 }
 
 /**
@@ -467,14 +489,33 @@ export function propagateGraphChange(
         updated.layers.layer2,
         updated.layers.layer3.services
       );
-      applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.fixedCosts);
+      const resultadoNode2 = (Array.isArray(graph.nodes) ? graph.nodes : []).find((n) => n.type === 'resultado') as ProductNode & { data: ResultadoNodeData } | undefined;
+      const unidadesLote2 = graph.unitsPerBatch ?? resultadoNode2?.data.mainProduct.expectedQuantity ?? 1;
+      const unidadProducto2 = resultadoNode2?.data.mainProduct.unit ?? 'pza';
+      applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.fixedCosts, unidadesLote2);
       applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.extraCosts);
-      const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
+      const { precioVenta, ganancia, precioVentaConImpuestos, impuestoMonto, totalTaxRate, roi } = calculatePricing(
         breakdown.totalCost,
         pricing.margenPorcentaje,
         taxRate
       );
-      return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi };
+      const safeUnits2 = unidadesLote2 > 0 ? unidadesLote2 : 1;
+      return {
+        ...pricing,
+        costBreakdown: breakdown,
+        precioVenta,
+        ganancia,
+        precioVentaConImpuestos,
+        impuestoMonto,
+        totalTaxRate,
+        roi,
+        unidadesLote: unidadesLote2,
+        unidadProducto: unidadProducto2,
+        costoUnitario: Math.round(breakdown.totalCost / safeUnits2),
+        precioUnitario: Math.round(precioVenta / safeUnits2),
+        precioUnitarioConImpuestos: Math.round(precioVentaConImpuestos / safeUnits2),
+        gananciaUnitaria: Math.round(precioVenta / safeUnits2) - Math.round(breakdown.totalCost / safeUnits2),
+      };
     }),
   };
 
@@ -500,17 +541,31 @@ export function propagatePricingChange(
 
   (updated.layers.layer3.products[pIdx] as unknown as Record<string, unknown>)[field] = newValue;
 
-  // Recalcular precioVenta, ganancia, precio con impuestos y ROI
+  // Recalcular precioVenta, ganancia, precio con impuestos y ROI (con desglose por unidad)
   const pricing = updated.layers.layer3.products[pIdx];
   const taxRate = Object.values(updated.layers.layer3.taxes)
     .filter((t): t is TaxConfig => !!t && t.enabled)
     .reduce((sum, t) => sum + t.rate, 0);
-  const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
+  const { precioVenta, ganancia, precioVentaConImpuestos, impuestoMonto, totalTaxRate, roi } = calculatePricing(
     pricing.costBreakdown.totalCost,
     pricing.margenPorcentaje,
     taxRate
   );
-  updated.layers.layer3.products[pIdx] = { ...pricing, precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi };
+  const unidadesLote = pricing.unidadesLote ?? 1;
+  const safeUnits = unidadesLote > 0 ? unidadesLote : 1;
+  updated.layers.layer3.products[pIdx] = {
+    ...pricing,
+    precioVenta,
+    ganancia,
+    precioVentaConImpuestos,
+    impuestoMonto,
+    totalTaxRate,
+    roi,
+    costoUnitario: Math.round(pricing.costBreakdown.totalCost / safeUnits),
+    precioUnitario: Math.round(precioVenta / safeUnits),
+    precioUnitarioConImpuestos: Math.round(precioVentaConImpuestos / safeUnits),
+    gananciaUnitaria: Math.round(precioVenta / safeUnits) - Math.round(pricing.costBreakdown.totalCost / safeUnits),
+  };
   updated.layers.layer3.updatedAt = new Date().toISOString();
 
   updated.updatedAt = new Date();
@@ -580,14 +635,33 @@ export function recalculateAllLayers(project: BusinessProject): BusinessProject 
         updated.layers.layer2,
         updated.layers.layer3.services
       );
-      applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.fixedCosts);
+      const resultadoNode3 = (Array.isArray(graph.nodes) ? graph.nodes : []).find((n) => n.type === 'resultado') as ProductNode & { data: ResultadoNodeData } | undefined;
+      const unidadesLote3 = graph.unitsPerBatch ?? resultadoNode3?.data.mainProduct.expectedQuantity ?? 1;
+      const unidadProducto3 = resultadoNode3?.data.mainProduct.unit ?? 'pza';
+      applyFixedCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.fixedCosts, unidadesLote3);
       applyExtraCostsToBreakdown(breakdown, graph.totalCost ?? 0, updated.layers.layer2, updated.layers.layer3.extraCosts);
-      const { precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi } = calculatePricing(
+      const { precioVenta, ganancia, precioVentaConImpuestos, impuestoMonto, totalTaxRate, roi } = calculatePricing(
         breakdown.totalCost,
         pricing.margenPorcentaje,
         taxRate
       );
-      return { ...pricing, costBreakdown: breakdown, precioVenta, ganancia, precioVentaConImpuestos, totalTaxRate, roi };
+      const safeUnits3 = unidadesLote3 > 0 ? unidadesLote3 : 1;
+      return {
+        ...pricing,
+        costBreakdown: breakdown,
+        precioVenta,
+        ganancia,
+        precioVentaConImpuestos,
+        impuestoMonto,
+        totalTaxRate,
+        roi,
+        unidadesLote: unidadesLote3,
+        unidadProducto: unidadProducto3,
+        costoUnitario: Math.round(breakdown.totalCost / safeUnits3),
+        precioUnitario: Math.round(precioVenta / safeUnits3),
+        precioUnitarioConImpuestos: Math.round(precioVentaConImpuestos / safeUnits3),
+        gananciaUnitaria: Math.round(precioVenta / safeUnits3) - Math.round(breakdown.totalCost / safeUnits3),
+      };
     }),
   };
 
