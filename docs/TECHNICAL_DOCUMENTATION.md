@@ -1,8 +1,8 @@
 # 📚 Documentación Técnica — Arquitectura de CostoBot
 
-**Versión:** 1.0  
-**Fecha:** 4 de abril de 2026  
-**Autor:** CostoBot Engineering Team
+**Versión:** 1.3  
+**Fecha:** 26 de agosto de 2026  
+**Autor:** CostoBot Engineering Team — actualizado con unidades coherentes, paquete contenedor y Capa 3 por lote/unidad
 
 ---
 

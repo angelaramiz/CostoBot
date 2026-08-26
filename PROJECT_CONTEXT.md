@@ -1,38 +1,38 @@
 # 📚 Project Context — CostoBot
 
 ## 🎯 Overview
-CostoBot es un SaaS conversacional que ayuda a emprendedores latinoamericanos a calcular costos de negocio mediante IA. Los usuarios conversan con un agente IA que genera automáticamente un libro de costos con 4 capas interconectadas (Insumos → Procesos → Productos → Precios) con múltiples hojas por capa y actualización automática en cascada.
+CostoBot es un SaaS conversacional que ayuda a emprendedores latinoamericanos a calcular costos de negocio mediante IA. Libro de costos con **3 capas coherentes** (Insumos con unidades filtradas + `paquete` contenedor → Productos grafo con conversión precisa → Precios por lote y por unidad con fijos/agregados/impuestos) y guía de ticket a la par, con actualización automática en cascada.
 
-**MVP (Fase 1):** Chat + calculadora multi-hoja + exportación  
+**MVP (Fase 1):** Chat + calculadora 3 capas + unidades coherentes + paquete mayoreo + guía ticket + exportación  
 **Fase 2:** Validador de viabilidad de idea  
 **Fase 3:** Simulador de escenarios + colaboración en equipo
 
 ## 🏗️ Architecture
 - **Pattern:** Clean Architecture - Separation of concerns (UI / Calculator / Database)
-- **Rendering:** SSR + Client-side interactivity (Next.js App Router)
-- **Monorepo:** No — Separated Frontend (Next.js) + Backend (Node.js/Express)
-- **Frontend:** `/frontend/` — Next.js 14+ (this workspace)
-- **Backend:** `/backend/` — Node.js + Express (this workspace for dev, Render for prod)
-- **State Management:** Zustand (local) + MongoDB (remote)
-- **Data Sync:** Debounced (5s) local-to-remote, triggers cascade recalculation
+- **Rendering:** SSR + Client-side interactivity (Next.js 16 App Router)
+- **Monorepo:** No — Separated Frontend (Next.js) + Backend (Node.js/Express) — ambos en Render
+- **Frontend:** `/` — Next.js 16.2 + React 18 + `@xyflow/react` (grafos)
+- **Backend:** `/backend/` — Node.js + Express + Helmet + Rate Limit
+- **State Management:** Zustand (local) + MongoDB (remote) con `fixedCosts`/`extraCosts` + `package` fields
+- **Data Sync:** Debounced (5s) local-to-remote, triggers `cascade-engine` (lote y unidad) + `dependency-graph`
 
 ## 📦 Key Dependencies
 | Category | Package | Purpose |
 |----------|---------|---------|
-| **Framework** | next@14+ | Frontend framework, API routes |
-| **UI/React** | react@18+ | Component library |
-| **Typing** | typescript | Strict type safety |
-| **State** | zustand | Local state + multi-sheet JSON reactivity |
-| **Validation** | zod | Schema validation (especially multi-layer) |
-| **Backend** | express | REST API server |
-| **Database** | mongodb | Document store (multi-sheet projects) |
-| **Auth** | firebase | User authentication |
-| **Calculations** | — | Custom deterministic motor (no lib) |
-| **Export** | sheetjs (xlsx) | Multi-sheet export to Excel |
+| **Framework** | next@16.2 | Frontend framework, App Router |
+| **UI/React** | react@18 + @xyflow/react | Grafo de productos + componentes |
+| **Typing** | typescript 5 | Strict type safety |
+| **State** | zustand 4.5 | Local state + multi-sheet JSON reactivity |
+| **Validation** | zod 3.22 | Schemas layer1/2/3 + ticket + units |
+| **Backend** | express + helmet | REST API server + seguridad |
+| **Database** | mongodb (mongoose) | Document store + BusinessProject (package, fixedCosts) |
+| **Auth** | firebase 11 | User authentication |
+| **Calculations** | — | `services/calculation` (cascade, dependency-graph, units) + `lib/units` + `lib/ticket` |
+| **Export** | @e965/xlsx | Multi-sheet Excel + JSON + guía ticket |
 | **IA** | openrouter-js (adapter) | Flexible IA provider (OpenRouter/LMStudio/Ollama) |
-| **Testing** | jest, @testing-library/react | Unit & component tests |
-| **Linting** | eslint, prettier | Code quality |
-| **Build** | webpack (via Next.js) | Production build |
+| **Testing** | jest 29 + testing-library | Unit & component tests |
+| **Linting** | eslint 9 | Code quality |
+| **Build** | next build | Production build |
 
 ## 🔌 External APIs & Services
 | Service | Purpose | Env var | Notes |
@@ -62,19 +62,21 @@ CostoBot es un SaaS conversacional que ayuda a emprendedores latinoamericanos a 
 | `INTERNAL_API_KEY` | API key (backend-only) | Yes | Backend |
 
 ## 🚀 Deployment
-- **Platform:** Vercel (frontend) + Render (backend)
-- **Environments:** dev (localhost), staging (optional), prod (Vercel + Render)
-- **Build command:** `npm run build` (Next.js)
-- **Start command:** `npm start` (Next.js production server)
-- **Database** managed: MongoDB Atlas (cloud)
+- **Platform:** Render (frontend `costobot-frontend` + backend `costobot-backend`) — `render.yaml` IaC
+- **Environments:** dev (localhost:3000/3001), prod (Render)
+- **Build command:** `npm install && npm run build` (frontend) / `npm install` (backend)
+- **Start command:** `node .next/standalone/server.js` / `node backend/server.js`
+- **Health:** `GET /health` con estado DB
+- **Database** managed: MongoDB Atlas (cloud) — `DATABASE_URL`
 
 ## 📊 Database
 - **Engine:** MongoDB (document-oriented, flexible schema)
-- **ORM:** None — using Mongoose for schema definition (optional) or raw MongoDB driver
+- **ORM:** Mongoose — `BusinessProject.model.js` (Insumo con `packageQuantity/packageUnit`, CostBreakdown con `fixed`, ProductPricing con `costoUnitario/precioUnitario/impuestoMonto`)
 - **Key models:**
-  - `BusinessProject` — Main document with 4-layer structure, dependency graph, metadata
+  - `BusinessProject` — 3-layer structure (`layer1` Insumos coherentes, `layer2` ProductGraph, `layer3` Precios con `fixedCosts`+`extraCosts`+`products` por lote/unidad)
   - `User` — Firebase-managed (stored separately)
-  - `ProjectVersion` — History of project snapshots (optional, for Fase 2)
+  - `VersionHistory` — Historial de bumps (para rollback)
+  - `TicketData` — guía `lib/ticket/ticket-types.ts` (subtotal/IVA/propina)
 
 ## 🔍 Architecture Decisions (ADRs)
 See [ARCHITECTURE.md](./ARCHITECTURE.md)

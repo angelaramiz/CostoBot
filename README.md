@@ -43,105 +43,94 @@ Sync cada 5s             Validación de datos
 
 ---
 
-## 💡 Las 4 Capas de CostoBot
+## 💡 Las 3 Capas Coherentes de CostoBot
 
-CostoBot organiza los costos en **4 capas interconectadas**. Cada cambio en una se refleja automáticamente en las demás.
+CostoBot organiza los costos en **3 capas interconectadas con unidades coherentes**. Cada cambio se propaga automáticamente.
 
-### **Capa 1️⃣ — Insumos (Materiales)**
-Aquí registras TODO lo que necesitas para producir.
+### **Capa 1️⃣ — Insumos (Catálogo coherente)**
+Registras TODO lo que compras, con unidad filtrada por categoría y conversión precisa.
+
+**Unidades por categoría** (`lib/units.ts`):
+- **Ingrediente:** Peso `mg/g/kg/oz/lb` · Volumen `ml/L/fl_oz/gal` · Cantidad `pza/paquete`
+- **Material:** `pza/paquete`
+- **Utensilio:** `pza` (costo por depreciación, no por unidad)
+- **Máquina:** `pza/hr` (tarifa por hora o servicio)
+
+**Paquete como contenedor:** `Paquete 4×1L Leche $120` → `$30/L`, `Caja 20kg Carne` → costo interno pro-rata. Si es `paquete`, defines contenido interno (ej: 20 `kg`) y el costo se prorratea automático.
 
 **Ejemplo: Panadería**
-| Insumo | Unidad | Precio | Cantidad/Pan | Costo Total |
-|--------|--------|--------|--------------|-------------|
-| Harina integral | kg | $2.50 | 0.5 kg | $1.25 |
+| Insumo | Unidad | Precio | Cantidad/Pan | Costo |
+|--------|--------|--------|--------------|-------|
+| Harina integral | kg | $2.50 | 500 g (0.5 kg) | $1.25 |
 | Levadura | g | $0.05 | 10 g | $0.50 |
-| Sal | g | $0.01 | 5 g | $0.05 |
-| **Total Insumos** | | | | **$1.80** |
+| Paquete Leche 4L | paquete 4 L $120 | $30/L | 250 ml | $7.50 |
+| **Total Insumos** | | | | **$9.25** |
 
-**¿Qué incluir?**
-- Materias primas (ingredientes, telas, materiales)
-- Empaques
-- Etiquetas
+> Conversión sin redondeos raros: `500 g → kg` vía `calculateIngredientCost` (`500*1000/1e6`).
 
 ---
 
-### **Capa 2️⃣ — Procesos (Producción)**
-Define cuánto cuesta **hacer** el producto.
+### **Capa 2️⃣ — Productos (Grafo visual)**
+Conectas insumos en un grafo dirigido (ReactFlow). Cada nodo elige insumo y cantidad con **unidad compatible** (si el insumo es `kg`, puedes usar `g/kg/oz/lb`).
 
 **Ejemplo: Panadería**
-| Proceso | Tiempo | Costo Mano Obra | Energía | Costo Total |
-|---------|--------|-----------------|---------|-------------|
-| Mezclar | 5 min | $0.30 | $0.05 | $0.35 |
-| Reposo | 30 min | $0.00 | $0.15 | $0.15 |
-| Hornear | 20 min | $0.50 | $0.40 | $0.90 |
-| **Total Procesos** | | | | **$1.40** |
-
-**¿Qué incluir?**
-- Tiempo de mano de obra
-- Consumo de energía/gas
-- Desgaste de equipos
-- Control de calidad
+```
+Harina 500g ─┐
+Leche 250ml ─┤→ [Mezcla] ──→ [Horno 20min, 1.5kW] ──→ [Resultado: 20 panes]
+Sal 5g ──────┘                              ↑ empaque: bolsa pza
+```
+- Costos: ingredientes con conversión + máquinas (`kW·h·tarifa` o `$/hr`) + utensilios por depreciación + servicios + empaque + yield (merma).
 
 ---
 
-### **Capa 3️⃣ — Productos (Costo Final)**
-El sistema **calcula automáticamente** cuánto cuesta cada unidad.
+### **Capa 3️⃣ — Precios (Producto final correcto)**
+Cálculo coherente **por lote y por unidad**:
 
-**Ejemplo: Panadería**
 ```
-Costo por Pan Francés:
-  Insumos (Capa 1):     $1.80
-  Procesos (Capa 2):    $1.40
-  Gastos Fijos:         $0.50  ← (arriendo, servicios, etc.)
-  ─────────────────────────────
-  COSTO TOTAL:          $3.70
-```
-
-Si cambias el precio de la harina en Capa 1, **automáticamente se recalcula todo en Capa 3**.
-
----
-
-### **Capa 4️⃣ — Precios (Venta & Rentabilidad)**
-Define cuánto cobras y qué ganancias obtienes.
-
-**Ejemplo: Panadería**
-```
-Costo por Pan (Capa 3):         $3.70
-Precio de Venta:                $8.50
-────────────────────────────────
-Ganancia por Pan:               $4.80
-Margen (%):                     56%
-────────────────────────────────
-Panes para Break-Even:          42 panes/día
-Ganancia diaria (si vendes 200): $960
+Costo por lote (20 panes):
+  Ingredientes:        $9.25
+  Máquinas:            $0.90
+  Utensilios:          $0.10
+  Servicios:           $0.40
+  Empaque (20×$0.50):  $10.00
+  Mano de obra (extra):$5.00
+  Gastos fijos prorrateados: $3.00 (renta $3000/1000u → $3/u ×20)
+  ───────────────────────────────
+  COSTO TOTAL LOTE:    $28.65 → $1.43 / unidad
+  Margen 56%:          +$16.04
+  Precio lote:         $44.69 → $2.23 / unidad
+  IVA 16%:             +$7.15 ($0.36/u)
+  Precio final:        $51.84 → $2.59 / unidad
+  Ganancia:            $16.04 lote / $0.80 u — ROI 31%
 ```
 
-**¿Qué defines aquí?**
-- Precio de venta final
-- Descuentos (mayoreo, promociones)
-- Margen de ganancia
-- Punto de equilibrio (cuándo empezacas a ganar)
+- **Gastos Fijos (mensuales):** renta, servicios base, sueldos → prorrateo por unidad (`totalFijos/unidadesMes * unidadesLote`) o por peso del costo.
+- **Gastos Agregados (por lote):** mano de obra, empaque/envío, otros → share proporcional.
+- **Impuestos:** suma de tasas habilitadas (IVA 16% MX) → `precioConImpuestos = precioVenta + impuestoMonto`.
+- Todo recalculado en cascada si cambias harina en Capa 1.
 
 ---
 
 ## 🔄 Actualización en Cascada (La Magia)
 
-**Scenario:** Cambias el precio de la harina.
+**Scenario:** Cambias harina $2.50/kg → $3.00/kg.
 
 ```
-HARINA: $2.50 → $3.00
+HARINA: $2.50 → $3.00 (+$0.50/kg)
 
-↓ Automáticamente se actualiza:
+↓ Automáticamente:
 
-Capa 1 (Insumos):         Costo/unidad: +$0.50
+Capa 1 (Insumos):    Harina 500g: $1.25 → $1.50 (+$0.25/u)
     ↓
-Capa 3 (Productos):       Costo total: $3.70 → $4.20
+Capa 2 (Productos):  Lote 20 panes: $28.65 → $33.65 (+$5 lote / +$0.25/u)
     ↓
-Capa 4 (Precios):         Ganancia/pan: $4.80 → $4.30
-                          Break-even: 42 panes → 46 panes
+Capa 3 (Precios):    Precio final 20u: $51.84 → $59.34 (+$0.38/u)
+                     Ganancia/u: $0.80 → $0.73
+                     Gastos fijos y agregados prorrateados se recalculan por unidad
 ```
 
 **Todo recalculado en < 500ms. Sin presionar botones. Sin errores.**
+- Conversión `g→kg`, `ml→L`, `paquete 4L` y prorrateo de fijos por `unidadesMes` incluidos.
 
 ---
 
@@ -149,10 +138,13 @@ Capa 4 (Precios):         Ganancia/pan: $4.80 → $4.30
 
 ### ✅ **MVP (Fase 1)**
 - 🤖 Chat IA conversacional para guía
-- 📋 4 capas de costos multi-hoja
+- 📋 3 capas coherentes (Insumos → Productos grafo → Precios por lote/unidad)
+- ⚖️ Unidades coherentes por categoría + `paquete` contenedor (4 L, 20 kg) con conversión precisa
+- 🧾 Guía de extracción de ticket a la par (folio, IVA, propina no deducible)
+- 📊 Gastos fijos mensuales prorrateados + agregados por lote + impuestos con desglose por unidad
 - 🔄 Cálculos en cascada automática
-- 📊 Tabla editable para cada capa
-- 💾 Guardado en tiempo real
+- 📊 Tabla editable + grafo ReactFlow
+- 💾 Guardado en tiempo real (5s debounce)
 - 📥 Exporta a Excel o JSON
 - 🔐 Autenticación Firebase
 - 📱 Responsive mobile
@@ -238,14 +230,15 @@ Archivo: CostoBot_Panaderia_Lima_Mar2026.xlsx
 
 | Capa | Tecnología |
 |------|------------|
-| **Frontend** | Next.js 14 + React + TypeScript + Tailwind |
-| **Estado Local** | Zustand (JSON reactivo) |
-| **Backend** | Node.js + Express |
-| **Base de Datos** | MongoDB Atlas |
-| **Auth** | Firebase Auth |
-| **IA** | OpenRouter API (Nemotron) |
-| **Exportación** | SheetJS (Excel) |
-| **Hosting** | Vercel (frontend) + Render (backend) |
+| **Frontend** | Next.js 16 + React 18 + TypeScript + Tailwind · Render |
+| **Estado Local** | Zustand (JSON reactivo) + sync 5s a MongoDB |
+| **Backend** | Node.js + Express + Helmet + Rate Limit · Render |
+| **Base de Datos** | MongoDB Atlas (Mongoose) + Firebase Auth |
+| **IA** | OpenRouter (Nemotron) + Ollama/LM Studio (adapter) |
+| **Cálculos** | Motor determinista `services/calculation` + `lib/units` (conversión precisa) |
+| **Exportación** | SheetJS (Excel multi-hoja) + JSON |
+| **Tickets** | `lib/ticket` + `TicketExtractionGuide` (guía a la par) |
+| **Hosting** | Render (frontend + backend) |
 
 ---
 
