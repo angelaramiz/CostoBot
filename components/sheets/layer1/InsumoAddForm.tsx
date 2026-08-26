@@ -54,6 +54,7 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
         patch({
             category: cat,
             isReusable: cat === 'maquina' || cat === 'utensilio',
+            ...(cat === 'utensilio' ? { costPerUnit: 0 } : {}),
         });
     }
 
@@ -131,18 +132,27 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
                         </select>
                     </div>
 
-                    <div className={styles.formField}>
-                        <label htmlFor="add-cost">Costo / unidad ($)</label>
-                        <input
-                            id="add-cost"
-                            type="number"
-                            min={0}
-                            step={0.01}
-                            value={form.costPerUnit || ''}
-                            onChange={(e) => patch({ costPerUnit: parseFloat(e.target.value) || 0 })}
-                            placeholder="ej: 12.50"
-                        />
-                    </div>
+                    {form.category !== 'utensilio' && (
+                        <div className={styles.formField}>
+                            <label htmlFor="add-cost">
+                                {form.category === 'maquina' ? 'Tarifa por hora ($/hr)' : 'Costo / unidad ($)'}
+                            </label>
+                            <input
+                                id="add-cost"
+                                type="number"
+                                min={0}
+                                step={0.01}
+                                value={form.costPerUnit || ''}
+                                onChange={(e) => patch({ costPerUnit: parseFloat(e.target.value) || 0 })}
+                                placeholder={form.category === 'maquina' ? 'ej: 50.00 /hr' : 'ej: 12.50'}
+                                title={
+                                    form.category === 'maquina'
+                                        ? 'Usado solo si no configuras servicio (electricidad/gas) en Capa 2'
+                                        : undefined
+                                }
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Campos dinámicos por categoría */}
