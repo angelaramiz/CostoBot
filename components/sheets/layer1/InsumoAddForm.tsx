@@ -127,10 +127,10 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
                             onChange={(e) => patch({ unit: e.target.value })}
                         >
                             {getGroupedUnitsForCategory(form.category).map(({ group, units }) => (
-                                <optgroup key={group} label={group === 'weight' ? 'Peso' : group === 'volume' ? 'Volumen' : group === 'count' ? 'Cantidad' : group === 'length' ? 'Longitud' : 'Tiempo'}>
+                                <optgroup key={group} label={group === 'weight' ? 'Peso' : group === 'volume' ? 'Volumen' : group === 'count' ? 'Cantidad' : 'Tiempo'}>
                                     {units.map((u) => (
                                         <option key={u} value={u}>
-                                            {u}
+                                            {u === 'fl_oz' ? 'oz liq' : u}
                                         </option>
                                     ))}
                                 </optgroup>

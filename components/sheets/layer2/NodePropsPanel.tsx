@@ -67,10 +67,9 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
         const group = getUnitGroup(insumoUnit);
         // Unidades compatibles dentro del mismo grupo físico
         const UNIT_OPTIONS: Record<string, string[]> = {
-          weight: ['mg', 'g', 'kg'],
-          volume: ['ml', 'L'],
-          count: ['pza'],
-          length: ['mm', 'cm', 'm'],
+          weight: ['mg', 'g', 'kg', 'oz', 'lb'],
+          volume: ['ml', 'L', 'fl_oz', 'gal'],
+          count: ['pza', 'paquete'],
           time: ['min', 'hr'],
         };
         const compatibleUnits = group ? UNIT_OPTIONS[group] ?? [insumoUnit] : [insumoUnit];
@@ -91,9 +90,9 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 }}
               >
                 <option value="">— Selecciona —</option>
-                {ingredientInsumos.map((i) => (
-                  <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>
-                ))}
+              {ingredientInsumos.map((i) => (
+                <option key={i.id} value={i.id}>{i.name} ({i.unit === 'fl_oz' ? 'oz liq' : i.unit})</option>
+              ))}
               </select>
             </div>
             <div className={styles.formGroup}>
@@ -117,7 +116,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                   title={selectedInsumo ? `Insumo en ${insumoUnit} — conversión automática` : undefined}
                 >
                   {compatibleUnits.map((u) => (
-                    <option key={u} value={u}>{u}</option>
+                    <option key={u} value={u}>{u === 'fl_oz' ? 'oz liq' : u}</option>
                   ))}
                 </select>
               </div>

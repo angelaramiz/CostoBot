@@ -5,16 +5,18 @@
  * Todas las conversiones usan enteros (unidad base) para evitar floats raros.
  */
 
-// Grupos físicos — cada grupo comparte base y factores enteros
+// Grupos físicos — cada grupo comparte base y factores
+// Peso y volumen incluyen unidades imperiales para LATAM
 const UNIT_GROUPS = {
   weight: {
     label: 'Peso',
     base: 'g' as const,
-    // factor a mg (unidad mínima) para precisión entera
     units: {
-      mg: { factor: 1, label: 'miligramo' },
-      g: { factor: 1000, label: 'gramo' },
-      kg: { factor: 1_000_000, label: 'kilogramo' },
+      mg: { factor: 0.001, label: 'miligramo' },
+      g: { factor: 1, label: 'gramo' },
+      kg: { factor: 1000, label: 'kilogramo' },
+      oz: { factor: 28.3495, label: 'onza' },
+      lb: { factor: 453.592, label: 'libra' },
     },
   },
   volume: {
@@ -23,6 +25,8 @@ const UNIT_GROUPS = {
     units: {
       ml: { factor: 1, label: 'mililitro' },
       L: { factor: 1000, label: 'litro' },
+      'fl_oz': { factor: 29.5735, label: 'onza líquida' },
+      gal: { factor: 3785.41, label: 'galón' },
     },
   },
   count: {
@@ -30,15 +34,7 @@ const UNIT_GROUPS = {
     base: 'pza' as const,
     units: {
       pza: { factor: 1, label: 'pieza' },
-    },
-  },
-  length: {
-    label: 'Longitud',
-    base: 'mm' as const,
-    units: {
-      mm: { factor: 1, label: 'milímetro' },
-      cm: { factor: 10, label: 'centímetro' },
-      m: { factor: 1000, label: 'metro' },
+      paquete: { factor: 1, label: 'paquete' },
     },
   },
   time: {
@@ -52,7 +48,6 @@ const UNIT_GROUPS = {
 } as const;
 
 type UnitGroupKey = keyof typeof UNIT_GROUPS;
-type Unit = string; // 'kg' | 'g' | 'mg' | 'L' | 'ml' | 'pza' | 'm' | 'cm' | 'mm' | 'hr' | 'min'
 
 const UNIT_TO_GROUP = new Map<string, UnitGroupKey>();
 const UNIT_FACTOR = new Map<string, number>();
@@ -66,8 +61,8 @@ for (const [groupKey, group] of Object.entries(UNIT_GROUPS) as [UnitGroupKey, ty
 
 // Unidades permitidas por categoría de insumo
 export const UNITS_BY_CATEGORY: Record<string, string[]> = {
-  ingrediente: ['mg', 'g', 'kg', 'ml', 'L', 'pza'],
-  material: ['pza', 'm', 'cm', 'mm'],
+  ingrediente: ['mg', 'g', 'kg', 'oz', 'lb', 'ml', 'L', 'fl_oz', 'gal', 'pza', 'paquete'],
+  material: ['pza', 'paquete'],
   utensilio: ['pza'],
   maquina: ['pza', 'hr'],
 };
@@ -76,7 +71,6 @@ export const UNIT_GROUP_LABELS: Record<UnitGroupKey, string> = {
   weight: 'Peso',
   volume: 'Volumen',
   count: 'Cantidad',
-  length: 'Longitud',
   time: 'Tiempo',
 };
 
