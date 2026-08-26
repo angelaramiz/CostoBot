@@ -392,7 +392,7 @@ export default function Layer3ProductoSheet() {
             {/* Total Gastos Agregados (por lote) */}
             {((extraCosts.laborCost ?? 0) + (extraCosts.packagingShipping ?? 0) + (extraCosts.other ?? 0)) > 0 && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #334155', paddingTop: 10, marginTop: 4 }}>
-                <span style={{ fontSize: '0.82rem', color: '#94a3b8', marginRight: 8 }}>Total gastos extra:</span>
+                <span style={{ fontSize: '0.82rem', color: '#94a3b8', marginRight: 8 }}>Total gastos agregados:</span>
                 <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f59e0b' }}>
                   {formatCurrency((extraCosts.laborCost ?? 0) + (extraCosts.packagingShipping ?? 0) + (extraCosts.other ?? 0))}
                 </span>
@@ -400,7 +400,7 @@ export default function Layer3ProductoSheet() {
             )}
 
             <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: 12, fontStyle: 'italic' }}>
-              Los gastos extra se distribuyen entre los productos para refinar el costo final
+              Los gastos agregados (por lote) se distribuyen proporcionalmente entre productos para el costo final coherente.
             </div>
           </div>
         )}
