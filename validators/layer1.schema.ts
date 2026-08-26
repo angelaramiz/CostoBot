@@ -30,6 +30,8 @@ export const InsumoSchema = z.object({
     .optional(),
   supplier: z.string().optional(),
   sku: z.string().optional(),
+  packageQuantity: z.number().positive('Debe ser > 0').optional(),
+  packageUnit: z.string().min(1).optional(),
 });
 
 export type InsumoInput = z.infer<typeof InsumoSchema>;

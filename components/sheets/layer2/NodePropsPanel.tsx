@@ -64,7 +64,9 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
       {nodeType === 'ingredient' && (() => {
         const selectedInsumo = insumos.find((i) => i.id === (form.insumoId as string));
         const insumoUnit = selectedInsumo?.unit ?? 'pza';
-        const group = getUnitGroup(insumoUnit);
+        const isPaquete = insumoUnit === 'paquete';
+        const effectiveUnit = isPaquete ? (selectedInsumo?.packageUnit ?? 'pza') : insumoUnit;
+        const group = getUnitGroup(effectiveUnit);
         // Unidades compatibles dentro del mismo grupo físico
         const UNIT_OPTIONS: Record<string, string[]> = {
           weight: ['mg', 'g', 'kg', 'oz', 'lb'],
@@ -72,7 +74,15 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
           count: ['pza', 'paquete'],
           time: ['min', 'hr'],
         };
-        const compatibleUnits = group ? UNIT_OPTIONS[group] ?? [insumoUnit] : [insumoUnit];
+        let compatibleUnits: string[];
+        if (isPaquete) {
+          const innerGroup = getUnitGroup(effectiveUnit);
+          const innerUnits = innerGroup ? UNIT_OPTIONS[innerGroup] ?? [effectiveUnit] : [effectiveUnit];
+          // permite usar tanto paquetes enteros como unidades internas (ej: 1 paquete o 500 g)
+          compatibleUnits = ['paquete', ...innerUnits.filter(u => u !== 'paquete')];
+        } else {
+          compatibleUnits = group ? UNIT_OPTIONS[group] ?? [insumoUnit] : [insumoUnit];
+        }
         const currentUnit = (form.unit as string) || insumoUnit;
 
         return (
@@ -91,7 +101,9 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
               >
                 <option value="">— Selecciona —</option>
               {ingredientInsumos.map((i) => (
-                <option key={i.id} value={i.id}>{i.name} ({i.unit === 'fl_oz' ? 'oz liq' : i.unit})</option>
+                <option key={i.id} value={i.id}>
+                  {i.name} ({i.unit === 'paquete' ? `paquete ${i.packageQuantity ?? 1} ${i.packageUnit === 'fl_oz' ? 'oz liq' : i.packageUnit ?? 'pza'}` : i.unit === 'fl_oz' ? 'oz liq' : i.unit})
+                </option>
               ))}
               </select>
             </div>

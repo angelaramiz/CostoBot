@@ -7,7 +7,7 @@ import IngredienteFields from './dynamic-fields/IngredienteFields';
 import MaterialFields from './dynamic-fields/MaterialFields';
 import UtensilioFields from './dynamic-fields/UtensilioFields';
 import MaquinaFields from './dynamic-fields/MaquinaFields';
-import { getUnitsForCategory, getGroupedUnitsForCategory } from '@/lib/units';
+import { getUnitsForCategory, getGroupedUnitsForCategory, getPackageInnerUnits } from '@/lib/units';
 import styles from './Layer1.module.css';
 
 type FormState = {
@@ -21,6 +21,8 @@ type FormState = {
     residualValue: number; // centavos
     supplier: string;
     sku: string;
+    packageQuantity: number;
+    packageUnit: string;
 };
 
 const defaultForm: FormState = {
@@ -34,6 +36,8 @@ const defaultForm: FormState = {
     residualValue: 0,
     supplier: '',
     sku: '',
+    packageQuantity: 0,
+    packageUnit: 'pza',
 };
 
 interface InsumoAddFormProps {
@@ -57,6 +61,7 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
             unit: nextUnit,
             isReusable: cat === 'maquina' || cat === 'utensilio',
             ...(cat === 'utensilio' ? { costPerUnit: 0 } : {}),
+            ...(nextUnit !== 'paquete' ? { packageQuantity: 0, packageUnit: 'pza' } : {}),
         });
     }
 
@@ -82,6 +87,12 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
                 ? {
                     supplier: form.supplier || undefined,
                     sku: form.sku || undefined,
+                }
+                : {}),
+            ...(form.unit === 'paquete'
+                ? {
+                    packageQuantity: form.packageQuantity || 1,
+                    packageUnit: form.packageUnit || 'pza',
                 }
                 : {}),
         };
@@ -124,7 +135,15 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
                         <select
                             id="add-unit"
                             value={form.unit}
-                            onChange={(e) => patch({ unit: e.target.value })}
+                            onChange={(e) => {
+                                const next = e.target.value;
+                                if (next === 'paquete') {
+                                    const innerUnits = getPackageInnerUnits(form.category);
+                                    patch({ unit: next, packageQuantity: form.packageQuantity || 1, packageUnit: form.packageUnit || innerUnits[0] || 'pza' });
+                                } else {
+                                    patch({ unit: next, packageQuantity: 0, packageUnit: 'pza' });
+                                }
+                            }}
                         >
                             {getGroupedUnitsForCategory(form.category).map(({ group, units }) => (
                                 <optgroup key={group} label={group === 'weight' ? 'Peso' : group === 'volume' ? 'Volumen' : group === 'count' ? 'Cantidad' : 'Tiempo'}>
@@ -160,6 +179,45 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
                         </div>
                     )}
                 </div>
+
+                {/* Contenido del paquete — solo si unidad es paquete */}
+                {form.unit === 'paquete' && (
+                    <div className={styles.formRow} style={{ marginTop: 8, background: 'rgba(59,130,246,0.08)', borderRadius: 8, padding: '8px 10px', border: '1px dashed #3b82f6' }}>
+                        <div className={styles.formField}>
+                            <label htmlFor="add-pkg-qty">Contenido por paquete</label>
+                            <input
+                                id="add-pkg-qty"
+                                type="number"
+                                min={0.001}
+                                step={0.01}
+                                value={form.packageQuantity || ''}
+                                onChange={(e) => patch({ packageQuantity: parseFloat(e.target.value) || 0 })}
+                                placeholder="ej: 4"
+                            />
+                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Ej: caja 20kg → 20, pack 4L → 4</span>
+                        </div>
+                        <div className={styles.formField}>
+                            <label htmlFor="add-pkg-unit">Unidad interna</label>
+                            <select
+                                id="add-pkg-unit"
+                                value={form.packageUnit}
+                                onChange={(e) => patch({ packageUnit: e.target.value })}
+                            >
+                                {getPackageInnerUnits(form.category).map((u) => (
+                                    <option key={u} value={u}>{u === 'fl_oz' ? 'oz liq' : u}</option>
+                                ))}
+                            </select>
+                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Qué hay dentro del paquete</span>
+                        </div>
+                        {form.packageQuantity > 0 && form.costPerUnit > 0 && (
+                            <div className={styles.formField} style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                <div style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 600, paddingBottom: 6 }}>
+                                    ${(form.costPerUnit / form.packageQuantity).toFixed(2)} / {form.packageUnit === 'fl_oz' ? 'oz liq' : form.packageUnit}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Campos dinámicos por categoría */}
                 <div className={styles.formRow}>

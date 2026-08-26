@@ -89,7 +89,7 @@ function calculateGraphCostBreakdown(
       const insumo = insumoMap.get(node.data.insumoId);
       if (insumo) {
         const qtyUnit = (node.data as IngredientNodeData).unit || insumo.unit;
-        ingredients += calculateIngredientCost(insumo.costPerUnit, insumo.unit, node.data.quantity, qtyUnit);
+        ingredients += calculateIngredientCost(insumo.costPerUnit, insumo.unit, node.data.quantity, qtyUnit, insumo.packageQuantity, insumo.packageUnit);
       }
     } else if (isUtensilData(node)) {
       const insumo = insumoMap.get(node.data.insumoId);

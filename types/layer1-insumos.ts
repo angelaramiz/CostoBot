@@ -17,4 +17,8 @@ export interface Insumo {
   supplier?: string;
   /** Solo para material: código SKU */
   sku?: string;
+  /** Solo cuando unit === 'paquete': cuánto contiene cada paquete */
+  packageQuantity?: number;
+  /** Solo cuando unit === 'paquete': en qué unidad está el contenido */
+  packageUnit?: string;
 }

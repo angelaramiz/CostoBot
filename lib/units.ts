@@ -101,15 +101,29 @@ export function convertQuantity(quantity: number, fromUnit: string, toUnit: stri
 /**
  * Costo preciso de un ingrediente considerando conversión de unidades.
  * costPerUnit está en centavos por costUnit. quantity está en quantityUnit.
+ * Si costUnit es 'paquete' con packageQuantity/packageUnit, calcula costo por unidad interna.
  * Si las unidades son incompatibles, asume 1:1 (fallback defensivo).
  */
 export function calculateIngredientCost(
   costPerUnit: number,
   costUnit: string,
   quantity: number,
-  quantityUnit: string
+  quantityUnit: string,
+  packageQuantity?: number,
+  packageUnit?: string
 ): number {
   if (quantity <= 0 || costPerUnit <= 0) return 0;
+
+  // Caso paquete: costPerUnit es por paquete completo
+  if (costUnit === 'paquete' && packageQuantity && packageUnit) {
+    if (quantityUnit === 'paquete') return Math.round(costPerUnit * quantity);
+    // quantity viene en unidad interna (ej: L) o compatible (ml -> L)
+    const converted = convertQuantity(quantity, quantityUnit, packageUnit);
+    if (converted == null) return Math.round(costPerUnit * quantity);
+    const costPerInner = costPerUnit / packageQuantity;
+    return Math.round(costPerInner * converted);
+  }
+
   if (costUnit === quantityUnit) return Math.round(costPerUnit * quantity);
   const converted = convertQuantity(quantity, quantityUnit, costUnit);
   if (converted == null) {
@@ -118,6 +132,13 @@ export function calculateIngredientCost(
   }
   // costPerUnit * quantityEnCostUnit, redondeo al centavo más cercano
   return Math.round(costPerUnit * converted);
+}
+
+/** Unidades internas válidas para un paquete (excluye el propio 'paquete') */
+export function getPackageInnerUnits(category: string): string[] {
+  const all = getUnitsForCategory(category).filter((u) => u !== 'paquete');
+  // Para ingrediente permite todo peso/volumen/cantidad; para material solo pza
+  return all;
 }
 
 export function getUnitsForCategory(category: string): string[] {

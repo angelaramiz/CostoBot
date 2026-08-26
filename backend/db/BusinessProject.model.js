@@ -25,6 +25,9 @@ const InsumoSchema = new Schema(
     // Campos de material (opcionales, para material)
     supplier:         { type: String },
     sku:              { type: String },
+    // Campos de paquete (cuando unit === 'paquete')
+    packageQuantity:  { type: Number, min: 0.001 },
+    packageUnit:      { type: String },
   },
   { _id: false }
 );
