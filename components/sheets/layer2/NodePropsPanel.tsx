@@ -87,7 +87,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
               type="number"
               min={0}
               step={0.01}
-              value={String(form.quantity ?? '')}
+              value={form.quantity ? String(form.quantity) : ''}
               placeholder="0"
               onChange={(e) => set('quantity', parseFloat(e.target.value) || 0)}
             />
@@ -122,7 +122,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
               type="number"
               min={0}
               step={1}
-              value={String(form.timeMinutes ?? '')}
+              value={form.timeMinutes ? String(form.timeMinutes) : ''}
               placeholder="0"
               onChange={(e) => set('timeMinutes', parseFloat(e.target.value) || 0)}
             />
@@ -220,7 +220,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
               type="number"
               min={1}
               step={1}
-              value={String(form.unitsProducedThisMonth ?? '')}
+              value={form.unitsProducedThisMonth ? String(form.unitsProducedThisMonth) : ''}
               placeholder="1"
               onChange={(e) => set('unitsProducedThisMonth', parseInt(e.target.value, 10) || 1)}
             />
@@ -259,7 +259,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 type="number"
                 min={0}
                 step={0.01}
-                value={String(mainProd.expectedQuantity ?? '')}
+                value={mainProd.expectedQuantity ? String(mainProd.expectedQuantity) : ''}
                 placeholder="0"
                 onChange={(e) =>
                   set('mainProduct', {
@@ -333,7 +333,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                     type="number"
                     min={0}
                     step={0.01}
-                    value={String(byProd.expectedQuantity ?? '')}
+                    value={byProd.expectedQuantity ? String(byProd.expectedQuantity) : ''}
                     placeholder="0"
                     onChange={(e) =>
                       set('byProduct', {
@@ -385,7 +385,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 type="number"
                 min={0}
                 step={0.01}
-                value={String(resultadoData.inputTotal ?? '')}
+                value={resultadoData.inputTotal ? String(resultadoData.inputTotal) : ''}
                 placeholder="0"
                 onChange={(e) => set('inputTotal', parseFloat(e.target.value) || 0)}
               />
@@ -398,7 +398,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 min={0}
                 max={1}
                 step={0.01}
-                value={String(resultadoData.yield ?? '')}
+                value={resultadoData.yield ? String(resultadoData.yield) : ''}
                 placeholder="0.8"
                 onChange={(e) => set('yield', parseFloat(e.target.value) || 0)}
               />
@@ -446,7 +446,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                     type="number"
                     min={0.001}
                     step={0.001}
-                    value={String(resultadoData.packagingCapacity ?? '')}
+                    value={resultadoData.packagingCapacity ? String(resultadoData.packagingCapacity) : ''}
                     placeholder={`ej: 0.5 (${mainProd.unit})`}
                     onChange={(e) =>
                       set('packagingCapacity', parseFloat(e.target.value) || undefined)
@@ -619,7 +619,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 type="number"
                 min={0}
                 step={0.01}
-                value={String(importData.quantity ?? '')}
+                value={importData.quantity ? String(importData.quantity) : ''}
                 placeholder="0"
                 onChange={(e) => set('quantity', parseFloat(e.target.value) || 0)}
               />
