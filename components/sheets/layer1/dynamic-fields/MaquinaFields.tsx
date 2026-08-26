@@ -26,7 +26,7 @@ export default function MaquinaFields({
           type="number"
           min={0}
           step={1}
-          value={acquisitionCost / 100}
+          value={acquisitionCost > 0 ? acquisitionCost / 100 : ''}
           onChange={(e) =>
             onChange({ acquisitionCost: Math.round((parseFloat(e.target.value) || 0) * 100), isReusable: true })
           }
@@ -40,7 +40,7 @@ export default function MaquinaFields({
           type="number"
           min={1}
           step={1}
-          value={usefulLifeMonths}
+          value={usefulLifeMonths > 1 ? usefulLifeMonths : ''}
           onChange={(e) => onChange({ usefulLifeMonths: parseInt(e.target.value) || 1, isReusable: true })}
           placeholder="ej: 60"
         />

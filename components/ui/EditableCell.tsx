@@ -31,15 +31,29 @@ export default function EditableCell({
   const inputRef = useRef<HTMLInputElement>(null);
 
   function display(): string {
-    if (type === 'currency') return formatCurrency(value as number);
-    if (type === 'percent') return formatPercent(value as number);
+    if (type === 'currency') {
+      const num = value as number;
+      return num > 0 ? formatCurrency(num) : '';
+    }
+    if (type === 'percent') {
+      const num = value as number;
+      return num > 0 ? formatPercent(num) : '';
+    }
+    if (type === 'number') {
+      const num = value as number;
+      return num > 0 ? String(num) : '';
+    }
     return String(value);
   }
 
   function startEdit() {
     if (readOnly || !onSave) return;
     if (type === 'currency') {
-      setDraft(((value as number) / 100).toFixed(2));
+      const num = value as number;
+      setDraft(num > 0 ? (num / 100).toFixed(2) : '');
+    } else if (type === 'number' || type === 'percent') {
+      const num = value as number;
+      setDraft(num > 0 ? String(num) : '');
     } else {
       setDraft(String(value));
     }
@@ -51,9 +65,9 @@ export default function EditableCell({
     setEditing(false);
     if (!onSave) return;
     if (type === 'currency') {
-      onSave(parseCurrency(draft));
+      onSave(parseCurrency(draft || '0'));
     } else if (type === 'number' || type === 'percent') {
-      onSave(parseFloat(draft) || 0);
+      onSave(draft.trim() ? parseFloat(draft) || 0 : 0);
     } else {
       onSave(draft.trim());
     }
@@ -111,6 +125,7 @@ export default function EditableCell({
         enterKeyHint="done"
         step={type === 'currency' ? '0.01' : type === 'percent' ? '0.01' : '1'}
         min={type !== 'text' ? '0' : undefined}
+        placeholder={type !== 'text' ? '0' : placeholder}
         autoFocus
       />
     );
@@ -134,12 +149,12 @@ export default function EditableCell({
       aria-label={readOnly ? undefined : `Editar ${placeholder ?? 'valor'}`}
       title={readOnly ? undefined : 'Click para editar'}
     >
-      {display() !== '' && display() !== '0' ? (
+      {display() ? (
         display()
       ) : placeholder ? (
         <span className={styles.placeholder}>{placeholder}</span>
       ) : (
-        display()
+        '0'
       )}
     </span>
   );

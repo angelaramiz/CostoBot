@@ -87,7 +87,8 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
               type="number"
               min={0}
               step={0.01}
-              value={String(form.quantity ?? 0)}
+              value={String(form.quantity ?? '')}
+              placeholder="0"
               onChange={(e) => set('quantity', parseFloat(e.target.value) || 0)}
             />
           </div>
@@ -121,7 +122,8 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
               type="number"
               min={0}
               step={1}
-              value={String(form.timeMinutes ?? 0)}
+              value={String(form.timeMinutes ?? '')}
+              placeholder="0"
               onChange={(e) => set('timeMinutes', parseFloat(e.target.value) || 0)}
             />
           </div>
@@ -218,7 +220,8 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
               type="number"
               min={1}
               step={1}
-              value={String(form.unitsProducedThisMonth ?? 1)}
+              value={String(form.unitsProducedThisMonth ?? '')}
+              placeholder="1"
               onChange={(e) => set('unitsProducedThisMonth', parseInt(e.target.value, 10) || 1)}
             />
           </div>
@@ -256,7 +259,8 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 type="number"
                 min={0}
                 step={0.01}
-                value={String(mainProd.expectedQuantity ?? 0)}
+                value={String(mainProd.expectedQuantity ?? '')}
+                placeholder="0"
                 onChange={(e) =>
                   set('mainProduct', {
                     ...mainProd,
@@ -329,7 +333,8 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                     type="number"
                     min={0}
                     step={0.01}
-                    value={String(byProd.expectedQuantity ?? 0)}
+                    value={String(byProd.expectedQuantity ?? '')}
+                    placeholder="0"
                     onChange={(e) =>
                       set('byProduct', {
                         ...byProd,
@@ -380,7 +385,8 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 type="number"
                 min={0}
                 step={0.01}
-                value={String(resultadoData.inputTotal ?? 0)}
+                value={String(resultadoData.inputTotal ?? '')}
+                placeholder="0"
                 onChange={(e) => set('inputTotal', parseFloat(e.target.value) || 0)}
               />
             </div>
@@ -392,7 +398,8 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 min={0}
                 max={1}
                 step={0.01}
-                value={String(resultadoData.yield ?? 0.8)}
+                value={String(resultadoData.yield ?? '')}
+                placeholder="0.8"
                 onChange={(e) => set('yield', parseFloat(e.target.value) || 0)}
               />
               <span className={styles.formHint}>Ej: 0.80 = 80% de rendimiento</span>
@@ -498,7 +505,7 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                         type="number"
                         min={0}
                         step={0.01}
-                        value={String(currentUsage)}
+                        value={String(currentUsage || '')}
                         placeholder={`ej: 2.5 ${rate.unit}`}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value) || 0;
@@ -612,7 +619,8 @@ export default function NodePropsPanel({ node, allGraphs, insumos, services, onS
                 type="number"
                 min={0}
                 step={0.01}
-                value={String(importData.quantity ?? 0)}
+                value={String(importData.quantity ?? '')}
+                placeholder="0"
                 onChange={(e) => set('quantity', parseFloat(e.target.value) || 0)}
               />
             </div>

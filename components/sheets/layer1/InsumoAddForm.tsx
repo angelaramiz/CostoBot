@@ -138,7 +138,7 @@ export default function InsumoAddForm({ counts, onAdd }: InsumoAddFormProps) {
                             type="number"
                             min={0}
                             step={0.01}
-                            value={form.costPerUnit}
+                            value={form.costPerUnit || ''}
                             onChange={(e) => patch({ costPerUnit: parseFloat(e.target.value) || 0 })}
                             placeholder="ej: 12.50"
                         />
