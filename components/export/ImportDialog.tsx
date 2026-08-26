@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useProjectStore } from '@/store/project.store';
 import { useAuthStore } from '@/store/auth.store';
 import { importFromFile } from '@/lib/export/json-importer';
+import TicketExtractionGuide from '@/components/ticket/TicketExtractionGuide';
 import type { BusinessProject } from '@/types/business-project';
 import styles from './ImportDialog.module.css';
 
@@ -26,6 +27,7 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
   const isSaving = useProjectStore((s) => s.isSaving);
   const syncError = useProjectStore((s) => s.syncError);
 
+  const [activeTab, setActiveTab] = useState<'json' | 'ticket'>('json');
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -111,11 +113,16 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
 
   return (
     <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && !isLoading && onClose()}>
-      <div className={styles.dialog} ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="import-title">
+      <div className={styles.dialog} ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="import-title" style={{ maxWidth: activeTab === 'ticket' ? 980 : undefined, width: activeTab === 'ticket' ? '96vw' : undefined }}>
         <header className={styles.header}>
-          <h2 id="import-title" className={styles.title}>Importar proyecto JSON</h2>
+          <h2 id="import-title" className={styles.title}>{activeTab === 'ticket' ? 'Importar ticket de compra' : 'Importar proyecto JSON'}</h2>
           <button className={styles.closeBtn} onClick={onClose} disabled={isLoading || isSaving} aria-label="Cerrar">✕</button>
         </header>
+
+        <div style={{ display: 'flex', gap: 8, padding: '0 16px', borderBottom: '1px solid #334155' }}>
+          <button onClick={() => setActiveTab('json')} style={{ padding: '8px 12px', fontSize: '0.82rem', fontWeight: activeTab === 'json' ? 700 : 400, color: activeTab === 'json' ? '#38bdf8' : '#94a3b8', background: 'transparent', border: 'none', borderBottom: activeTab === 'json' ? '2px solid #38bdf8' : '2px solid transparent', cursor: 'pointer' }}>Proyecto JSON</button>
+          <button onClick={() => setActiveTab('ticket')} style={{ padding: '8px 12px', fontSize: '0.82rem', fontWeight: activeTab === 'ticket' ? 700 : 400, color: activeTab === 'ticket' ? '#38bdf8' : '#94a3b8', background: 'transparent', border: 'none', borderBottom: activeTab === 'ticket' ? '2px solid #38bdf8' : '2px solid transparent', cursor: 'pointer' }}>Ticket de compra</button>
+        </div>
 
         <div className={styles.body}>
           {isSaving ? (
@@ -125,6 +132,15 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
               <p className={styles.progressText}>
                 {syncProgress || 'Importando...'}
               </p>
+            </div>
+          ) : activeTab === 'ticket' ? (
+            <div>
+              <TicketExtractionGuide />
+              <div style={{ marginTop: 12, padding: 12, border: '1px dashed #334155', borderRadius: 8, background: '#020617' }}>
+                <p style={{ fontSize: '0.82rem', color: '#cbd5e1', margin: '0 0 8px' }}>Sube foto/PDF del ticket — se extraerán folio, fecha, comercio, RFC, subtotal, IVA, propina y total. Validación OCR pendiente.</p>
+                <input type="file" accept="image/*,application/pdf" disabled style={{ fontSize: '0.8rem', color: '#64748b' }} />
+                <span style={{ fontSize: '0.72rem', color: '#64748b', marginLeft: 8 }}>Próximamente: OCR automático</span>
+              </div>
             </div>
           ) : (
             <>
@@ -169,13 +185,19 @@ export default function ImportDialog({ onClose }: ImportDialogProps) {
           <button className={styles.cancelBtn} onClick={onClose} disabled={isLoading || isSaving}>
             Cancelar
           </button>
-          <button
-            className={styles.confirmBtn}
-            onClick={handleConfirm}
-            disabled={!preview || isLoading || isSaving}
-          >
-            {isLoading || isSaving ? 'Importando…' : 'Confirmar importación'}
-          </button>
+          {activeTab === 'json' ? (
+            <button
+              className={styles.confirmBtn}
+              onClick={handleConfirm}
+              disabled={!preview || isLoading || isSaving}
+            >
+              {isLoading || isSaving ? 'Importando…' : 'Confirmar importación'}
+            </button>
+          ) : (
+            <button className={styles.confirmBtn} disabled style={{ opacity: 0.5 }}>
+              OCR próximamente
+            </button>
+          )}
         </footer>
       </div>
     </div>
